@@ -7,3 +7,5 @@ export { DividerBlock } from './DividerBlock';
 export { CodeBlock } from './CodeBlock';
 export { CalloutBlock } from './CalloutBlock';
 export { ToggleBlock } from './ToggleBlock';
+export { ImageBlock } from './ImageBlock';
+export { TableBlock } from './TableBlock';

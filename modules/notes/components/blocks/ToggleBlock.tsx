@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronRight, ChevronDown } from "lucide-react";
+import { type Block } from "../../types/blocks";
 
 interface ToggleBlockProps {
   content: string;
@@ -9,19 +10,23 @@ interface ToggleBlockProps {
   isFocused: boolean;
   onChange: (content: string, element?: HTMLElement) => void;
   onPropertyChange?: (properties: Record<string, any>) => void;
+  onKeyDown?: (e: React.KeyboardEvent) => void;
   onFocus: () => void;
   onBlur: () => void;
+  children?: React.ReactNode; // For rendering nested blocks
 }
 
-export const ToggleBlock = ({ 
-  content, 
-  properties = {}, 
-  placeholder, 
-  isFocused, 
-  onChange, 
+export const ToggleBlock = ({
+  content,
+  properties = {},
+  placeholder,
+  isFocused,
+  onChange,
   onPropertyChange,
-  onFocus, 
-  onBlur 
+  onKeyDown,
+  onFocus,
+  onBlur,
+  children
 }: ToggleBlockProps) => {
   const isOpen = properties.open || false;
   const togglePlaceholder = placeholder || 'Toggle';
@@ -33,11 +38,12 @@ export const ToggleBlock = ({
   };
 
   return (
-    <div>
-      <div className="flex items-center gap-2">
+    <div className="py-[3px] px-2">
+      <div className="flex items-center gap-1.5">
         <button
           onClick={handleToggle}
-          className="flex-shrink-0 p-1 hover:bg-accent rounded text-muted-foreground"
+          className="flex-shrink-0 p-0.5 hover:bg-accent rounded text-muted-foreground transition-colors"
+          type="button"
         >
           {isOpen ? (
             <ChevronDown className="w-4 h-4" />
@@ -49,19 +55,22 @@ export const ToggleBlock = ({
           type="text"
           value={content}
           onChange={(e) => onChange(e.target.value, e.target)}
+          onKeyDown={onKeyDown}
           onFocus={onFocus}
           onBlur={onBlur}
           placeholder={togglePlaceholder}
-          className="flex-1 text-base font-medium border-none outline-none bg-transparent placeholder:text-muted-foreground/50 py-1"
+          className="flex-1 text-base leading-[1.6] font-medium border-none outline-none bg-transparent placeholder:text-muted-foreground/40"
           autoFocus={isFocused}
         />
       </div>
-      
+
       {isOpen && (
-        <div className="ml-7 mt-2 p-3 border-l-2 border-border/50">
-          <div className="text-sm text-muted-foreground">
-            Toggle content area (coming soon)
-          </div>
+        <div className="ml-6 mt-1.5 p-2.5 border-l-2 border-border/40">
+          {children || (
+            <div className="text-sm text-muted-foreground/60 italic">
+              Empty toggle - press Enter to add content
+            </div>
+          )}
         </div>
       )}
     </div>

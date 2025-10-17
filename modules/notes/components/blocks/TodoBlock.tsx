@@ -9,6 +9,7 @@ interface TodoBlockProps {
   isFocused: boolean;
   onChange: (content: string, element?: HTMLElement) => void;
   onPropertyChange?: (properties: Record<string, any>) => void;
+  onKeyDown?: (e: React.KeyboardEvent) => void;
   onFocus: () => void;
   onBlur: () => void;
 }
@@ -20,6 +21,7 @@ export const TodoBlock = ({
   isFocused, 
   onChange, 
   onPropertyChange,
+  onKeyDown,
   onFocus, 
   onBlur 
 }: TodoBlockProps) => {
@@ -33,23 +35,24 @@ export const TodoBlock = ({
   };
 
   return (
-    <div className="flex items-start gap-3">
-      <div className="mt-1">
+    <div className="flex items-start gap-2 py-[3px] px-2">
+      <div className="mt-[3px]">
         <Checkbox
           checked={checked}
           onCheckedChange={handleCheckedChange}
-          className="w-4 h-4"
+          className="w-[18px] h-[18px]"
         />
       </div>
       <input
         type="text"
         value={content}
         onChange={(e) => onChange(e.target.value, e.target)}
+        onKeyDown={onKeyDown}
         onFocus={onFocus}
         onBlur={onBlur}
         placeholder={todoPlaceholder}
-        className={`flex-1 text-base border-none outline-none bg-transparent placeholder:text-muted-foreground/50 py-1 ${
-          checked ? 'line-through text-muted-foreground' : ''
+        className={`flex-1 text-base leading-[1.6] border-none outline-none bg-transparent placeholder:text-muted-foreground/40 ${
+          checked ? 'line-through text-muted-foreground/60' : ''
         }`}
         autoFocus={isFocused}
       />

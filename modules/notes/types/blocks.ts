@@ -1,6 +1,6 @@
-export type BlockType = 
+export type BlockType =
   | "paragraph"
-  | "heading1" 
+  | "heading1"
   | "heading2"
   | "heading3"
   | "bulletList"
@@ -14,12 +14,29 @@ export type BlockType =
   | "table"
   | "callout";
 
+// Text formatting types
+export type TextColor = "default" | "gray" | "brown" | "orange" | "yellow" | "green" | "blue" | "purple" | "pink" | "red";
+
+export interface FormattedTextSegment {
+  text: string;
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+  strikethrough?: boolean;
+  code?: boolean;
+  color?: TextColor;
+  backgroundColor?: TextColor;
+}
+
+export type FormattedContent = FormattedTextSegment[] | string;
+
 export interface BaseBlock {
   id: string;
   type: BlockType;
-  content: string;
+  content: string | FormattedContent; // Support both plain text and formatted content
   properties?: Record<string, any>;
   children?: Block[];
+  textColor?: TextColor; // Block-level text color
 }
 
 export interface ParagraphBlock extends BaseBlock {
@@ -176,9 +193,23 @@ export const textToBlocks = (text: string): Block[] => {
     return [createBlock("paragraph")];
   }
 
-  return text.split('\n').map(line => 
-    createBlock("paragraph", line.trim())
-  ).filter(block => block.content || block.type === "paragraph");
+  const lines = text.split('\n');
+  const blocks: Block[] = [];
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    // Only create blocks for non-empty lines, or if it's the last line
+    if (line.trim() || i === lines.length - 1) {
+      blocks.push(createBlock("paragraph", line));
+    }
+  }
+  
+  // Ensure we always have at least one block
+  if (blocks.length === 0) {
+    blocks.push(createBlock("paragraph"));
+  }
+  
+  return blocks;
 };
 
 // Convert blocks to plain text (for backward compatibility)

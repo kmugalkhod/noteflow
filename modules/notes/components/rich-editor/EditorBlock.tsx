@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useCallback, useRef, useEffect } from 'react';
+import { forwardRef, useCallback, useRef } from 'react';
 import type { Block } from '../../types/blocks';
 import { TextBlock } from '../blocks/TextBlock';
 import { HeadingBlock } from '../blocks/HeadingBlock';
@@ -11,6 +11,10 @@ import { DividerBlock } from '../blocks/DividerBlock';
 import { CodeBlock } from '../blocks/CodeBlock';
 import { CalloutBlock } from '../blocks/CalloutBlock';
 import { ToggleBlock } from '../blocks/ToggleBlock';
+import { ImageBlock } from '../blocks/ImageBlock';
+import { TableBlock } from '../blocks/TableBlock';
+import { detectMarkdownOnSpace } from '../../utils/markdownShortcuts';
+import { BlockActionsMenu } from './BlockActionsMenu';
 
 export interface EditorBlockProps {
   block: Block;
@@ -19,10 +23,22 @@ export interface EditorBlockProps {
   onChange: (content: string, properties?: Record<string, any>) => void;
   onFocus: () => void;
   onBlur: () => void;
-  onEnterKey: (cursorPosition: number) => void;
+  onEnterKey: (cursorPosition: number, isEmptyBlock: boolean, shiftKey: boolean) => void;
+  onEscapeKey: () => void;
   onBackspaceAtStart: () => void;
   onSlashTrigger: (position: number, query: string, element: HTMLElement) => void;
   onClearSlashTrigger: () => void;
+  onMarkdownTransform?: (newType: Block['type'], newContent: string, cursorPosition: number) => void;
+  onDuplicate?: () => void;
+  onDelete?: () => void;
+  onTransform?: (newType: Block['type']) => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+  canMoveUp?: boolean;
+  canMoveDown?: boolean;
+  canDelete?: boolean;
+  allBlocks?: Block[];
+  blockIndex?: number;
 }
 
 export const EditorBlock = forwardRef<HTMLDivElement, EditorBlockProps>(({
@@ -33,40 +49,41 @@ export const EditorBlock = forwardRef<HTMLDivElement, EditorBlockProps>(({
   onFocus,
   onBlur,
   onEnterKey,
+  onEscapeKey,
   onBackspaceAtStart,
   onSlashTrigger,
   onClearSlashTrigger,
+  onMarkdownTransform,
+  onDuplicate,
+  onDelete,
+  onTransform,
+  onMoveUp,
+  onMoveDown,
+  canMoveUp = false,
+  canMoveDown = false,
+  canDelete = true,
+  allBlocks = [],
+  blockIndex = 0,
 }, ref) => {
   const blockRef = useRef<HTMLDivElement>(null);
 
-  // Handle keyboard events
-  const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    const target = event.target as HTMLInputElement | HTMLTextAreaElement;
-    
-    switch (event.key) {
-      case 'Enter':
-        if (event.shiftKey) {
-          // Shift+Enter: Allow new line within block (default behavior for textarea)
-          return;
-        } else {
-          // Enter: Create new block (like Notion)
-          event.preventDefault();
-          const cursorPosition = target.selectionStart || 0;
-          onEnterKey(cursorPosition);
-        }
+  // Calculate list number for numbered lists
+  const calculateListNumber = useCallback((): number => {
+    if (block.type !== 'numberedList' || !allBlocks.length) return 1;
+
+    let number = 1;
+    // Count backwards from current block to find the start of this numbered list
+    for (let i = blockIndex - 1; i >= 0; i--) {
+      if (allBlocks[i].type === 'numberedList') {
+        number++;
+      } else {
+        // Different block type breaks the numbered list sequence
         break;
-        
-      case 'Backspace':
-        if (target.selectionStart === 0 && target.selectionEnd === 0) {
-          // At the beginning of the block
-          if (block.content === '') {
-            event.preventDefault();
-            onBackspaceAtStart();
-          }
-        }
-        break;
+      }
     }
-  }, [block.content, block.type, onEnterKey, onBackspaceAtStart]);
+
+    return number;
+  }, [block.type, allBlocks, blockIndex]);
 
   // Handle content changes and slash trigger detection
   const handleContentChange = useCallback((newContent: string, element?: HTMLElement) => {
@@ -95,42 +112,125 @@ export const EditorBlock = forwardRef<HTMLDivElement, EditorBlockProps>(({
 
   // Handle property changes (for blocks like todo, toggle, etc.)
   const handlePropertyChange = useCallback((properties: Record<string, any>) => {
-    onChange(block.content, properties);
+    onChange(block.content as string, properties);
   }, [onChange, block.content]);
 
   // Handle keyboard events via React event handlers
   const handleReactKeyDown = useCallback((e: React.KeyboardEvent) => {
     const target = e.target as HTMLInputElement | HTMLTextAreaElement;
-    
+
+    // Special handling for divider blocks
+    if (block.type === 'divider') {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        onEnterKey(0, true, false); // Create new paragraph after divider
+      } else if (e.key === 'Backspace') {
+        e.preventDefault();
+        onBackspaceAtStart(); // Delete the divider
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        onEscapeKey(); // Convert to paragraph (which will be empty and can be deleted)
+      }
+      return;
+    }
+
     switch (e.key) {
       case 'Enter':
-        if (e.shiftKey) {
-          // Shift+Enter: Allow new line within block (default behavior for textarea)
-          return;
+        // For multiline blocks (paragraph, quote, code): Enter adds newline
+        const multilineBlocks = ['paragraph', 'quote', 'code'];
+
+        if (multilineBlocks.includes(block.type)) {
+          if (e.shiftKey) {
+            // Shift+Enter: Exit block and create new paragraph
+            e.preventDefault();
+            const cursorPosition = target.selectionStart || 0;
+            onEnterKey(cursorPosition, false, true);
+          } else {
+            // Enter: Allow newline within block (default textarea behavior)
+            // Check if on an empty line (for double-enter exit behavior)
+            const cursorPosition = target.selectionStart || 0;
+            const textBeforeCursor = (block.content as string).substring(0, cursorPosition);
+            const textAfterCursor = (block.content as string).substring(cursorPosition);
+            const lines = textBeforeCursor.split('\n');
+            const currentLine = lines[lines.length - 1];
+
+            // If current line is empty and we're at the end, exit block
+            if (currentLine === '' && textAfterCursor.trim() === '') {
+              e.preventDefault();
+              onEnterKey(cursorPosition, true, false);
+            }
+            // Otherwise allow default newline behavior
+          }
         } else {
-          // Enter: Create new block (like Notion)
-          e.preventDefault();
-          const cursorPosition = target.selectionStart || 0;
-          onEnterKey(cursorPosition);
+          // For single-line blocks: Enter creates new block
+          if (e.shiftKey) {
+            // Shift+Enter: Allow new line within block (for future multiline support)
+            return;
+          } else {
+            // Enter: Create new block or exit formatting if empty
+            e.preventDefault();
+            const cursorPosition = target.selectionStart || 0;
+            const isEmptyBlock = (block.content as string) === '';
+            onEnterKey(cursorPosition, isEmptyBlock, false);
+          }
         }
         break;
-        
+
+      case 'Escape':
+        // Escape: Exit block formatting
+        e.preventDefault();
+        onEscapeKey();
+        break;
+
+      case 'Tab':
+        // Handle Tab key for list indentation
+        if (block.type === 'bulletList' || block.type === 'numberedList') {
+          e.preventDefault();
+          const currentLevel = (block.properties as any)?.level || 0;
+
+          if (e.shiftKey) {
+            // Shift+Tab: Decrease indent (outdent)
+            if (currentLevel > 0) {
+              handlePropertyChange({ level: currentLevel - 1 });
+            }
+          } else {
+            // Tab: Increase indent
+            if (currentLevel < 3) { // Max 3 levels
+              handlePropertyChange({ level: currentLevel + 1 });
+            }
+          }
+        }
+        break;
+
+      case ' ':
+        // Detect markdown shortcuts when space is pressed
+        if (onMarkdownTransform && block.type === 'paragraph') {
+          const cursorPosition = target.selectionStart || 0;
+          const markdown = detectMarkdownOnSpace(block.content as string, cursorPosition);
+
+          if (markdown) {
+            e.preventDefault();
+            onMarkdownTransform(markdown.type, markdown.content, markdown.newCursorPosition);
+          }
+        }
+        break;
+
       case 'Backspace':
         if (target.selectionStart === 0 && target.selectionEnd === 0) {
           // At the beginning of the block
-          if (block.content === '') {
+          if ((block.content as string) === '') {
             e.preventDefault();
             onBackspaceAtStart();
           }
         }
         break;
     }
-  }, [block.content, onEnterKey, onBackspaceAtStart]);
+  }, [block.content, block.type, block.properties, onEnterKey, onEscapeKey, onBackspaceAtStart, onMarkdownTransform, handlePropertyChange]);
 
   // Render the appropriate block component
   const renderBlock = () => {
     const baseProps = {
-      content: block.content,
+      content: block.content as string,
       placeholder,
       isFocused,
       onChange: handleContentChange,
@@ -143,63 +243,72 @@ export const EditorBlock = forwardRef<HTMLDivElement, EditorBlockProps>(({
     switch (block.type) {
       case 'paragraph':
         return <TextBlock {...baseProps} />;
-      
+
       case 'heading1':
       case 'heading2':
       case 'heading3':
         return <HeadingBlock {...baseProps} level={parseInt(block.type.slice(-1))} />;
-      
+
       case 'bulletList':
       case 'numberedList':
-        return <ListBlock {...baseProps} properties={block.properties} listType={block.type === 'bulletList' ? 'bullet' : 'numbered'} />;
-      
+        return <ListBlock {...baseProps} properties={block.properties} listType={block.type === 'bulletList' ? 'bullet' : 'numbered'} listNumber={calculateListNumber()} />;
+
       case 'todo':
         return <TodoBlock {...baseProps} properties={block.properties} />;
-      
+
       case 'toggle':
         return <ToggleBlock {...baseProps} properties={block.properties} />;
-      
+
       case 'quote':
         return <QuoteBlock {...baseProps} />;
-      
+
       case 'divider':
         return <DividerBlock {...baseProps} />;
-      
+
       case 'code':
         return <CodeBlock {...baseProps} properties={block.properties} />;
-      
+
       case 'callout':
         return <CalloutBlock {...baseProps} properties={block.properties} />;
-      
-      // TODO: Implement image and table blocks
+
       case 'image':
-        return (
-          <div className="p-4 border border-dashed border-muted-foreground/30 rounded-md text-center text-muted-foreground">
-            Image block (coming soon)
-          </div>
-        );
-      
+        return <ImageBlock {...baseProps} properties={block.properties} />;
+
       case 'table':
-        return (
-          <div className="p-4 border border-dashed border-muted-foreground/30 rounded-md text-center text-muted-foreground">
-            Table block (coming soon)
-          </div>
-        );
-      
+        return <TableBlock {...baseProps} properties={block.properties} />;
+
       default:
         return <TextBlock {...baseProps} />;
     }
   };
 
   return (
-    <div 
+    <div
       ref={ref || blockRef}
-      className={`editor-block group relative ${isFocused ? 'focused' : ''}`}
+      className={`editor-block group relative transition-colors ${isFocused ? 'focused' : ''}`}
       data-block-id={block.id}
       data-block-type={block.type}
-      style={{ marginBottom: '1px' }}
+      style={{ marginBottom: '2px' }}
     >
-      {renderBlock()}
+      {/* Block Actions Menu */}
+      {onDuplicate && onDelete && onTransform && onMoveUp && onMoveDown && (
+        <BlockActionsMenu
+          blockId={block.id}
+          blockType={block.type}
+          canMoveUp={canMoveUp}
+          canMoveDown={canMoveDown}
+          canDelete={canDelete}
+          onDuplicate={onDuplicate}
+          onDelete={onDelete}
+          onTransform={onTransform}
+          onMoveUp={onMoveUp}
+          onMoveDown={onMoveDown}
+        />
+      )}
+
+      <div className="relative hover:bg-accent/5 rounded-sm transition-colors">
+        {renderBlock()}
+      </div>
     </div>
   );
 });
