@@ -3,15 +3,16 @@
 import { useState, useEffect, useRef, useCallback, useImperativeHandle, forwardRef } from 'react';
 import { EditorBlock } from './EditorBlock';
 import { SlashMenu, useSlashMenu, type SlashCommand } from '../slash-menu';
-import { 
-  createBlock, 
-  serializeBlocks, 
-  deserializeBlocks, 
+import {
+  createBlock,
+  serializeBlocks,
+  deserializeBlocks,
   textToBlocks,
-  type Block, 
+  type Block,
   type EditorState,
-  type BlockType 
+  type BlockType
 } from '../../types/blocks';
+import { useEditorHistory } from '../../hooks/useEditorHistory';
 
 export interface RichEditorRef {
   focus: () => void;
@@ -54,6 +55,9 @@ export const RichEditor = forwardRef<RichEditorRef, RichEditorProps>(({
   const blockRefs = useRef<Map<string, HTMLElement>>(new Map());
   const isUserChangeRef = useRef(false);
 
+  // Initialize history
+  const history = useEditorHistory(editorState.blocks);
+
   // Initialize blocks from content
   useEffect(() => {
     if (initialContent) {
@@ -92,7 +96,7 @@ export const RichEditor = forwardRef<RichEditorRef, RichEditorProps>(({
     const currentBlock = newBlocks[blockIndex];
     
     // Remove the slash trigger from the content
-    const content = currentBlock.content;
+    const content = currentBlock.content as string;
     const slashIndex = content.lastIndexOf('/');
     const newContent = content.substring(0, slashIndex) + content.substring(slashIndex + 1 + slashTrigger.query.length);
     
@@ -134,12 +138,12 @@ export const RichEditor = forwardRef<RichEditorRef, RichEditorProps>(({
   const handleBlockChange = useCallback((blockId: string, newContent: string, newProperties?: Record<string, any>) => {
     isUserChangeRef.current = true; // Mark as user-initiated change
     setEditorState(prev => {
-      const newBlocks = prev.blocks.map(block => 
-        block.id === blockId 
+      const newBlocks = prev.blocks.map(block =>
+        block.id === blockId
           ? { ...block, content: newContent, ...(newProperties && { properties: { ...block.properties, ...newProperties } }) } as Block
           : block
       );
-      
+
       return { ...prev, blocks: newBlocks };
     });
   }, []);
@@ -149,9 +153,16 @@ export const RichEditor = forwardRef<RichEditorRef, RichEditorProps>(({
     if (onChange && isInitialized && isUserChangeRef.current) {
       const serialized = serializeBlocks(editorState.blocks);
       onChange(editorState.blocks, serialized);
+
+      // Push to history
+      history.pushHistory({
+        blocks: editorState.blocks,
+        focusedBlockId: editorState.focusedBlockId
+      });
+
       isUserChangeRef.current = false; // Reset flag
     }
-  }, [editorState.blocks, onChange, isInitialized]);
+  }, [editorState.blocks, editorState.focusedBlockId, onChange, isInitialized, history]);
 
   // Handle slash trigger detection
   const handleSlashTrigger = useCallback((blockId: string, position: number, query: string, element: HTMLElement) => {
@@ -173,33 +184,96 @@ export const RichEditor = forwardRef<RichEditorRef, RichEditorProps>(({
   }, [slashMenu]);
 
   // Handle Enter key to create new blocks
-  const handleEnterKey = useCallback((blockId: string, cursorPosition: number) => {
+  const handleEnterKey = useCallback((blockId: string, cursorPosition: number, isEmptyBlock: boolean, shiftKey: boolean = false) => {
     const blockIndex = editorState.blocks.findIndex(b => b.id === blockId);
     if (blockIndex === -1) return;
 
     const currentBlock = editorState.blocks[blockIndex];
-    const content = currentBlock.content;
-    
+    const content = currentBlock.content as string;
+
+    // If it's an empty block (double Enter scenario), convert to paragraph
+    if (isEmptyBlock && currentBlock.type !== 'paragraph' && currentBlock.type !== 'divider') {
+      const newBlocks = [...editorState.blocks];
+      const newBlock = createBlock('paragraph', '');
+      newBlocks[blockIndex] = newBlock;
+
+      isUserChangeRef.current = true;
+      setEditorState(prev => ({
+        ...prev,
+        blocks: newBlocks,
+        focusedBlockId: newBlock.id,
+      }));
+
+      setTimeout(() => {
+        const blockElement = blockRefs.current.get(newBlock.id);
+        if (blockElement) {
+          const input = blockElement.querySelector('input, textarea, [contenteditable]') as HTMLElement;
+          if (input) input.focus();
+        }
+      }, 10);
+      return;
+    }
+
     // Split content at cursor position
     const beforeCursor = content.substring(0, cursorPosition);
     const afterCursor = content.substring(cursorPosition);
-    
+
     const newBlocks = [...editorState.blocks];
-    
+
     // Update current block with content before cursor
     newBlocks[blockIndex] = { ...currentBlock, content: beforeCursor } as Block;
-    
-    // Create new block with content after cursor
-    const newBlock = createBlock('paragraph', afterCursor);
+
+    // Determine the type for the new block
+    let newBlockType: BlockType = 'paragraph';
+
+    // For code blocks with Shift+Enter, always create a paragraph
+    if (currentBlock.type === 'code' && shiftKey) {
+      newBlockType = 'paragraph';
+    } else {
+      // For these block types, create a new block of the same type
+      const continuousBlockTypes: BlockType[] = [
+        'bulletList', 'numberedList', 'todo', 'quote', 'callout', 'toggle'
+      ];
+
+      if (continuousBlockTypes.includes(currentBlock.type)) {
+        newBlockType = currentBlock.type;
+      }
+    }
+
+    // Create new block with content after cursor, preserving properties for certain types
+    let newBlock: Block;
+    if (newBlockType === currentBlock.type && currentBlock.properties) {
+      // Preserve certain properties (like language for code, color for callout)
+      const propertiesToCopy: Record<string, any> = {};
+      const props = currentBlock.properties as any;
+
+      if (newBlockType === 'code' && props.language) {
+        propertiesToCopy.language = props.language;
+      } else if (newBlockType === 'callout') {
+        propertiesToCopy.icon = props.icon || '💡';
+        propertiesToCopy.color = props.color || 'default';
+      } else if (newBlockType === 'todo') {
+        propertiesToCopy.checked = false; // Always start new todos unchecked
+      } else if (newBlockType === 'toggle') {
+        propertiesToCopy.open = false; // Always start new toggles closed
+      } else if ((newBlockType === 'bulletList' || newBlockType === 'numberedList') && props.level !== undefined) {
+        propertiesToCopy.level = props.level;
+      }
+
+      newBlock = createBlock(newBlockType, afterCursor, propertiesToCopy);
+    } else {
+      newBlock = createBlock(newBlockType, afterCursor);
+    }
+
     newBlocks.splice(blockIndex + 1, 0, newBlock);
-    
+
     isUserChangeRef.current = true; // Mark as user-initiated change
     setEditorState(prev => ({
       ...prev,
       blocks: newBlocks,
       focusedBlockId: newBlock.id,
     }));
-    
+
     // Focus new block
     setTimeout(() => {
       const blockElement = blockRefs.current.get(newBlock.id);
@@ -216,6 +290,36 @@ export const RichEditor = forwardRef<RichEditorRef, RichEditorProps>(({
     }, 10);
   }, [editorState.blocks]);
 
+  // Handle Escape key to exit block formatting
+  const handleEscapeKey = useCallback((blockId: string) => {
+    const blockIndex = editorState.blocks.findIndex(b => b.id === blockId);
+    if (blockIndex === -1) return;
+
+    const currentBlock = editorState.blocks[blockIndex];
+
+    // Convert non-paragraph blocks to paragraph
+    if (currentBlock.type !== 'paragraph') {
+      const newBlocks = [...editorState.blocks];
+      const newBlock = createBlock('paragraph', currentBlock.content as string);
+      newBlocks[blockIndex] = newBlock;
+
+      isUserChangeRef.current = true;
+      setEditorState(prev => ({
+        ...prev,
+        blocks: newBlocks,
+        focusedBlockId: newBlock.id,
+      }));
+
+      setTimeout(() => {
+        const blockElement = blockRefs.current.get(newBlock.id);
+        if (blockElement) {
+          const input = blockElement.querySelector('input, textarea, [contenteditable]') as HTMLElement;
+          if (input) input.focus();
+        }
+      }, 10);
+    }
+  }, [editorState.blocks]);
+
   // Handle backspace at beginning of block
   const handleBackspaceAtStart = useCallback((blockId: string) => {
     const blockIndex = editorState.blocks.findIndex(b => b.id === blockId);
@@ -224,11 +328,11 @@ export const RichEditor = forwardRef<RichEditorRef, RichEditorProps>(({
     const newBlocks = [...editorState.blocks];
     const currentBlock = newBlocks[blockIndex];
     const previousBlock = newBlocks[blockIndex - 1];
-    
+
     // Merge content into previous block
-    const mergedContent = previousBlock.content + currentBlock.content;
-    const cursorPosition = previousBlock.content.length;
-    
+    const mergedContent = (previousBlock.content as string) + (currentBlock.content as string);
+    const cursorPosition = (previousBlock.content as string).length;
+
     newBlocks[blockIndex - 1] = { ...previousBlock, content: mergedContent } as Block;
     newBlocks.splice(blockIndex, 1);
     
@@ -266,9 +370,211 @@ export const RichEditor = forwardRef<RichEditorRef, RichEditorProps>(({
     if (onBlur) onBlur();
   }, [onBlur]);
 
+  // Handle markdown transformation
+  const handleMarkdownTransform = useCallback((blockId: string, newType: BlockType, newContent: string, cursorPosition: number) => {
+    const blockIndex = editorState.blocks.findIndex(b => b.id === blockId);
+    if (blockIndex === -1) return;
+
+    const newBlocks = [...editorState.blocks];
+    const currentBlock = newBlocks[blockIndex];
+
+    // Create new block with transformed type
+    const newBlock = createBlock(newType, newContent, currentBlock.properties);
+    newBlocks[blockIndex] = newBlock;
+
+    isUserChangeRef.current = true;
+    setEditorState(prev => ({
+      ...prev,
+      blocks: newBlocks,
+      focusedBlockId: newBlock.id,
+    }));
+
+    // Focus and set cursor position
+    setTimeout(() => {
+      const blockElement = blockRefs.current.get(newBlock.id);
+      if (blockElement) {
+        const input = blockElement.querySelector('input, textarea, [contenteditable]') as HTMLElement;
+        if (input) {
+          input.focus();
+          if (input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement) {
+            input.setSelectionRange(cursorPosition, cursorPosition);
+          }
+        }
+      }
+    }, 10);
+  }, [editorState.blocks]);
+
+  // Handle undo
+  const handleUndo = useCallback(() => {
+    const previousState = history.undo();
+    if (previousState) {
+      setEditorState({
+        blocks: previousState.blocks,
+        focusedBlockId: previousState.focusedBlockId
+      });
+    }
+  }, [history]);
+
+  // Handle redo
+  const handleRedo = useCallback(() => {
+    const nextState = history.redo();
+    if (nextState) {
+      setEditorState({
+        blocks: nextState.blocks,
+        focusedBlockId: nextState.focusedBlockId
+      });
+    }
+  }, [history]);
+
+  // Handle duplicate block
+  const handleDuplicateBlock = useCallback((blockId: string) => {
+    const blockIndex = editorState.blocks.findIndex(b => b.id === blockId);
+    if (blockIndex === -1) return;
+
+    const blockToDuplicate = editorState.blocks[blockIndex];
+
+    // Create a new block with the same type, content, and properties
+    const newBlock = createBlock(
+      blockToDuplicate.type,
+      blockToDuplicate.content as string,
+      blockToDuplicate.properties
+    );
+
+    const newBlocks = [...editorState.blocks];
+    newBlocks.splice(blockIndex + 1, 0, newBlock);
+
+    isUserChangeRef.current = true;
+    setEditorState(prev => ({
+      ...prev,
+      blocks: newBlocks,
+      focusedBlockId: newBlock.id,
+    }));
+
+    // Focus the new duplicated block
+    setTimeout(() => {
+      const blockElement = blockRefs.current.get(newBlock.id);
+      if (blockElement) {
+        const input = blockElement.querySelector('input, textarea, [contenteditable]') as HTMLElement;
+        if (input) input.focus();
+      }
+    }, 10);
+  }, [editorState.blocks]);
+
+  // Handle delete block
+  const handleDeleteBlock = useCallback((blockId: string) => {
+    // Don't allow deleting the last block
+    if (editorState.blocks.length <= 1) return;
+
+    const blockIndex = editorState.blocks.findIndex(b => b.id === blockId);
+    if (blockIndex === -1) return;
+
+    const newBlocks = [...editorState.blocks];
+    newBlocks.splice(blockIndex, 1);
+
+    // Determine which block to focus after deletion
+    const nextFocusIndex = blockIndex < newBlocks.length ? blockIndex : blockIndex - 1;
+    const nextFocusBlock = newBlocks[nextFocusIndex];
+
+    isUserChangeRef.current = true;
+    setEditorState(prev => ({
+      ...prev,
+      blocks: newBlocks,
+      focusedBlockId: nextFocusBlock.id,
+    }));
+
+    // Focus the next block
+    setTimeout(() => {
+      const blockElement = blockRefs.current.get(nextFocusBlock.id);
+      if (blockElement) {
+        const input = blockElement.querySelector('input, textarea, [contenteditable]') as HTMLElement;
+        if (input) input.focus();
+      }
+    }, 10);
+  }, [editorState.blocks]);
+
+  // Handle transform block
+  const handleTransformBlock = useCallback((blockId: string, newType: BlockType) => {
+    const blockIndex = editorState.blocks.findIndex(b => b.id === blockId);
+    if (blockIndex === -1) return;
+
+    const currentBlock = editorState.blocks[blockIndex];
+
+    // Create new block with transformed type
+    // Preserve content but reset properties to defaults for the new type
+    const newBlock = createBlock(newType, currentBlock.content as string);
+
+    const newBlocks = [...editorState.blocks];
+    newBlocks[blockIndex] = newBlock;
+
+    isUserChangeRef.current = true;
+    setEditorState(prev => ({
+      ...prev,
+      blocks: newBlocks,
+      focusedBlockId: newBlock.id,
+    }));
+
+    // Focus the transformed block
+    setTimeout(() => {
+      const blockElement = blockRefs.current.get(newBlock.id);
+      if (blockElement) {
+        const input = blockElement.querySelector('input, textarea, [contenteditable]') as HTMLElement;
+        if (input) input.focus();
+      }
+    }, 10);
+  }, [editorState.blocks]);
+
+  // Handle move block
+  const handleMoveBlock = useCallback((blockId: string, direction: 'up' | 'down') => {
+    const blockIndex = editorState.blocks.findIndex(b => b.id === blockId);
+    if (blockIndex === -1) return;
+
+    // Check if move is valid
+    if (direction === 'up' && blockIndex === 0) return;
+    if (direction === 'down' && blockIndex === editorState.blocks.length - 1) return;
+
+    const newBlocks = [...editorState.blocks];
+    const targetIndex = direction === 'up' ? blockIndex - 1 : blockIndex + 1;
+
+    // Swap blocks
+    [newBlocks[blockIndex], newBlocks[targetIndex]] = [newBlocks[targetIndex], newBlocks[blockIndex]];
+
+    isUserChangeRef.current = true;
+    setEditorState(prev => ({
+      ...prev,
+      blocks: newBlocks,
+      focusedBlockId: blockId, // Keep focus on the same block
+    }));
+
+    // Keep focus on the moved block
+    setTimeout(() => {
+      const blockElement = blockRefs.current.get(blockId);
+      if (blockElement) {
+        const input = blockElement.querySelector('input, textarea, [contenteditable]') as HTMLElement;
+        if (input) input.focus();
+      }
+    }, 10);
+  }, [editorState.blocks]);
+
   // Global keyboard handling
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Handle undo/redo
+      if ((event.metaKey || event.ctrlKey) && event.key === 'z') {
+        event.preventDefault();
+        if (event.shiftKey) {
+          handleRedo();
+        } else {
+          handleUndo();
+        }
+        return;
+      }
+
+      if ((event.metaKey || event.ctrlKey) && event.key === 'y') {
+        event.preventDefault();
+        handleRedo();
+        return;
+      }
+
       if (slashMenu.handleKeyDown(event)) {
         return; // Slash menu handled the event
       }
@@ -276,7 +582,7 @@ export const RichEditor = forwardRef<RichEditorRef, RichEditorProps>(({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [slashMenu]);
+  }, [slashMenu, handleUndo, handleRedo]);
 
   // Expose editor methods through ref
   useImperativeHandle(ref, () => ({
@@ -325,14 +631,30 @@ export const RichEditor = forwardRef<RichEditorRef, RichEditorProps>(({
           key={block.id}
           block={block}
           isFocused={editorState.focusedBlockId === block.id}
-          placeholder={index === 0 && block.content === '' ? placeholder : undefined}
+          placeholder={
+            block.content === '' && editorState.focusedBlockId === block.id
+              ? placeholder
+              : undefined
+          }
           onChange={(content, properties) => handleBlockChange(block.id, content, properties)}
           onFocus={() => handleBlockFocus(block.id)}
           onBlur={handleBlockBlur}
-          onEnterKey={(cursorPosition) => handleEnterKey(block.id, cursorPosition)}
+          onEnterKey={(cursorPosition, isEmptyBlock, shiftKey) => handleEnterKey(block.id, cursorPosition, isEmptyBlock, shiftKey)}
+          onEscapeKey={() => handleEscapeKey(block.id)}
           onBackspaceAtStart={() => handleBackspaceAtStart(block.id)}
           onSlashTrigger={(position, query, element) => handleSlashTrigger(block.id, position, query, element)}
           onClearSlashTrigger={handleClearSlashTrigger}
+          onMarkdownTransform={(newType, newContent, cursorPosition) => handleMarkdownTransform(block.id, newType, newContent, cursorPosition)}
+          onDuplicate={() => handleDuplicateBlock(block.id)}
+          onDelete={() => handleDeleteBlock(block.id)}
+          onTransform={(newType) => handleTransformBlock(block.id, newType)}
+          onMoveUp={() => handleMoveBlock(block.id, 'up')}
+          onMoveDown={() => handleMoveBlock(block.id, 'down')}
+          canMoveUp={index > 0}
+          canMoveDown={index < editorState.blocks.length - 1}
+          canDelete={editorState.blocks.length > 1}
+          allBlocks={editorState.blocks}
+          blockIndex={index}
           ref={(el) => {
             if (el) {
               blockRefs.current.set(block.id, el);
@@ -344,10 +666,10 @@ export const RichEditor = forwardRef<RichEditorRef, RichEditorProps>(({
       ))}
       
       {/* Slash Menu */}
-      <SlashMenu 
+      <SlashMenu
         state={slashMenu.state}
         menuRef={slashMenu.menuRef as React.RefObject<HTMLDivElement>}
-        onSelectCommand={(command, index) => slashMenu.selectCommand(index)}
+        onSelectCommand={(_command, index) => slashMenu.selectCommand(index)}
       />
     </div>
   );

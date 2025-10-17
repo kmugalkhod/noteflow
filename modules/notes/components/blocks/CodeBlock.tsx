@@ -9,6 +9,7 @@ interface CodeBlockProps {
   isFocused: boolean;
   onChange: (content: string, element?: HTMLElement) => void;
   onPropertyChange?: (properties: Record<string, any>) => void;
+  onKeyDown?: (e: React.KeyboardEvent) => void;
   onFocus: () => void;
   onBlur: () => void;
 }
@@ -20,6 +21,7 @@ export const CodeBlock = ({
   isFocused, 
   onChange, 
   onPropertyChange,
+  onKeyDown,
   onFocus, 
   onBlur 
 }: CodeBlockProps) => {
@@ -50,28 +52,29 @@ export const CodeBlock = ({
   };
 
   return (
-    <div className="bg-muted/50 rounded-md border">
+    <div className="bg-muted/40 rounded-md border border-border/50 my-1">
       {/* Language selector */}
-      <div className="px-3 py-2 border-b border-border/50 bg-muted/30">
+      <div className="px-3 py-1.5 border-b border-border/30 bg-muted/20">
         <input
           type="text"
           value={language}
           onChange={(e) => handleLanguageChange(e.target.value)}
           placeholder="Language"
-          className="text-xs bg-transparent border-none outline-none text-muted-foreground w-20"
+          className="text-xs bg-transparent border-none outline-none text-muted-foreground/70 w-20 font-medium"
         />
       </div>
-      
+
       {/* Code content */}
       <div className="p-3">
         <textarea
           ref={textareaRef}
           value={content}
           onChange={(e) => onChange(e.target.value, e.target)}
+          onKeyDown={onKeyDown}
           onFocus={onFocus}
           onBlur={onBlur}
           placeholder={codePlaceholder}
-          className="w-full min-h-[100px] text-sm font-mono leading-6 border-none outline-none bg-transparent placeholder:text-muted-foreground/50 resize-none overflow-hidden"
+          className="w-full min-h-[100px] text-[13px] font-mono leading-[1.5] border-none outline-none bg-transparent placeholder:text-muted-foreground/40 resize-none overflow-hidden"
         />
       </div>
     </div>

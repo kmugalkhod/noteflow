@@ -12,14 +12,14 @@ interface TextBlockProps {
   onBlur: () => void;
 }
 
-export const TextBlock = ({ 
-  content, 
-  placeholder, 
-  isFocused, 
-  onChange, 
+export const TextBlock = ({
+  content,
+  placeholder,
+  isFocused,
+  onChange,
   onKeyDown,
-  onFocus, 
-  onBlur 
+  onFocus,
+  onBlur,
 }: TextBlockProps) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -47,8 +47,8 @@ export const TextBlock = ({
       onKeyDown={onKeyDown}
       onFocus={onFocus}
       onBlur={onBlur}
-      placeholder={placeholder || "Type '/' for commands"}
-      className="w-full text-base leading-7 border-none outline-none bg-transparent placeholder:text-muted-foreground/50 py-1 resize-none overflow-hidden min-h-[28px]"
+      placeholder={placeholder}
+      className="w-full text-base leading-[1.6] border-none outline-none bg-transparent placeholder:text-muted-foreground/40 py-[3px] px-2 resize-none overflow-hidden min-h-[32px]"
       rows={1}
     />
   );
