@@ -32,10 +32,11 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
   const [content, setContent] = useState("");
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [tags, setTags] = useState<string[]>([]);
-  const [isRichMode, setIsRichMode] = useState(false);
+  const [isRichMode, setIsRichMode] = useState(true); // Default to rich mode
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const richEditorRef = useRef<RichEditorRef>(null);
   const debouncedTitle = useDebounce(title, 500);
@@ -49,29 +50,35 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
     setContent("");
     setBlocks([]);
     setTags([]);
-    setIsRichMode(false);
+    setIsRichMode(true); // Default to rich mode
     setLastSaved(null);
   }, [noteId]);
+
+  // Check if note exists after loading
+  useEffect(() => {
+    if (note !== undefined) {
+      setIsLoading(false);
+    }
+  }, [note]);
 
   // Initialize from Convex data ONLY ONCE per note
   useEffect(() => {
     if (note && !isInitialized) {
       setTitle(note.title);
       setContent(note.content);
-      
-      // Determine if this is rich content or plain text
-      const isRich = note.contentType === "rich" || Boolean(note.blocks);
-      setIsRichMode(isRich);
-      
-      if (isRich && note.blocks) {
-        // Load rich content
+
+      // Always use rich mode, but load content appropriately
+      setIsRichMode(true);
+
+      if (note.blocks && note.contentType === "rich") {
+        // Load existing rich content
         const deserializedBlocks = deserializeBlocks(note.blocks);
         setBlocks(deserializedBlocks.length > 0 ? deserializedBlocks : textToBlocks(note.content));
       } else {
-        // Load plain text content
-        setBlocks(textToBlocks(note.content));
+        // Convert plain text to rich blocks
+        setBlocks(textToBlocks(note.content || ""));
       }
-      
+
       setIsInitialized(true);
     }
   }, [note, isInitialized]);
@@ -144,7 +151,8 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
     }
   };
 
-  if (!note) {
+  // Show loader while fetching
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
         <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
@@ -152,95 +160,62 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
     );
   }
 
-  return (
-    <div className="h-full flex flex-col">
-      {/* Header with folder selector and save status */}
-      <div className="p-4 border-b border-border space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <FolderSelector
-              value={note.folderId}
-              onChange={(folderId) => {
-                console.log("Updating note folder:", { noteId, folderId, currentFolderId: note.folderId });
-                updateNote({ noteId, folderId });
-              }}
-            />
-            
-            {/* Editor Mode Toggle */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={toggleEditorMode}
-              className="flex items-center gap-2"
-            >
-              {isRichMode ? (
-                <>
-                  <Sparkles className="w-4 h-4" />
-                  Rich
-                </>
-              ) : (
-                <>
-                  <FileText className="w-4 h-4" />
-                  Plain
-                </>
-              )}
-            </Button>
-          </div>
-          
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            {isSaving ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Saving...</span>
-              </>
-            ) : lastSaved ? (
-              <>
-                <Check className="w-4 h-4 text-green-600" />
-                <span>Saved</span>
-              </>
-            ) : null}
-          </div>
-        </div>
-        
-        {/* Tags Section */}
-        <div>
-          <label className="text-sm font-medium text-foreground mb-2 block">
-            Tags
-          </label>
-          <TagInput
-            noteId={noteId}
-            selectedTags={tags}
-            onTagsChange={setTags}
-          />
+  // Show error state if note doesn't exist
+  if (!note) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full bg-editor-bg px-6">
+        <div className="text-center max-w-md">
+          <FileText className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
+          <h2 className="text-2xl font-semibold mb-2">Note Not Found</h2>
+          <p className="text-muted-foreground mb-6">
+            This note doesn't exist or has been deleted. Please select another note from the list or create a new one.
+          </p>
         </div>
       </div>
+    );
+  }
 
-      {/* Editor */}
-      <div className="flex-1 overflow-auto px-12 py-10 max-w-5xl mx-auto w-full">
+  return (
+    <div className="h-full flex flex-col bg-editor-bg">
+      {/* Minimal Editor - Apple Notes Style with Rich Editing */}
+      <div className="flex-1 overflow-auto px-16 py-12 max-w-4xl mx-auto w-full">
         <Input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Untitled"
-          className="text-5xl font-bold border-none focus-visible:ring-0 px-0 mb-8 placeholder:text-muted-foreground/30 h-auto"
+          className="text-4xl font-bold border-none focus-visible:ring-0 px-0 mb-6 placeholder:text-muted-foreground/40 h-auto bg-transparent"
         />
 
-        {isRichMode ? (
+        {isInitialized && isRichMode ? (
           <RichEditor
+            key={noteId} // Force remount on note change
             ref={richEditorRef}
             initialContent={serializeBlocks(blocks)}
             placeholder="Type '/' for commands or just start writing..."
             onChange={handleRichEditorChange}
-            className="min-h-[calc(100vh-20rem)]"
+            className="min-h-[calc(100vh-12rem)]"
           />
+        ) : !isInitialized ? (
+          <div className="flex items-center justify-center min-h-[200px]">
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+          </div>
         ) : (
           <textarea
             value={content}
             onChange={(e) => handlePlainTextChange(e.target.value)}
             placeholder="Start writing..."
-            className="w-full min-h-[calc(100vh-20rem)] text-base leading-relaxed border-none outline-none bg-transparent placeholder:text-muted-foreground/30 resize-none"
+            className="w-full min-h-[calc(100vh-12rem)] text-base leading-relaxed border-none outline-none bg-transparent placeholder:text-muted-foreground/40 resize-none font-[inherit]"
           />
         )}
       </div>
+
+      {/* Auto-save indicator (minimal, bottom-right corner) */}
+      {isSaving && (
+        <div className="fixed bottom-4 right-4 flex items-center gap-2 text-xs text-muted-foreground bg-background/80 backdrop-blur-sm px-3 py-1.5 rounded-full border border-border">
+          <Loader2 className="w-3 h-3 animate-spin" />
+          <span>Saving...</span>
+        </div>
+      )}
     </div>
   );
 }

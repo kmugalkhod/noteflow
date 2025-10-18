@@ -186,3 +186,86 @@ export const togglePin = mutation({
     });
   },
 });
+
+// Toggle favorite status
+export const toggleFavorite = mutation({
+  args: { noteId: v.id("notes") },
+  handler: async (ctx, { noteId }) => {
+    const note = await ctx.db.get(noteId);
+    if (!note) throw new Error("Note not found");
+
+    await ctx.db.patch(noteId, {
+      isFavorite: !note.isFavorite,
+      updatedAt: Date.now(),
+    });
+  },
+});
+
+// Get favorite notes for a user
+export const getFavoriteNotes = query({
+  args: { userId: v.id("users") },
+  handler: async (ctx, { userId }) => {
+    const notes = await ctx.db
+      .query("notes")
+      .withIndex("by_user_favorite", (q) =>
+        q.eq("userId", userId).eq("isFavorite", true)
+      )
+      .collect();
+
+    // Filter out deleted notes and sort by updated date
+    return notes
+      .filter((note) => !note.isDeleted)
+      .sort((a, b) => b.updatedAt - a.updatedAt);
+  },
+});
+
+// Move note to different folder
+export const moveNoteToFolder = mutation({
+  args: {
+    noteId: v.id("notes"),
+    folderId: v.optional(v.union(v.id("folders"), v.null())),
+  },
+  handler: async (ctx, { noteId, folderId }) => {
+    await ctx.db.patch(noteId, {
+      folderId: folderId === null ? undefined : folderId,
+      updatedAt: Date.now(),
+    });
+  },
+});
+
+// Reorder notes by updating position
+export const reorderNotes = mutation({
+  args: {
+    updates: v.array(
+      v.object({
+        noteId: v.id("notes"),
+        position: v.number(),
+      })
+    ),
+  },
+  handler: async (ctx, { updates }) => {
+    for (const update of updates) {
+      await ctx.db.patch(update.noteId, {
+        position: update.position,
+        updatedAt: Date.now(),
+      });
+    }
+  },
+});
+
+// Get recent notes (last 10 updated)
+export const getRecentNotes = query({
+  args: { userId: v.id("users"), limit: v.optional(v.number()) },
+  handler: async (ctx, { userId, limit = 10 }) => {
+    const notes = await ctx.db
+      .query("notes")
+      .withIndex("by_user_not_deleted", (q) =>
+        q.eq("userId", userId).eq("isDeleted", false)
+      )
+      .collect();
+
+    return notes
+      .sort((a, b) => b.updatedAt - a.updatedAt)
+      .slice(0, limit);
+  },
+});

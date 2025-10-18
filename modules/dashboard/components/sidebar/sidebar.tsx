@@ -1,10 +1,11 @@
 "use client";
 
+import { useRef } from "react";
 import { Home, FileText, Users, PenTool } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { FolderList } from "../folder-list";
+import { FolderTree, type FolderTreeRef } from "../folder-tree";
 import { WritingStats } from "../writing-stats";
 import { UserMenu } from "../user-menu";
 import { CreateFolderButton } from "@/modules/folders/components";
@@ -30,6 +31,7 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
   const router = useRouter();
   const convexUser = useConvexUser();
   const createNote = useMutation(api.notes.createNote);
+  const folderTreeRef = useRef<FolderTreeRef>(null);
 
   const handleNewStory = async () => {
     if (!convexUser) return;
@@ -45,6 +47,10 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
     } catch (error) {
       console.error("Failed to create note:", error);
     }
+  };
+
+  const handleNewFolder = () => {
+    folderTreeRef.current?.startCreatingFolder();
   };
 
   return (
@@ -107,9 +113,9 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
               Folders
             </h3>
           </div>
-          <FolderList />
+          <FolderTree ref={folderTreeRef} />
           <div className="mt-2">
-            <CreateFolderButton />
+            <CreateFolderButton onClick={handleNewFolder} />
           </div>
         </div>
       </nav>
