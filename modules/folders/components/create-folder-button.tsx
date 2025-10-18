@@ -97,13 +97,19 @@ export function CreateFolderButton() {
                   <button
                     key={color}
                     type="button"
-                    onClick={() => setSelectedColor(color)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedColor(color);
+                    }}
                     className={`w-8 h-8 rounded-full border-2 transition-all ${
                       selectedColor === color
                         ? "border-foreground scale-110"
                         : "border-transparent hover:scale-105"
                     }`}
-                    style={{ backgroundColor: color }}
+                    style={{
+                      backgroundColor: color,
+                      isolation: 'isolate'
+                    }}
                   />
                 ))}
               </div>

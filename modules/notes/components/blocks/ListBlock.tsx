@@ -17,6 +17,7 @@ interface ListBlockProps {
   onBlur: () => void;
   onSelect?: (start: number, end: number) => void;
   listNumber?: number;
+  fontSize?: 'small' | 'normal' | 'large';
 }
 
 export const ListBlock = ({
@@ -30,7 +31,8 @@ export const ListBlock = ({
   onFocus,
   onBlur,
   onSelect,
-  listNumber = 1
+  listNumber = 1,
+  fontSize = 'normal'
 }: ListBlockProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const isFormatted = typeof content !== 'string';
@@ -41,6 +43,20 @@ export const ListBlock = ({
 
   const listMarker = listType === 'bullet' ? '•' : `${listNumber}.`;
   const listPlaceholder = placeholder || 'List item';
+
+  // Get font size class
+  const getFontSizeClass = () => {
+    switch (fontSize) {
+      case 'small':
+        return 'text-sm leading-normal';
+      case 'large':
+        return 'text-lg leading-relaxed';
+      default:
+        return 'text-base leading-[1.6]';
+    }
+  };
+
+  const fontSizeClass = getFontSizeClass();
 
   // Auto-focus when isFocused changes
   useEffect(() => {
@@ -62,13 +78,13 @@ export const ListBlock = ({
   if (isFormatted) {
     return (
       <div className="flex items-start gap-2 py-[3px] px-2" style={{ paddingLeft: `${paddingLeft + 8}px` }}>
-        <span className="text-muted-foreground mt-[3px] flex-shrink-0 w-5 text-center text-sm">
+        <span className={`text-foreground/60 mt-[3px] flex-shrink-0 w-5 text-center ${fontSize === 'small' ? 'text-xs' : fontSize === 'large' ? 'text-base' : 'text-sm'}`}>
           {listMarker}
         </span>
         <div className="relative flex-1">
           {/* Formatted preview layer (visible) */}
           <div
-            className="absolute inset-0 pointer-events-none text-base leading-[1.6] z-10"
+            className={`absolute inset-0 pointer-events-none ${fontSizeClass} z-10`}
             aria-hidden="true"
           >
             <FormattedText content={content} />
@@ -87,7 +103,7 @@ export const ListBlock = ({
             onMouseUp={handleSelect}
             onKeyUp={handleSelect}
             placeholder={listPlaceholder}
-            className="relative w-full text-base leading-[1.6] border-none outline-none bg-transparent placeholder:text-muted-foreground/40"
+            className={`relative w-full ${fontSizeClass} border-none outline-none bg-transparent placeholder:text-muted-foreground/40`}
             style={{
               color: 'transparent',
               caretColor: 'currentColor',
@@ -102,7 +118,7 @@ export const ListBlock = ({
 
   return (
     <div className="flex items-start gap-2 py-[3px] px-2" style={{ paddingLeft: `${paddingLeft + 8}px` }}>
-      <span className="text-muted-foreground mt-[3px] flex-shrink-0 w-5 text-center text-sm">
+      <span className={`text-foreground/60 mt-[3px] flex-shrink-0 w-5 text-center ${fontSize === 'small' ? 'text-xs' : fontSize === 'large' ? 'text-base' : 'text-sm'}`}>
         {listMarker}
       </span>
       <input
@@ -117,7 +133,7 @@ export const ListBlock = ({
         onMouseUp={handleSelect}
         onKeyUp={handleSelect}
         placeholder={listPlaceholder}
-        className="flex-1 text-base leading-[1.6] border-none outline-none bg-transparent placeholder:text-muted-foreground/40"
+        className={`flex-1 ${fontSizeClass} border-none outline-none bg-transparent placeholder:text-muted-foreground/40`}
         autoFocus={isFocused}
       />
     </div>

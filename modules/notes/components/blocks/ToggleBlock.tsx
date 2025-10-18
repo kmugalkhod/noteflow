@@ -18,6 +18,7 @@ interface ToggleBlockProps {
   onBlur: () => void;
   onSelect?: (start: number, end: number) => void;
   children?: React.ReactNode; // For rendering nested blocks
+  fontSize?: 'small' | 'normal' | 'large';
 }
 
 export const ToggleBlock = ({
@@ -31,13 +32,28 @@ export const ToggleBlock = ({
   onFocus,
   onBlur,
   onSelect,
-  children
+  children,
+  fontSize = 'normal'
 }: ToggleBlockProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const isFormatted = typeof content !== 'string';
   const textContent = isFormatted ? segmentsToString(content) : content;
   const isOpen = properties.open || false;
   const togglePlaceholder = placeholder || 'Toggle';
+
+  // Get font size class
+  const getFontSizeClass = () => {
+    switch (fontSize) {
+      case 'small':
+        return 'text-sm leading-normal';
+      case 'large':
+        return 'text-lg leading-relaxed';
+      default:
+        return 'text-base leading-[1.6]';
+    }
+  };
+
+  const fontSizeClass = getFontSizeClass();
 
   const handleToggle = () => {
     if (onPropertyChange) {
@@ -80,7 +96,7 @@ export const ToggleBlock = ({
           <div className="relative flex-1">
             {/* Formatted preview layer (visible) */}
             <div
-              className="absolute inset-0 pointer-events-none text-base leading-[1.6] font-medium z-10"
+              className={`absolute inset-0 pointer-events-none ${fontSizeClass} font-medium z-10`}
               aria-hidden="true"
             >
               <FormattedText content={content} />
@@ -99,7 +115,7 @@ export const ToggleBlock = ({
               onMouseUp={handleSelect}
               onKeyUp={handleSelect}
               placeholder={togglePlaceholder}
-              className="relative w-full text-base leading-[1.6] font-medium border-none outline-none bg-transparent placeholder:text-muted-foreground/40"
+              className={`relative w-full ${fontSizeClass} font-medium border-none outline-none bg-transparent placeholder:text-muted-foreground/40`}
               style={{
                 color: 'transparent',
                 caretColor: 'currentColor',
@@ -149,7 +165,7 @@ export const ToggleBlock = ({
           onMouseUp={handleSelect}
           onKeyUp={handleSelect}
           placeholder={togglePlaceholder}
-          className="flex-1 text-base leading-[1.6] font-medium border-none outline-none bg-transparent placeholder:text-muted-foreground/40"
+          className={`flex-1 ${fontSizeClass} font-medium border-none outline-none bg-transparent placeholder:text-muted-foreground/40`}
           autoFocus={isFocused}
         />
       </div>

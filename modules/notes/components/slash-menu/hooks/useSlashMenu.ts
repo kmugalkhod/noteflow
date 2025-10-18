@@ -35,37 +35,72 @@ export const useSlashMenu = ({ onSelectCommand, onClose }: UseSlashMenuProps) =>
     }));
   }, [state.query]);
 
-  // Calculate menu position based on cursor/caret position
+  // Calculate menu position based on cursor/caret position with viewport awareness
   const calculatePosition = useCallback((element: HTMLElement, caretOffset: number): { x: number; y: number } => {
     const elementRect = element.getBoundingClientRect();
     const style = window.getComputedStyle(element);
     const fontSize = parseFloat(style.fontSize);
     const lineHeight = parseFloat(style.lineHeight) || fontSize * 1.2;
-    
+
     // Create a temporary element to measure text width
     const measureEl = document.createElement('span');
     measureEl.style.font = style.font;
     measureEl.style.position = 'absolute';
     measureEl.style.visibility = 'hidden';
     measureEl.style.whiteSpace = 'pre';
-    
+
     // Get text before caret
     const textBeforeCaret = element.textContent?.substring(0, caretOffset) || '';
     const lines = textBeforeCaret.split('\n');
     const currentLine = lines[lines.length - 1];
-    
+
     measureEl.textContent = currentLine;
     document.body.appendChild(measureEl);
     const textWidth = measureEl.getBoundingClientRect().width;
     document.body.removeChild(measureEl);
-    
+
     const lineNumber = lines.length - 1;
     const paddingLeft = parseFloat(style.paddingLeft) || 0;
     const paddingTop = parseFloat(style.paddingTop) || 0;
-    
+
+    // Calculate base position
+    const baseX = elementRect.left + paddingLeft + textWidth;
+    const cursorY = elementRect.top + paddingTop + (lineNumber * lineHeight);
+    const baseY = cursorY + lineHeight; // Position below cursor by default
+
+    // Viewport-aware positioning
+    const MENU_MAX_HEIGHT = 384; // max-h-96 in pixels
+    const BUFFER = 50; // Extra space for comfort
+    const requiredSpace = MENU_MAX_HEIGHT + BUFFER;
+    const viewportHeight = window.innerHeight;
+
+    // Check available space below cursor
+    const spaceBelow = viewportHeight - baseY;
+
+    // Check available space above cursor
+    const spaceAbove = cursorY;
+
+    let finalY = baseY;
+
+    // If not enough space below but enough above, position menu above cursor
+    if (spaceBelow < requiredSpace && spaceAbove >= requiredSpace) {
+      finalY = cursorY - MENU_MAX_HEIGHT;
+    }
+    // If not enough space either way, position at best available spot
+    else if (spaceBelow < requiredSpace && spaceAbove < requiredSpace) {
+      // Use the side with more space
+      if (spaceAbove > spaceBelow) {
+        // Position at top of viewport with padding
+        finalY = Math.max(20, cursorY - MENU_MAX_HEIGHT);
+      } else {
+        // Position to fit in remaining space at bottom
+        finalY = Math.max(20, Math.min(baseY, viewportHeight - MENU_MAX_HEIGHT - 20));
+      }
+    }
+
     return {
-      x: elementRect.left + paddingLeft + textWidth,
-      y: elementRect.top + paddingTop + (lineNumber * lineHeight) + lineHeight,
+      x: baseX,
+      y: finalY,
     };
   }, []);
 

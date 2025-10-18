@@ -15,6 +15,7 @@ interface CodeBlockProps {
   onFocus: () => void;
   onBlur: () => void;
   onSelect?: (start: number, end: number) => void;
+  fontSize?: 'small' | 'normal' | 'large';
 }
 
 export const CodeBlock = ({
@@ -27,12 +28,27 @@ export const CodeBlock = ({
   onKeyDown,
   onFocus,
   onBlur,
-  onSelect
+  onSelect,
+  fontSize = 'normal'
 }: CodeBlockProps) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const textContent = typeof content === 'string' ? content : segmentsToString(content);
   const language = properties.language || 'text';
   const codePlaceholder = placeholder || 'Enter code...';
+
+  // Get font size class for code
+  const getFontSizeClass = () => {
+    switch (fontSize) {
+      case 'small':
+        return 'text-xs';
+      case 'large':
+        return 'text-sm';
+      default:
+        return 'text-[13px]';
+    }
+  };
+
+  const fontSizeClass = getFontSizeClass();
 
   // Handle selection changes
   const handleSelect = () => {
@@ -91,7 +107,7 @@ export const CodeBlock = ({
           onMouseUp={handleSelect}
           onKeyUp={handleSelect}
           placeholder={codePlaceholder}
-          className="w-full min-h-[100px] text-[13px] font-mono leading-[1.5] border-none outline-none bg-transparent placeholder:text-muted-foreground/40 resize-none overflow-hidden"
+          className={`w-full min-h-[100px] ${fontSizeClass} font-mono leading-[1.5] border-none outline-none bg-transparent placeholder:text-muted-foreground/40 resize-none overflow-hidden`}
         />
       </div>
     </div>

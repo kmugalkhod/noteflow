@@ -216,28 +216,28 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
       </div>
 
       {/* Editor */}
-      <div className="flex-1 overflow-auto p-8 max-w-4xl mx-auto w-full">
+      <div className="flex-1 overflow-auto px-12 py-10 max-w-5xl mx-auto w-full">
         <Input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Untitled"
-          className="text-4xl font-bold border-none focus-visible:ring-0 px-0 mb-6 placeholder:text-muted-foreground/50"
+          className="text-5xl font-bold border-none focus-visible:ring-0 px-0 mb-8 placeholder:text-muted-foreground/30 h-auto"
         />
 
         {isRichMode ? (
           <RichEditor
             ref={richEditorRef}
             initialContent={serializeBlocks(blocks)}
-            placeholder="Type '/' for commands"
+            placeholder="Type '/' for commands or just start writing..."
             onChange={handleRichEditorChange}
-            className="min-h-[calc(100vh-18rem)]"
+            className="min-h-[calc(100vh-20rem)]"
           />
         ) : (
           <textarea
             value={content}
             onChange={(e) => handlePlainTextChange(e.target.value)}
             placeholder="Start writing..."
-            className="w-full min-h-[calc(100vh-18rem)] text-lg border-none outline-none bg-transparent placeholder:text-muted-foreground/50 resize-none"
+            className="w-full min-h-[calc(100vh-20rem)] text-base leading-relaxed border-none outline-none bg-transparent placeholder:text-muted-foreground/30 resize-none"
           />
         )}
       </div>
