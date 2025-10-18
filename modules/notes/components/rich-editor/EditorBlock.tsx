@@ -15,6 +15,7 @@ import { ImageBlock } from '../blocks/ImageBlock';
 import { TableBlock } from '../blocks/TableBlock';
 import { detectMarkdownOnSpace } from '../../utils/markdownShortcuts';
 import { BlockActionsMenu } from './BlockActionsMenu';
+import { segmentsToString } from '../../utils/textFormatting';
 
 export interface EditorBlockProps {
   block: Block;
@@ -29,6 +30,7 @@ export interface EditorBlockProps {
   onSlashTrigger: (position: number, query: string, element: HTMLElement) => void;
   onClearSlashTrigger: () => void;
   onMarkdownTransform?: (newType: Block['type'], newContent: string, cursorPosition: number) => void;
+  onTextSelect?: (start: number, end: number) => void;
   onDuplicate?: () => void;
   onDelete?: () => void;
   onTransform?: (newType: Block['type']) => void;
@@ -54,6 +56,7 @@ export const EditorBlock = forwardRef<HTMLDivElement, EditorBlockProps>(({
   onSlashTrigger,
   onClearSlashTrigger,
   onMarkdownTransform,
+  onTextSelect,
   onDuplicate,
   onDelete,
   onTransform,
@@ -112,7 +115,8 @@ export const EditorBlock = forwardRef<HTMLDivElement, EditorBlockProps>(({
 
   // Handle property changes (for blocks like todo, toggle, etc.)
   const handlePropertyChange = useCallback((properties: Record<string, any>) => {
-    onChange(block.content as string, properties);
+    const contentStr = typeof block.content === 'string' ? block.content : segmentsToString(block.content);
+    onChange(contentStr, properties);
   }, [onChange, block.content]);
 
   // Handle keyboard events via React event handlers
@@ -149,8 +153,9 @@ export const EditorBlock = forwardRef<HTMLDivElement, EditorBlockProps>(({
             // Enter: Allow newline within block (default textarea behavior)
             // Check if on an empty line (for double-enter exit behavior)
             const cursorPosition = target.selectionStart || 0;
-            const textBeforeCursor = (block.content as string).substring(0, cursorPosition);
-            const textAfterCursor = (block.content as string).substring(cursorPosition);
+            const contentStr = typeof block.content === 'string' ? block.content : segmentsToString(block.content);
+            const textBeforeCursor = contentStr.substring(0, cursorPosition);
+            const textAfterCursor = contentStr.substring(cursorPosition);
             const lines = textBeforeCursor.split('\n');
             const currentLine = lines[lines.length - 1];
 
@@ -170,7 +175,8 @@ export const EditorBlock = forwardRef<HTMLDivElement, EditorBlockProps>(({
             // Enter: Create new block or exit formatting if empty
             e.preventDefault();
             const cursorPosition = target.selectionStart || 0;
-            const isEmptyBlock = (block.content as string) === '';
+            const contentStr = typeof block.content === 'string' ? block.content : segmentsToString(block.content);
+            const isEmptyBlock = contentStr === '';
             onEnterKey(cursorPosition, isEmptyBlock, false);
           }
         }
@@ -206,7 +212,8 @@ export const EditorBlock = forwardRef<HTMLDivElement, EditorBlockProps>(({
         // Detect markdown shortcuts when space is pressed
         if (onMarkdownTransform && block.type === 'paragraph') {
           const cursorPosition = target.selectionStart || 0;
-          const markdown = detectMarkdownOnSpace(block.content as string, cursorPosition);
+          const contentStr = typeof block.content === 'string' ? block.content : segmentsToString(block.content);
+          const markdown = detectMarkdownOnSpace(contentStr, cursorPosition);
 
           if (markdown) {
             e.preventDefault();
@@ -218,7 +225,8 @@ export const EditorBlock = forwardRef<HTMLDivElement, EditorBlockProps>(({
       case 'Backspace':
         if (target.selectionStart === 0 && target.selectionEnd === 0) {
           // At the beginning of the block
-          if ((block.content as string) === '') {
+          const contentStr = typeof block.content === 'string' ? block.content : segmentsToString(block.content);
+          if (contentStr === '') {
             e.preventDefault();
             onBackspaceAtStart();
           }
@@ -230,7 +238,7 @@ export const EditorBlock = forwardRef<HTMLDivElement, EditorBlockProps>(({
   // Render the appropriate block component
   const renderBlock = () => {
     const baseProps = {
-      content: block.content as string,
+      content: block.content,
       placeholder,
       isFocused,
       onChange: handleContentChange,
@@ -238,6 +246,7 @@ export const EditorBlock = forwardRef<HTMLDivElement, EditorBlockProps>(({
       onKeyDown: handleReactKeyDown,
       onFocus,
       onBlur,
+      onSelect: onTextSelect,
     };
 
     switch (block.type) {

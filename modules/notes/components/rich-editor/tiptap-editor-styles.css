@@ -1,0 +1,292 @@
+/* Tiptap Editor Styles */
+
+.tiptap-editor-wrapper {
+  width: 100%;
+}
+
+.tiptap-editor {
+  width: 100%;
+  min-height: 200px;
+  font-size: 0.875rem;
+  line-height: 1.625;
+}
+
+/* Placeholder */
+.tiptap-editor .is-empty::before {
+  content: attr(data-placeholder);
+  @apply text-muted-foreground/40 pointer-events-none float-left h-0;
+}
+
+/* Headings */
+.tiptap-editor h1 {
+  @apply text-3xl font-bold mb-4 mt-6;
+}
+
+.tiptap-editor h2 {
+  @apply text-2xl font-semibold mb-3 mt-5;
+}
+
+.tiptap-editor h3 {
+  @apply text-xl font-semibold mb-2 mt-4;
+}
+
+/* Paragraphs */
+.tiptap-editor p {
+  @apply mb-3;
+}
+
+/* Lists */
+.tiptap-editor ul,
+.tiptap-editor ol {
+  @apply pl-6 mb-3;
+}
+
+.tiptap-editor ul {
+  @apply list-disc;
+}
+
+.tiptap-editor ol {
+  @apply list-decimal;
+}
+
+.tiptap-editor li {
+  @apply mb-1;
+}
+
+.tiptap-editor li > p {
+  @apply mb-0;
+}
+
+/* Task List */
+.tiptap-editor ul[data-type="taskList"] {
+  @apply list-none pl-0;
+}
+
+.tiptap-editor ul[data-type="taskList"] li {
+  @apply flex items-start gap-2;
+}
+
+.tiptap-editor ul[data-type="taskList"] li > label {
+  @apply flex items-center gap-2 flex-1;
+}
+
+.tiptap-editor ul[data-type="taskList"] li > label > input[type="checkbox"] {
+  @apply w-4 h-4 rounded border-gray-300 mt-0.5;
+}
+
+.tiptap-editor ul[data-type="taskList"] li > label > div {
+  @apply flex-1;
+}
+
+/* Blockquote */
+.tiptap-editor blockquote {
+  @apply pl-4 border-l-4 border-primary/30 text-muted-foreground italic my-4;
+}
+
+/* Code Block */
+.tiptap-editor pre {
+  @apply bg-muted p-4 rounded-lg overflow-x-auto my-4 font-mono text-sm;
+}
+
+.tiptap-editor code {
+  @apply bg-muted px-1.5 py-0.5 rounded font-mono text-sm;
+}
+
+.tiptap-editor pre code {
+  @apply bg-transparent p-0;
+}
+
+/* Inline Code */
+.tiptap-editor p code {
+  @apply bg-accent px-1.5 py-0.5 rounded;
+}
+
+/* Horizontal Rule */
+.tiptap-editor hr {
+  @apply my-6 border-border;
+}
+
+/* Links */
+.tiptap-editor a {
+  @apply text-primary underline cursor-pointer;
+}
+
+.tiptap-editor a:hover {
+  @apply text-primary/80;
+}
+
+/* Text Formatting */
+.tiptap-editor strong {
+  @apply font-bold;
+}
+
+.tiptap-editor em {
+  @apply italic;
+}
+
+.tiptap-editor u {
+  @apply underline;
+}
+
+.tiptap-editor s {
+  @apply line-through;
+}
+
+/* Highlight */
+.tiptap-editor mark {
+  @apply bg-yellow-200 dark:bg-yellow-900/30 px-0.5 rounded;
+}
+
+/* Images */
+.tiptap-editor img {
+  @apply max-w-full h-auto rounded-lg my-4;
+}
+
+.tiptap-editor img.ProseMirror-selectednode {
+  @apply outline-2 outline-primary outline-offset-2 outline;
+}
+
+/* Tables */
+.tiptap-editor table {
+  @apply border-collapse table-auto w-full my-4;
+}
+
+.tiptap-editor th {
+  @apply border border-border bg-muted p-2 font-semibold text-left;
+}
+
+.tiptap-editor td {
+  @apply border border-border p-2;
+}
+
+.tiptap-editor th:first-child,
+.tiptap-editor td:first-child {
+  @apply border-l;
+}
+
+.tiptap-editor .selectedCell {
+  @apply bg-primary/10;
+}
+
+/* Callout Block */
+.tiptap-editor .callout {
+  @apply flex gap-3 p-4 rounded-lg my-4;
+}
+
+.tiptap-editor .callout-default {
+  @apply bg-gray-100 dark:bg-gray-800;
+}
+
+.tiptap-editor .callout-gray {
+  @apply bg-gray-100 dark:bg-gray-800;
+}
+
+.tiptap-editor .callout-brown {
+  @apply bg-amber-100 dark:bg-amber-900/30;
+}
+
+.tiptap-editor .callout-orange {
+  @apply bg-orange-100 dark:bg-orange-900/30;
+}
+
+.tiptap-editor .callout-yellow {
+  @apply bg-yellow-100 dark:bg-yellow-900/30;
+}
+
+.tiptap-editor .callout-green {
+  @apply bg-green-100 dark:bg-green-900/30;
+}
+
+.tiptap-editor .callout-blue {
+  @apply bg-blue-100 dark:bg-blue-900/30;
+}
+
+.tiptap-editor .callout-purple {
+  @apply bg-purple-100 dark:bg-purple-900/30;
+}
+
+.tiptap-editor .callout-pink {
+  @apply bg-pink-100 dark:bg-pink-900/30;
+}
+
+.tiptap-editor .callout-red {
+  @apply bg-red-100 dark:bg-red-900/30;
+}
+
+.tiptap-editor .callout-icon {
+  @apply text-2xl select-none flex-shrink-0;
+}
+
+.tiptap-editor .callout-content {
+  @apply flex-1;
+}
+
+/* Toggle Block */
+.tiptap-editor .toggle-block {
+  @apply my-2;
+}
+
+.tiptap-editor .toggle-summary {
+  @apply cursor-pointer font-medium select-none;
+}
+
+.tiptap-editor .toggle-summary::marker {
+  @apply text-primary;
+}
+
+.tiptap-editor .toggle-content {
+  @apply pl-4 mt-2;
+}
+
+/* Focus State */
+.tiptap-editor:focus-within {
+  @apply outline-none;
+}
+
+/* Selection */
+.tiptap-editor .ProseMirror-selectednode {
+  @apply outline-2 outline-primary/50 outline-offset-2 outline;
+}
+
+/* Gapcursor (for placing cursor in empty blocks) */
+.tiptap-editor .ProseMirror-gapcursor {
+  @apply relative;
+}
+
+.tiptap-editor .ProseMirror-gapcursor::after {
+  content: '';
+  @apply absolute top-0 bottom-0 w-0.5 bg-primary animate-pulse;
+}
+
+/* Drag handle (if you add drag and drop later) */
+.tiptap-editor .drag-handle {
+  @apply opacity-0 transition-opacity cursor-grab;
+}
+
+.tiptap-editor:hover .drag-handle {
+  @apply opacity-100;
+}
+
+.tiptap-editor .drag-handle:active {
+  @apply cursor-grabbing;
+}
+
+/* Color text */
+.tiptap-editor [style*="color:"] {
+  @apply transition-colors;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .tiptap-editor h1 {
+    @apply text-2xl;
+  }
+
+  .tiptap-editor h2 {
+    @apply text-xl;
+  }
+
+  .tiptap-editor h3 {
+    @apply text-lg;
+  }
+}
