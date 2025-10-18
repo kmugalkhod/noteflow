@@ -16,13 +16,13 @@ export const DividerBlock = ({
 }: DividerBlockProps) => {
   return (
     <div
-      className={`py-3 ${isFocused ? 'bg-accent/10 rounded' : ''}`}
+      className={`py-4 ${isFocused ? 'bg-accent/10 rounded' : ''}`}
       onClick={onFocus}
       onBlur={onBlur}
       onKeyDown={onKeyDown}
       tabIndex={0}
     >
-      <hr className="border-t border-border/60" />
+      <hr className="border-t border-border" />
     </div>
   );
 };

@@ -93,37 +93,57 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* Notion's Dark Theme - Exact Color Scheme */
+
+  /* Backgrounds - Notion's carefully crafted dark surfaces */
+  --background: #191919;  /* c-bacPri - Main background */
+  --foreground: #f0efed;  /* c-texPri - Primary text with excellent contrast */
+
+  --card: #202020;  /* c-bacSec - Elevated surfaces */
+  --card-foreground: #f0efed;
+
+  --popover: #252525;  /* c-popBac - Dropdown/menu background */
+  --popover-foreground: #f0efed;
+
+  /* Primary Interactive Color - Notion's signature blue */
+  --primary: #2383e2;  /* c-bluBacAccPri - Interactive elements */
+  --primary-foreground: #f0efed;
+
+  /* Secondary & Muted - Notion's hierarchy */
+  --secondary: #30302e;  /* c-bacTer - Tertiary background */
+  --secondary-foreground: #f0efed;
+
+  --muted: #2c2c2b;  /* c-borSec - Subtle backgrounds */
+  --muted-foreground: #a8a49c;  /* c-texSec - Secondary text */
+
+  /* Accent - Hover and active states */
+  --accent: #30302e;  /* c-bacAccPri - Hover backgrounds */
+  --accent-foreground: #f0efed;
+
+  /* Destructive Actions */
+  --destructive: #de5550;  /* c-redBacAccPri - Delete/error states */
+
+  /* Borders - Notion's visible but elegant borders */
+  --border: #30302e;  /* c-borPri - Primary borders (much more visible!) */
+  --input: hsla(0, 0%, 100%, 0.055);  /* ca-inpBac - Transparent input backgrounds */
+  --ring: #2383e2;  /* Focus ring - Notion blue */
+
+  /* Charts - Notion's color palette */
+  --chart-1: #2383e2;  /* Blue */
+  --chart-2: #46a171;  /* Green */
+  --chart-3: #d5803b;  /* Orange */
+  --chart-4: #b577d6;  /* Purple */
+  --chart-5: #db6999;  /* Pink */
+
+  /* Sidebar - Notion's sidebar styling */
+  --sidebar: #202020;  /* c-bacSec */
+  --sidebar-foreground: #a8a49c;  /* c-sidTexCol - Sidebar text */
+  --sidebar-primary: #2383e2;  /* Active item color */
+  --sidebar-primary-foreground: #f0efed;
+  --sidebar-accent: #30302e;  /* Hover state */
+  --sidebar-accent-foreground: #f0efed;
+  --sidebar-border: #30302e;  /* c-borPri */
+  --sidebar-ring: #2383e2;
 }
 
 @layer base {

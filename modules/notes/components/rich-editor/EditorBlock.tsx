@@ -237,6 +237,8 @@ export const EditorBlock = forwardRef<HTMLDivElement, EditorBlockProps>(({
 
   // Render the appropriate block component
   const renderBlock = () => {
+    const fontSize = (block.properties as any)?.fontSize as 'small' | 'normal' | 'large' | undefined;
+
     const baseProps = {
       content: block.content,
       placeholder,
@@ -247,6 +249,7 @@ export const EditorBlock = forwardRef<HTMLDivElement, EditorBlockProps>(({
       onFocus,
       onBlur,
       onSelect: onTextSelect,
+      fontSize,
     };
 
     switch (block.type) {
@@ -297,7 +300,7 @@ export const EditorBlock = forwardRef<HTMLDivElement, EditorBlockProps>(({
       className={`editor-block group relative transition-colors ${isFocused ? 'focused' : ''}`}
       data-block-id={block.id}
       data-block-type={block.type}
-      style={{ marginBottom: '2px' }}
+      style={{ marginBottom: '1px' }}
     >
       {/* Block Actions Menu */}
       {onDuplicate && onDelete && onTransform && onMoveUp && onMoveDown && (
@@ -315,7 +318,7 @@ export const EditorBlock = forwardRef<HTMLDivElement, EditorBlockProps>(({
         />
       )}
 
-      <div className="relative hover:bg-accent/5 rounded-sm transition-colors">
+      <div className="relative hover:bg-accent/10 rounded-md transition-all duration-100 ease-in-out">
         {renderBlock()}
       </div>
     </div>

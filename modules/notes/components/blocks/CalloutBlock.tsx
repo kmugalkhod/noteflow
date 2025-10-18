@@ -17,6 +17,7 @@ interface CalloutBlockProps {
   onFocus: () => void;
   onBlur: () => void;
   onSelect?: (start: number, end: number) => void;
+  fontSize?: 'small' | 'normal' | 'large';
 }
 
 type CalloutColor = 'default' | 'gray' | 'blue' | 'green' | 'yellow' | 'red' | 'purple' | 'brown' | 'orange' | 'pink';
@@ -31,7 +32,8 @@ export const CalloutBlock = ({
   onKeyDown,
   onFocus,
   onBlur,
-  onSelect
+  onSelect,
+  fontSize = 'normal'
 }: CalloutBlockProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const isFormatted = typeof content !== 'string';
@@ -40,6 +42,20 @@ export const CalloutBlock = ({
   const color = (properties.color || 'default') as CalloutColor;
   const calloutPlaceholder = placeholder || 'Callout text...';
   const [showColorPicker, setShowColorPicker] = useState(false);
+
+  // Get font size class
+  const getFontSizeClass = () => {
+    switch (fontSize) {
+      case 'small':
+        return 'text-sm leading-normal';
+      case 'large':
+        return 'text-lg leading-relaxed';
+      default:
+        return 'text-base leading-[1.6]';
+    }
+  };
+
+  const fontSizeClass = getFontSizeClass();
 
   // Auto-focus when isFocused changes
   useEffect(() => {
@@ -123,7 +139,7 @@ export const CalloutBlock = ({
           <div className="relative flex-1">
             {/* Formatted preview layer (visible) */}
             <div
-              className="absolute inset-0 pointer-events-none text-base leading-[1.6] z-10"
+              className={`absolute inset-0 pointer-events-none ${fontSizeClass} z-10`}
               aria-hidden="true"
             >
               <FormattedText content={content} />
@@ -142,7 +158,7 @@ export const CalloutBlock = ({
               onMouseUp={handleSelect}
               onKeyUp={handleSelect}
               placeholder={calloutPlaceholder}
-              className="relative w-full text-base leading-[1.6] border-none outline-none bg-transparent placeholder:text-muted-foreground/40"
+              className={`relative w-full ${fontSizeClass} border-none outline-none bg-transparent placeholder:text-muted-foreground/40`}
               style={{
                 color: 'transparent',
                 caretColor: 'currentColor',
@@ -215,7 +231,7 @@ export const CalloutBlock = ({
           onMouseUp={handleSelect}
           onKeyUp={handleSelect}
           placeholder={calloutPlaceholder}
-          className="flex-1 text-base leading-[1.6] border-none outline-none bg-transparent placeholder:text-muted-foreground/40"
+          className={`flex-1 ${fontSizeClass} border-none outline-none bg-transparent placeholder:text-muted-foreground/40`}
           autoFocus={isFocused}
         />
 

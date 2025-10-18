@@ -15,6 +15,7 @@ interface HeadingBlockProps {
   onFocus: () => void;
   onBlur: () => void;
   onSelect?: (start: number, end: number) => void;
+  fontSize?: 'small' | 'normal' | 'large';
 }
 
 export const HeadingBlock = ({
@@ -27,6 +28,7 @@ export const HeadingBlock = ({
   onFocus,
   onBlur,
   onSelect,
+  fontSize = 'normal',
 }: HeadingBlockProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const isFormatted = typeof content !== 'string';
@@ -41,17 +43,18 @@ export const HeadingBlock = ({
     }
   };
 
-  const getHeadingStyles = (level: number) => {
-    switch (level) {
-      case 1:
-        return "text-3xl font-bold leading-[1.2] mb-1";
-      case 2:
-        return "text-2xl font-semibold leading-[1.3] mb-0.5";
-      case 3:
-        return "text-xl font-semibold leading-[1.4]";
-      default:
-        return "text-lg font-medium leading-[1.4]";
-    }
+  const getHeadingStyles = (level: number, fontSize: string) => {
+    // Base styles by level
+    const baseStyles = {
+      1: { small: "text-3xl", normal: "text-4xl", large: "text-5xl", weight: "font-bold", leading: "leading-tight" },
+      2: { small: "text-2xl", normal: "text-3xl", large: "text-4xl", weight: "font-bold", leading: "leading-tight" },
+      3: { small: "text-xl", normal: "text-2xl", large: "text-3xl", weight: "font-semibold", leading: "leading-snug" }
+    };
+
+    const style = baseStyles[level as keyof typeof baseStyles] || baseStyles[1];
+    const sizeClass = style[fontSize as keyof typeof style.small] || style.normal;
+
+    return `${sizeClass} ${style.weight} ${style.leading} mb-1`;
   };
 
   const headingPlaceholder = placeholder || `Heading ${level}`;
@@ -69,7 +72,7 @@ export const HeadingBlock = ({
       <div className="relative">
         {/* Formatted preview layer (visible) */}
         <div
-          className={`absolute inset-0 pointer-events-none py-[3px] px-2 z-10 ${getHeadingStyles(level)}`}
+          className={`absolute inset-0 pointer-events-none py-[3px] px-2 z-10 ${getHeadingStyles(level, fontSize)}`}
           aria-hidden="true"
         >
           <FormattedText content={content} />
@@ -88,7 +91,7 @@ export const HeadingBlock = ({
           onMouseUp={handleSelect}
           onKeyUp={handleSelect}
           placeholder={headingPlaceholder}
-          className={`relative w-full border-none outline-none bg-transparent placeholder:text-muted-foreground/40 py-[3px] px-2 ${getHeadingStyles(level)}`}
+          className={`relative w-full border-none outline-none bg-transparent placeholder:text-muted-foreground/40 py-[3px] px-2 ${getHeadingStyles(level, fontSize)}`}
           style={{
             color: 'transparent',
             caretColor: 'currentColor',
@@ -113,7 +116,7 @@ export const HeadingBlock = ({
       onMouseUp={handleSelect}
       onKeyUp={handleSelect}
       placeholder={headingPlaceholder}
-      className={`w-full border-none outline-none bg-transparent placeholder:text-muted-foreground/40 py-[3px] px-2 ${getHeadingStyles(level)}`}
+      className={`w-full border-none outline-none bg-transparent placeholder:text-muted-foreground/40 py-[3px] px-2 ${getHeadingStyles(level, fontSize)}`}
       autoFocus={isFocused}
     />
   );

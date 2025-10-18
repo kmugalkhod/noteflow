@@ -14,6 +14,7 @@ interface QuoteBlockProps {
   onFocus: () => void;
   onBlur: () => void;
   onSelect?: (start: number, end: number) => void;
+  fontSize?: 'small' | 'normal' | 'large';
 }
 
 export const QuoteBlock = ({
@@ -24,12 +25,27 @@ export const QuoteBlock = ({
   onKeyDown,
   onFocus,
   onBlur,
-  onSelect
+  onSelect,
+  fontSize = 'normal'
 }: QuoteBlockProps) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isFormatted = typeof content !== 'string';
   const textContent = isFormatted ? segmentsToString(content) : content;
   const quotePlaceholder = placeholder || 'Quote';
+
+  // Get font size class
+  const getFontSizeClass = () => {
+    switch (fontSize) {
+      case 'small':
+        return 'text-sm leading-normal';
+      case 'large':
+        return 'text-lg leading-relaxed';
+      default:
+        return 'text-base leading-[1.6]';
+    }
+  };
+
+  const fontSizeClass = getFontSizeClass();
 
   // Handle selection changes
   const handleSelect = () => {
@@ -59,11 +75,11 @@ export const QuoteBlock = ({
   // If content is formatted, show formatted preview with editable overlay
   if (isFormatted) {
     return (
-      <div className="border-l-4 border-foreground/20 pl-4 py-[3px] px-2 my-1">
+      <div className="border-l-3 border-border pl-4 py-1 px-2 my-1">
         <div className="relative">
           {/* Formatted preview layer (visible) */}
           <div
-            className="absolute inset-0 pointer-events-none text-base leading-[1.6] whitespace-pre-wrap break-words z-10"
+            className={`absolute inset-0 pointer-events-none ${fontSizeClass} whitespace-pre-wrap break-words z-10`}
             aria-hidden="true"
           >
             <FormattedText content={content} />
@@ -81,7 +97,7 @@ export const QuoteBlock = ({
             onMouseUp={handleSelect}
             onKeyUp={handleSelect}
             placeholder={quotePlaceholder}
-            className="relative w-full text-base leading-[1.6] border-none outline-none bg-transparent placeholder:text-muted-foreground/40 resize-none overflow-hidden min-h-[32px] selection:bg-blue-200 dark:selection:bg-blue-800"
+            className={`relative w-full ${fontSizeClass} border-none outline-none bg-transparent placeholder:text-muted-foreground/40 resize-none overflow-hidden min-h-[32px] selection:bg-blue-200 dark:selection:bg-blue-800`}
             style={{
               color: 'transparent',
               caretColor: 'currentColor',
@@ -95,7 +111,7 @@ export const QuoteBlock = ({
   }
 
   return (
-    <div className="border-l-4 border-foreground/20 pl-4 py-[3px] px-2 my-1">
+    <div className="border-l-3 border-border pl-4 py-1 px-2 my-1">
       <textarea
         ref={textareaRef}
         value={textContent}
@@ -107,7 +123,7 @@ export const QuoteBlock = ({
         onMouseUp={handleSelect}
         onKeyUp={handleSelect}
         placeholder={quotePlaceholder}
-        className="w-full text-base leading-[1.6] border-none outline-none bg-transparent placeholder:text-muted-foreground/40 resize-none overflow-hidden min-h-[32px]"
+        className={`w-full ${fontSizeClass} border-none outline-none bg-transparent placeholder:text-muted-foreground/40 resize-none overflow-hidden min-h-[32px]`}
         rows={1}
       />
     </div>

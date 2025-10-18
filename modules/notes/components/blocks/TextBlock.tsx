@@ -14,6 +14,7 @@ interface TextBlockProps {
   onFocus: () => void;
   onBlur: () => void;
   onSelect?: (start: number, end: number) => void;
+  fontSize?: 'small' | 'normal' | 'large';
 }
 
 export const TextBlock = ({
@@ -25,10 +26,25 @@ export const TextBlock = ({
   onFocus,
   onBlur,
   onSelect,
+  fontSize = 'normal',
 }: TextBlockProps) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isFormatted = typeof content !== 'string';
   const textContent = isFormatted ? segmentsToString(content) : content;
+
+  // Get font size class
+  const getFontSizeClass = () => {
+    switch (fontSize) {
+      case 'small':
+        return 'text-sm leading-normal';
+      case 'large':
+        return 'text-lg leading-relaxed';
+      default:
+        return 'text-base leading-relaxed';
+    }
+  };
+
+  const fontSizeClass = getFontSizeClass();
 
   console.log('TextBlock render - isFormatted:', isFormatted, 'content type:', typeof content);
 
@@ -64,7 +80,7 @@ export const TextBlock = ({
       <div className="relative">
         {/* Formatted preview layer (visible) */}
         <div
-          className="absolute inset-0 pointer-events-none py-[3px] px-2 text-base leading-[1.6] whitespace-pre-wrap break-words z-10"
+          className={`absolute inset-0 pointer-events-none py-1 px-2 ${fontSizeClass} whitespace-pre-wrap break-words z-10`}
           aria-hidden="true"
         >
           <FormattedText content={content} />
@@ -82,7 +98,7 @@ export const TextBlock = ({
           onMouseUp={handleSelect}
           onKeyUp={handleSelect}
           placeholder={placeholder}
-          className="relative w-full text-base leading-[1.6] border-none outline-none bg-transparent placeholder:text-muted-foreground/40 py-[3px] px-2 resize-none overflow-hidden min-h-[32px] selection:bg-blue-200 dark:selection:bg-blue-800"
+          className={`relative w-full ${fontSizeClass} border-none outline-none bg-transparent placeholder:text-muted-foreground/25 py-1 px-2 resize-none overflow-hidden min-h-[28px] selection:bg-blue-200 dark:selection:bg-blue-800`}
           style={{
             color: 'transparent',
             caretColor: 'currentColor',
@@ -106,7 +122,7 @@ export const TextBlock = ({
       onMouseUp={handleSelect}
       onKeyUp={handleSelect}
       placeholder={placeholder}
-      className="w-full text-base leading-[1.6] border-none outline-none bg-transparent placeholder:text-muted-foreground/40 py-[3px] px-2 resize-none overflow-hidden min-h-[32px]"
+      className={`w-full ${fontSizeClass} border-none outline-none bg-transparent placeholder:text-muted-foreground/25 py-1 px-2 resize-none overflow-hidden min-h-[28px]`}
       rows={1}
     />
   );

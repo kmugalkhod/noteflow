@@ -17,6 +17,7 @@ interface TodoBlockProps {
   onFocus: () => void;
   onBlur: () => void;
   onSelect?: (start: number, end: number) => void;
+  fontSize?: 'small' | 'normal' | 'large';
 }
 
 export const TodoBlock = ({
@@ -29,13 +30,28 @@ export const TodoBlock = ({
   onKeyDown,
   onFocus,
   onBlur,
-  onSelect
+  onSelect,
+  fontSize = 'normal'
 }: TodoBlockProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const isFormatted = typeof content !== 'string';
   const textContent = isFormatted ? segmentsToString(content) : content;
   const checked = properties.checked || false;
   const todoPlaceholder = placeholder || 'To-do';
+
+  // Get font size class
+  const getFontSizeClass = () => {
+    switch (fontSize) {
+      case 'small':
+        return 'text-sm leading-normal';
+      case 'large':
+        return 'text-lg leading-relaxed';
+      default:
+        return 'text-base leading-[1.6]';
+    }
+  };
+
+  const fontSizeClass = getFontSizeClass();
 
   const handleCheckedChange = (newChecked: boolean) => {
     if (onPropertyChange) {
@@ -62,18 +78,18 @@ export const TodoBlock = ({
   // If content is formatted, show formatted preview with editable overlay
   if (isFormatted) {
     return (
-      <div className="flex items-start gap-2 py-[3px] px-2">
-        <div className="mt-[3px]">
+      <div className="flex items-start gap-2.5 py-1 px-2">
+        <div className="mt-[2px]">
           <Checkbox
             checked={checked}
             onCheckedChange={handleCheckedChange}
-            className="w-[18px] h-[18px]"
+            className="w-[20px] h-[20px] border-2 data-[state=unchecked]:border-foreground/30 hover:data-[state=unchecked]:border-foreground/50 transition-colors"
           />
         </div>
         <div className="relative flex-1">
           {/* Formatted preview layer (visible) */}
           <div
-            className={`absolute inset-0 pointer-events-none text-base leading-[1.6] z-10 ${
+            className={`absolute inset-0 pointer-events-none ${fontSizeClass} z-10 ${
               checked ? 'line-through text-muted-foreground/60' : ''
             }`}
             aria-hidden="true"
@@ -94,7 +110,7 @@ export const TodoBlock = ({
             onMouseUp={handleSelect}
             onKeyUp={handleSelect}
             placeholder={todoPlaceholder}
-            className={`relative w-full text-base leading-[1.6] border-none outline-none bg-transparent placeholder:text-muted-foreground/40 ${
+            className={`relative w-full ${fontSizeClass} border-none outline-none bg-transparent placeholder:text-muted-foreground/40 ${
               checked ? 'line-through text-muted-foreground/60' : ''
             }`}
             style={{
@@ -110,12 +126,12 @@ export const TodoBlock = ({
   }
 
   return (
-    <div className="flex items-start gap-2 py-[3px] px-2">
-      <div className="mt-[3px]">
+    <div className="flex items-start gap-2.5 py-1 px-2">
+      <div className="mt-[2px]">
         <Checkbox
           checked={checked}
           onCheckedChange={handleCheckedChange}
-          className="w-[18px] h-[18px]"
+          className="w-[20px] h-[20px] border-2 data-[state=unchecked]:border-foreground/30 hover:data-[state=unchecked]:border-foreground/50 transition-colors"
         />
       </div>
       <input
@@ -130,7 +146,7 @@ export const TodoBlock = ({
         onMouseUp={handleSelect}
         onKeyUp={handleSelect}
         placeholder={todoPlaceholder}
-        className={`flex-1 text-base leading-[1.6] border-none outline-none bg-transparent placeholder:text-muted-foreground/40 ${
+        className={`flex-1 ${fontSizeClass} border-none outline-none bg-transparent placeholder:text-muted-foreground/40 ${
           checked ? 'line-through text-muted-foreground/60' : ''
         }`}
         autoFocus={isFocused}
