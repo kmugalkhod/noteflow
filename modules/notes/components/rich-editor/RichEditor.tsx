@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useImperativeHandle, forwardRef } from 'react';
 import { EditorBlock } from './EditorBlock';
 import { SlashMenu, useSlashMenu, type SlashCommand } from '../slash-menu';
+import { FormattingToolbar } from './FormattingToolbar';
 import {
   createBlock,
   serializeBlocks,
@@ -10,9 +11,19 @@ import {
   textToBlocks,
   type Block,
   type EditorState,
-  type BlockType
+  type BlockType,
+  type TextColor,
+  type FormattedContent,
 } from '../../types/blocks';
 import { useEditorHistory } from '../../hooks/useEditorHistory';
+import {
+  applyFormatting,
+  applyColor,
+  applyHighlight,
+  getActiveFormatsAtPosition,
+  segmentsToString,
+  type TextSelection,
+} from '../../utils/textFormatting';
 
 export interface RichEditorRef {
   focus: () => void;
@@ -48,6 +59,14 @@ export const RichEditor = forwardRef<RichEditorRef, RichEditorProps>(({
     position: number;
     query: string;
   } | null>(null);
+
+  const [textSelection, setTextSelection] = useState<{
+    blockId: string;
+    start: number;
+    end: number;
+  } | null>(null);
+
+  const [showFormattingToolbar, setShowFormattingToolbar] = useState(false);
 
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -135,7 +154,7 @@ export const RichEditor = forwardRef<RichEditorRef, RichEditorProps>(({
   });
 
   // Handle content changes
-  const handleBlockChange = useCallback((blockId: string, newContent: string, newProperties?: Record<string, any>) => {
+  const handleBlockChange = useCallback((blockId: string, newContent: string | FormattedContent, newProperties?: Record<string, any>) => {
     isUserChangeRef.current = true; // Mark as user-initiated change
     setEditorState(prev => {
       const newBlocks = prev.blocks.map(block =>
@@ -189,7 +208,9 @@ export const RichEditor = forwardRef<RichEditorRef, RichEditorProps>(({
     if (blockIndex === -1) return;
 
     const currentBlock = editorState.blocks[blockIndex];
-    const content = currentBlock.content as string;
+    const content = typeof currentBlock.content === 'string'
+      ? currentBlock.content
+      : segmentsToString(currentBlock.content);
 
     // If it's an empty block (double Enter scenario), convert to paragraph
     if (isEmptyBlock && currentBlock.type !== 'paragraph' && currentBlock.type !== 'divider') {
@@ -300,7 +321,10 @@ export const RichEditor = forwardRef<RichEditorRef, RichEditorProps>(({
     // Convert non-paragraph blocks to paragraph
     if (currentBlock.type !== 'paragraph') {
       const newBlocks = [...editorState.blocks];
-      const newBlock = createBlock('paragraph', currentBlock.content as string);
+      const contentStr = typeof currentBlock.content === 'string'
+        ? currentBlock.content
+        : segmentsToString(currentBlock.content);
+      const newBlock = createBlock('paragraph', contentStr);
       newBlocks[blockIndex] = newBlock;
 
       isUserChangeRef.current = true;
@@ -330,8 +354,14 @@ export const RichEditor = forwardRef<RichEditorRef, RichEditorProps>(({
     const previousBlock = newBlocks[blockIndex - 1];
 
     // Merge content into previous block
-    const mergedContent = (previousBlock.content as string) + (currentBlock.content as string);
-    const cursorPosition = (previousBlock.content as string).length;
+    const prevContentStr = typeof previousBlock.content === 'string'
+      ? previousBlock.content
+      : segmentsToString(previousBlock.content);
+    const currContentStr = typeof currentBlock.content === 'string'
+      ? currentBlock.content
+      : segmentsToString(currentBlock.content);
+    const mergedContent = prevContentStr + currContentStr;
+    const cursorPosition = prevContentStr.length;
 
     newBlocks[blockIndex - 1] = { ...previousBlock, content: mergedContent } as Block;
     newBlocks.splice(blockIndex, 1);
@@ -404,6 +434,121 @@ export const RichEditor = forwardRef<RichEditorRef, RichEditorProps>(({
     }, 10);
   }, [editorState.blocks]);
 
+  // Handle text selection
+  const handleTextSelection = useCallback((blockId: string, start: number, end: number) => {
+    if (start !== end) {
+      setTextSelection({ blockId, start, end });
+      setShowFormattingToolbar(true);
+    } else {
+      setShowFormattingToolbar(false);
+      setTextSelection(null);
+    }
+  }, []);
+
+  // Apply text formatting
+  const handleApplyFormat = useCallback((format: 'bold' | 'italic' | 'underline' | 'strikethrough' | 'code') => {
+    if (!textSelection) return;
+
+    const { blockId, start, end } = textSelection;
+    const blockIndex = editorState.blocks.findIndex(b => b.id === blockId);
+    if (blockIndex === -1) return;
+
+    const block = editorState.blocks[blockIndex];
+    const formatted = applyFormatting(block.content, { start, end }, format);
+
+    const newBlocks = [...editorState.blocks];
+    newBlocks[blockIndex] = { ...block, content: formatted } as Block;
+
+    isUserChangeRef.current = true;
+    setEditorState(prev => ({
+      ...prev,
+      blocks: newBlocks,
+    }));
+  }, [textSelection, editorState.blocks]);
+
+  // Apply text color
+  const handleApplyColor = useCallback((color: TextColor) => {
+    if (!textSelection) return;
+
+    const { blockId, start, end } = textSelection;
+    const blockIndex = editorState.blocks.findIndex(b => b.id === blockId);
+    if (blockIndex === -1) return;
+
+    const block = editorState.blocks[blockIndex];
+    console.log('Applying color:', color, 'to block:', blockId);
+    console.log('Original content:', JSON.stringify(block.content));
+    const formatted = applyColor(block.content, { start, end }, color);
+    console.log('Formatted with color:', JSON.stringify(formatted));
+
+    const newBlocks = [...editorState.blocks];
+    newBlocks[blockIndex] = { ...block, content: formatted } as Block;
+
+    console.log('Updated block:', JSON.stringify(newBlocks[blockIndex]));
+
+    isUserChangeRef.current = true;
+    setEditorState(prev => {
+      console.log('Setting new editor state');
+      return {
+        ...prev,
+        blocks: newBlocks,
+      };
+    });
+  }, [textSelection, editorState.blocks]);
+
+  // Apply highlight color
+  const handleApplyHighlight = useCallback((color: TextColor) => {
+    if (!textSelection) return;
+
+    const { blockId, start, end } = textSelection;
+    const blockIndex = editorState.blocks.findIndex(b => b.id === blockId);
+    if (blockIndex === -1) return;
+
+    const block = editorState.blocks[blockIndex];
+    const formatted = applyHighlight(block.content, { start, end }, color);
+
+    const newBlocks = [...editorState.blocks];
+    newBlocks[blockIndex] = { ...block, content: formatted } as Block;
+
+    isUserChangeRef.current = true;
+    setEditorState(prev => ({
+      ...prev,
+      blocks: newBlocks,
+    }));
+  }, [textSelection, editorState.blocks]);
+
+  // Apply font size
+  const handleApplyFontSize = useCallback((size: 'small' | 'normal' | 'large') => {
+    if (!textSelection) return;
+
+    const { blockId } = textSelection;
+    const blockIndex = editorState.blocks.findIndex(b => b.id === blockId);
+    if (blockIndex === -1) return;
+
+    const block = editorState.blocks[blockIndex];
+    const newBlocks = [...editorState.blocks];
+    newBlocks[blockIndex] = {
+      ...block,
+      properties: { ...block.properties, fontSize: size },
+    } as Block;
+
+    isUserChangeRef.current = true;
+    setEditorState(prev => ({
+      ...prev,
+      blocks: newBlocks,
+    }));
+  }, [textSelection, editorState.blocks]);
+
+  // Get active formats at current selection
+  const getActiveFormats = useCallback(() => {
+    if (!textSelection) return {};
+
+    const { blockId, start } = textSelection;
+    const block = editorState.blocks.find(b => b.id === blockId);
+    if (!block) return {};
+
+    return getActiveFormatsAtPosition(block.content, start);
+  }, [textSelection, editorState.blocks]);
+
   // Handle undo
   const handleUndo = useCallback(() => {
     const previousState = history.undo();
@@ -434,9 +579,12 @@ export const RichEditor = forwardRef<RichEditorRef, RichEditorProps>(({
     const blockToDuplicate = editorState.blocks[blockIndex];
 
     // Create a new block with the same type, content, and properties
+    const contentStr = typeof blockToDuplicate.content === 'string'
+      ? blockToDuplicate.content
+      : segmentsToString(blockToDuplicate.content);
     const newBlock = createBlock(
       blockToDuplicate.type,
-      blockToDuplicate.content as string,
+      contentStr,
       blockToDuplicate.properties
     );
 
@@ -501,7 +649,10 @@ export const RichEditor = forwardRef<RichEditorRef, RichEditorProps>(({
 
     // Create new block with transformed type
     // Preserve content but reset properties to defaults for the new type
-    const newBlock = createBlock(newType, currentBlock.content as string);
+    const contentStr = typeof currentBlock.content === 'string'
+      ? currentBlock.content
+      : segmentsToString(currentBlock.content);
+    const newBlock = createBlock(newType, contentStr);
 
     const newBlocks = [...editorState.blocks];
     newBlocks[blockIndex] = newBlock;
@@ -558,6 +709,27 @@ export const RichEditor = forwardRef<RichEditorRef, RichEditorProps>(({
   // Global keyboard handling
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Handle formatting shortcuts
+      if (textSelection) {
+        if ((event.metaKey || event.ctrlKey) && event.key === 'b') {
+          event.preventDefault();
+          handleApplyFormat('bold');
+          return;
+        }
+
+        if ((event.metaKey || event.ctrlKey) && event.key === 'i') {
+          event.preventDefault();
+          handleApplyFormat('italic');
+          return;
+        }
+
+        if ((event.metaKey || event.ctrlKey) && event.key === 'u') {
+          event.preventDefault();
+          handleApplyFormat('underline');
+          return;
+        }
+      }
+
       // Handle undo/redo
       if ((event.metaKey || event.ctrlKey) && event.key === 'z') {
         event.preventDefault();
@@ -582,7 +754,7 @@ export const RichEditor = forwardRef<RichEditorRef, RichEditorProps>(({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [slashMenu, handleUndo, handleRedo]);
+  }, [slashMenu, handleUndo, handleRedo, textSelection, handleApplyFormat]);
 
   // Expose editor methods through ref
   useImperativeHandle(ref, () => ({
@@ -611,7 +783,7 @@ export const RichEditor = forwardRef<RichEditorRef, RichEditorProps>(({
   }), [editorState.blocks]);
 
   return (
-    <div 
+    <div
       ref={editorRef}
       className={`rich-editor relative ${className}`}
       onClick={(e) => {
@@ -626,6 +798,19 @@ export const RichEditor = forwardRef<RichEditorRef, RichEditorProps>(({
         }
       }}
     >
+      {/* Formatting Toolbar */}
+      {showFormattingToolbar && textSelection && (
+        <div className="sticky top-0 z-20 flex justify-center py-2">
+          <FormattingToolbar
+            onFormat={handleApplyFormat}
+            onColorChange={handleApplyColor}
+            onHighlightChange={handleApplyHighlight}
+            onFontSizeChange={handleApplyFontSize}
+            activeFormats={getActiveFormats()}
+          />
+        </div>
+      )}
+
       {editorState.blocks.map((block, index) => (
         <EditorBlock
           key={block.id}
@@ -645,6 +830,7 @@ export const RichEditor = forwardRef<RichEditorRef, RichEditorProps>(({
           onSlashTrigger={(position, query, element) => handleSlashTrigger(block.id, position, query, element)}
           onClearSlashTrigger={handleClearSlashTrigger}
           onMarkdownTransform={(newType, newContent, cursorPosition) => handleMarkdownTransform(block.id, newType, newContent, cursorPosition)}
+          onTextSelect={(start, end) => handleTextSelection(block.id, start, end)}
           onDuplicate={() => handleDuplicateBlock(block.id)}
           onDelete={() => handleDeleteBlock(block.id)}
           onTransform={(newType) => handleTransformBlock(block.id, newType)}
@@ -664,7 +850,7 @@ export const RichEditor = forwardRef<RichEditorRef, RichEditorProps>(({
           }}
         />
       ))}
-      
+
       {/* Slash Menu */}
       <SlashMenu
         state={slashMenu.state}

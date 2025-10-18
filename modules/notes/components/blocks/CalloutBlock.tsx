@@ -1,10 +1,13 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Palette } from 'lucide-react';
+import type { FormattedContent } from '../../types/blocks';
+import { segmentsToString } from '../../utils/textFormatting';
+import { FormattedText } from '../rich-editor/FormattedText';
 
 interface CalloutBlockProps {
-  content: string;
+  content: string | FormattedContent;
   properties?: { icon?: string; color?: string };
   placeholder?: string;
   isFocused: boolean;
@@ -13,6 +16,7 @@ interface CalloutBlockProps {
   onKeyDown?: (e: React.KeyboardEvent) => void;
   onFocus: () => void;
   onBlur: () => void;
+  onSelect?: (start: number, end: number) => void;
 }
 
 type CalloutColor = 'default' | 'gray' | 'blue' | 'green' | 'yellow' | 'red' | 'purple' | 'brown' | 'orange' | 'pink';
@@ -26,12 +30,32 @@ export const CalloutBlock = ({
   onPropertyChange,
   onKeyDown,
   onFocus,
-  onBlur
+  onBlur,
+  onSelect
 }: CalloutBlockProps) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const isFormatted = typeof content !== 'string';
+  const textContent = isFormatted ? segmentsToString(content) : content;
   const icon = properties.icon || '💡';
   const color = (properties.color || 'default') as CalloutColor;
   const calloutPlaceholder = placeholder || 'Callout text...';
   const [showColorPicker, setShowColorPicker] = useState(false);
+
+  // Auto-focus when isFocused changes
+  useEffect(() => {
+    if (isFocused && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isFocused]);
+
+  // Handle selection changes
+  const handleSelect = () => {
+    if (onSelect && inputRef.current) {
+      const start = inputRef.current.selectionStart || 0;
+      const end = inputRef.current.selectionEnd || 0;
+      onSelect(start, end);
+    }
+  };
 
   const colorOptions: { name: CalloutColor; label: string; preview: string }[] = [
     { name: 'default', label: 'Default', preview: 'bg-accent/50 border-border' },
@@ -84,6 +108,91 @@ export const CalloutBlock = ({
     setShowColorPicker(false);
   };
 
+  // If content is formatted, show formatted preview with editable overlay
+  if (isFormatted) {
+    return (
+      <div className={`group relative rounded-md border p-3 my-1 ${getColorClasses(color)}`}>
+        <div className="flex items-start gap-2.5">
+          <input
+            type="text"
+            value={icon}
+            onChange={(e) => handleIconChange(e.target.value)}
+            className="w-7 text-center bg-transparent border-none outline-none text-lg leading-[1.6]"
+            maxLength={4}
+          />
+          <div className="relative flex-1">
+            {/* Formatted preview layer (visible) */}
+            <div
+              className="absolute inset-0 pointer-events-none text-base leading-[1.6] z-10"
+              aria-hidden="true"
+            >
+              <FormattedText content={content} />
+            </div>
+
+            {/* Editable text layer (invisible but functional) */}
+            <input
+              ref={inputRef}
+              type="text"
+              value={textContent}
+              onChange={(e) => onChange(e.target.value, e.target)}
+              onKeyDown={onKeyDown}
+              onFocus={onFocus}
+              onBlur={onBlur}
+              onSelect={handleSelect}
+              onMouseUp={handleSelect}
+              onKeyUp={handleSelect}
+              placeholder={calloutPlaceholder}
+              className="relative w-full text-base leading-[1.6] border-none outline-none bg-transparent placeholder:text-muted-foreground/40"
+              style={{
+                color: 'transparent',
+                caretColor: 'currentColor',
+                WebkitTextFillColor: 'transparent'
+              }}
+              autoFocus={isFocused}
+            />
+          </div>
+
+          {/* Color picker button */}
+          <div className="relative opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowColorPicker(!showColorPicker);
+              }}
+              className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+              title="Change color"
+              type="button"
+            >
+              <Palette className="w-4 h-4" />
+            </button>
+
+            {/* Color picker dropdown */}
+            {showColorPicker && (
+              <div className="absolute right-0 top-full mt-1 z-10 bg-popover border border-border rounded-lg shadow-lg p-2 w-32">
+                <div className="text-xs font-medium text-muted-foreground mb-2 px-1">Color</div>
+                <div className="space-y-1">
+                  {colorOptions.map((option) => (
+                    <button
+                      key={option.name}
+                      onClick={() => handleColorChange(option.name)}
+                      className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm hover:bg-accent transition-colors ${
+                        color === option.name ? 'bg-accent' : ''
+                      }`}
+                      type="button"
+                    >
+                      <div className={`w-4 h-4 rounded border ${option.preview}`} />
+                      <span>{option.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`group relative rounded-md border p-3 my-1 ${getColorClasses(color)}`}>
       <div className="flex items-start gap-2.5">
@@ -95,12 +204,16 @@ export const CalloutBlock = ({
           maxLength={4}
         />
         <input
+          ref={inputRef}
           type="text"
-          value={content}
+          value={textContent}
           onChange={(e) => onChange(e.target.value, e.target)}
           onKeyDown={onKeyDown}
           onFocus={onFocus}
           onBlur={onBlur}
+          onSelect={handleSelect}
+          onMouseUp={handleSelect}
+          onKeyUp={handleSelect}
           placeholder={calloutPlaceholder}
           className="flex-1 text-base leading-[1.6] border-none outline-none bg-transparent placeholder:text-muted-foreground/40"
           autoFocus={isFocused}

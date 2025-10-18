@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useRef } from 'react';
+import type { FormattedContent } from '../../types/blocks';
+import { segmentsToString } from '../../utils/textFormatting';
 
 interface CodeBlockProps {
-  content: string;
+  content: string | FormattedContent;
   properties?: { language?: string };
   placeholder?: string;
   isFocused: boolean;
@@ -12,22 +14,34 @@ interface CodeBlockProps {
   onKeyDown?: (e: React.KeyboardEvent) => void;
   onFocus: () => void;
   onBlur: () => void;
+  onSelect?: (start: number, end: number) => void;
 }
 
-export const CodeBlock = ({ 
-  content, 
-  properties = {}, 
-  placeholder, 
-  isFocused, 
-  onChange, 
+export const CodeBlock = ({
+  content,
+  properties = {},
+  placeholder,
+  isFocused,
+  onChange,
   onPropertyChange,
   onKeyDown,
-  onFocus, 
-  onBlur 
+  onFocus,
+  onBlur,
+  onSelect
 }: CodeBlockProps) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const textContent = typeof content === 'string' ? content : segmentsToString(content);
   const language = properties.language || 'text';
   const codePlaceholder = placeholder || 'Enter code...';
+
+  // Handle selection changes
+  const handleSelect = () => {
+    if (onSelect && textareaRef.current) {
+      const start = textareaRef.current.selectionStart || 0;
+      const end = textareaRef.current.selectionEnd || 0;
+      onSelect(start, end);
+    }
+  };
 
   // Auto-resize textarea to fit content
   useEffect(() => {
@@ -36,7 +50,7 @@ export const CodeBlock = ({
       textarea.style.height = 'auto';
       textarea.style.height = `${Math.max(100, textarea.scrollHeight)}px`;
     }
-  }, [content]);
+  }, [textContent]);
 
   // Auto-focus when isFocused changes
   useEffect(() => {
@@ -68,11 +82,14 @@ export const CodeBlock = ({
       <div className="p-3">
         <textarea
           ref={textareaRef}
-          value={content}
+          value={textContent}
           onChange={(e) => onChange(e.target.value, e.target)}
           onKeyDown={onKeyDown}
           onFocus={onFocus}
           onBlur={onBlur}
+          onSelect={handleSelect}
+          onMouseUp={handleSelect}
+          onKeyUp={handleSelect}
           placeholder={codePlaceholder}
           className="w-full min-h-[100px] text-[13px] font-mono leading-[1.5] border-none outline-none bg-transparent placeholder:text-muted-foreground/40 resize-none overflow-hidden"
         />
