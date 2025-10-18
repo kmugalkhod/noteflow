@@ -56,6 +56,14 @@ export const createOrUpdateUser = mutation({
   },
 });
 
+// Get user by ID
+export const getUser = query({
+  args: { userId: v.id("users") },
+  handler: async (ctx, { userId }) => {
+    return await ctx.db.get(userId);
+  },
+});
+
 // Update user preferences
 export const updateUserPreferences = mutation({
   args: {
@@ -69,5 +77,26 @@ export const updateUserPreferences = mutation({
       ...(defaultView && { defaultView }),
       updatedAt: Date.now(),
     });
+  },
+});
+
+// Update user (including expanded folders)
+export const updateUser = mutation({
+  args: {
+    userId: v.id("users"),
+    theme: v.optional(v.union(v.literal("light"), v.literal("dark"), v.literal("system"))),
+    defaultView: v.optional(v.union(v.literal("grid"), v.literal("list"))),
+    expandedFolders: v.optional(v.array(v.id("folders"))),
+  },
+  handler: async (ctx, { userId, theme, defaultView, expandedFolders }) => {
+    const updateData: any = {
+      updatedAt: Date.now(),
+    };
+
+    if (theme !== undefined) updateData.theme = theme;
+    if (defaultView !== undefined) updateData.defaultView = defaultView;
+    if (expandedFolders !== undefined) updateData.expandedFolders = expandedFolders;
+
+    await ctx.db.patch(userId, updateData);
   },
 });

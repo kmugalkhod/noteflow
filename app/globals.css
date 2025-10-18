@@ -37,6 +37,11 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-notes-list-bg: var(--notes-list-bg);
+  --color-editor-bg: var(--editor-bg);
+  --color-folder-selected-bg: var(--folder-selected-bg);
+  --color-folder-icon-color: var(--folder-icon-color);
+  --color-folder-hover-bg: var(--folder-hover-bg);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -46,104 +51,122 @@
 :root {
   --radius: 0.625rem;
 
-  /* Purple/Lavender Theme - Light Mode */
-  --background: oklch(0.99 0.005 300); /* Very light lavender background */
-  --foreground: oklch(0.2 0.02 280); /* Dark purple text */
+  /* Apple Notes Light Mode */
+  --background: #f5f5f5; /* Light gray background */
+  --foreground: #000000; /* Black text */
 
-  --card: oklch(1 0 0); /* White cards */
-  --card-foreground: oklch(0.2 0.02 280);
+  --card: #ffffff; /* White cards */
+  --card-foreground: #000000;
 
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.2 0.02 280);
+  --popover: #ffffff;
+  --popover-foreground: #000000;
 
-  /* Purple primary color matching design */
-  --primary: oklch(0.55 0.25 290); /* Purple #9333ea */
-  --primary-foreground: oklch(1 0 0); /* White text on purple */
+  /* Apple Blue for primary actions */
+  --primary: #007aff; /* Apple blue */
+  --primary-foreground: #ffffff; /* White text on blue */
 
-  --secondary: oklch(0.96 0.01 300); /* Light lavender */
-  --secondary-foreground: oklch(0.3 0.02 280);
+  --secondary: #e5e5ea; /* Light gray */
+  --secondary-foreground: #000000;
 
-  --muted: oklch(0.97 0.005 300); /* Muted lavender */
-  --muted-foreground: oklch(0.5 0.01 280); /* Gray-purple */
+  --muted: #f2f2f7; /* Muted light gray */
+  --muted-foreground: #8e8e93; /* Gray text */
 
-  --accent: oklch(0.95 0.02 290); /* Light purple accent */
-  --accent-foreground: oklch(0.3 0.02 280);
+  --accent: #e8e8ed; /* Light accent */
+  --accent-foreground: #000000;
 
-  --destructive: oklch(0.577 0.245 27.325); /* Red for destructive actions */
+  --destructive: #ff3b30; /* Apple red for destructive actions */
 
-  --border: oklch(0.93 0.005 300); /* Light lavender border */
-  --input: oklch(0.98 0.005 300); /* Input background */
-  --ring: oklch(0.55 0.25 290); /* Purple ring/focus */
+  --border: #d1d1d6; /* Light border */
+  --input: #ffffff; /* White input background */
+  --ring: #007aff; /* Apple blue focus ring */
 
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
+  --chart-1: #007aff; /* Blue */
+  --chart-2: #34c759; /* Green */
+  --chart-3: #ff9500; /* Orange */
+  --chart-4: #af52de; /* Purple */
+  --chart-5: #ff2d55; /* Pink */
 
-  /* Sidebar styling */
-  --sidebar: oklch(0.985 0.005 300); /* Very light lavender sidebar */
-  --sidebar-foreground: oklch(0.3 0.02 280);
-  --sidebar-primary: oklch(0.55 0.25 290); /* Purple for active items */
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.96 0.01 300); /* Light hover state */
-  --sidebar-accent-foreground: oklch(0.3 0.02 280);
-  --sidebar-border: oklch(0.93 0.005 300);
-  --sidebar-ring: oklch(0.55 0.25 290);
+  /* Sidebar styling - Apple Notes left panel */
+  --sidebar: #f2f2f7; /* Light gray sidebar */
+  --sidebar-foreground: #000000;
+  --sidebar-primary: #007aff; /* Apple blue for active items */
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e8e8ed; /* Light hover state */
+  --sidebar-accent-foreground: #000000;
+  --sidebar-border: #d1d1d6;
+  --sidebar-ring: #007aff;
+
+  /* Folder-specific colors (Light Mode) */
+  --folder-selected-bg: #ffd60a; /* Bright gold highlight */
+  --folder-icon-color: #ffb300; /* Gold icon */
+  --folder-hover-bg: #e8e8ed; /* Light hover */
+
+  /* Apple Notes Layout Colors (Light Mode) */
+  --notes-list-bg: #ffffff;  /* Middle panel background */
+  --editor-bg: #ffffff;  /* Right panel/editor background */
 }
 
 .dark {
-  /* Notion's Dark Theme - Exact Color Scheme */
+  /* Apple Notes Dark Mode */
 
-  /* Backgrounds - Notion's carefully crafted dark surfaces */
-  --background: #191919;  /* c-bacPri - Main background */
-  --foreground: #f0efed;  /* c-texPri - Primary text with excellent contrast */
+  /* Backgrounds - Apple's dark surfaces */
+  --background: #1e1e1e;  /* Sidebar/Main background */
+  --foreground: #ffffff;  /* White text */
 
-  --card: #202020;  /* c-bacSec - Elevated surfaces */
-  --card-foreground: #f0efed;
+  --card: #2c2c2e;  /* Elevated surfaces */
+  --card-foreground: #ffffff;
 
-  --popover: #252525;  /* c-popBac - Dropdown/menu background */
-  --popover-foreground: #f0efed;
+  --popover: #2c2c2e;  /* Dropdown/menu background */
+  --popover-foreground: #ffffff;
 
-  /* Primary Interactive Color - Notion's signature blue */
-  --primary: #2383e2;  /* c-bluBacAccPri - Interactive elements */
-  --primary-foreground: #f0efed;
+  /* Primary Interactive Color - Apple blue */
+  --primary: #007aff;  /* Apple blue */
+  --primary-foreground: #ffffff;
 
-  /* Secondary & Muted - Notion's hierarchy */
-  --secondary: #30302e;  /* c-bacTer - Tertiary background */
-  --secondary-foreground: #f0efed;
+  /* Secondary & Muted */
+  --secondary: #3a3a3c;  /* Secondary background */
+  --secondary-foreground: #ffffff;
 
-  --muted: #2c2c2b;  /* c-borSec - Subtle backgrounds */
-  --muted-foreground: #a8a49c;  /* c-texSec - Secondary text */
+  --muted: #2c2c2e;  /* Subtle backgrounds */
+  --muted-foreground: #8e8e93;  /* Gray text */
 
   /* Accent - Hover and active states */
-  --accent: #30302e;  /* c-bacAccPri - Hover backgrounds */
-  --accent-foreground: #f0efed;
+  --accent: #2c2c2e;  /* Hover backgrounds */
+  --accent-foreground: #ffffff;
 
   /* Destructive Actions */
-  --destructive: #de5550;  /* c-redBacAccPri - Delete/error states */
+  --destructive: #ff3b30;  /* Apple red */
 
-  /* Borders - Notion's visible but elegant borders */
-  --border: #30302e;  /* c-borPri - Primary borders (much more visible!) */
-  --input: hsla(0, 0%, 100%, 0.055);  /* ca-inpBac - Transparent input backgrounds */
-  --ring: #2383e2;  /* Focus ring - Notion blue */
+  /* Borders */
+  --border: #38383a;  /* Subtle borders */
+  --input: #2c2c2e;  /* Input backgrounds */
+  --ring: #007aff;  /* Apple blue focus ring */
 
-  /* Charts - Notion's color palette */
-  --chart-1: #2383e2;  /* Blue */
-  --chart-2: #46a171;  /* Green */
-  --chart-3: #d5803b;  /* Orange */
-  --chart-4: #b577d6;  /* Purple */
-  --chart-5: #db6999;  /* Pink */
+  /* Charts - Apple's color palette */
+  --chart-1: #007aff;  /* Blue */
+  --chart-2: #34c759;  /* Green */
+  --chart-3: #ff9500;  /* Orange */
+  --chart-4: #af52de;  /* Purple */
+  --chart-5: #ff2d55;  /* Pink */
 
-  /* Sidebar - Notion's sidebar styling */
-  --sidebar: #202020;  /* c-bacSec */
-  --sidebar-foreground: #a8a49c;  /* c-sidTexCol - Sidebar text */
-  --sidebar-primary: #2383e2;  /* Active item color */
-  --sidebar-primary-foreground: #f0efed;
-  --sidebar-accent: #30302e;  /* Hover state */
-  --sidebar-accent-foreground: #f0efed;
-  --sidebar-border: #30302e;  /* c-borPri */
-  --sidebar-ring: #2383e2;
+  /* Sidebar - Apple Notes left panel (dark) */
+  --sidebar: #454545;  /* Dark sidebar - neutral gray (hex fallback for oklch(0.269 0 0)) */
+  --sidebar-foreground: #ffffff;  /* White folder names */
+  --sidebar-primary: #007aff;  /* Apple blue for active items */
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #2c2c2e;  /* Hover state */
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #38383a;
+  --sidebar-ring: #007aff;
+
+  /* Folder-specific colors (Dark Mode) */
+  --folder-selected-bg: #c9a445;  /* Gold highlight */
+  --folder-icon-color: #f5b32d;  /* Gold icon */
+  --folder-hover-bg: #2c2c2e;  /* Dark hover */
+
+  /* Apple Notes Three-Column Layout Colors (Dark Mode) */
+  --notes-list-bg: #3a3a3c;  /* Middle panel background */
+  --editor-bg: #1c1c1e;  /* Right panel/editor background */
 }
 
 @layer base {
@@ -153,4 +176,17 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Drag and Drop Visual Feedback */
+.drag-over {
+  @apply bg-primary/10 border-primary/30 border-2 rounded-md;
+}
+
+[draggable="true"] {
+  cursor: grab;
+}
+
+[draggable="true"]:active {
+  cursor: grabbing;
 }

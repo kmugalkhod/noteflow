@@ -12,6 +12,7 @@ export default defineSchema({
     // User preferences
     theme: v.optional(v.union(v.literal("light"), v.literal("dark"), v.literal("system"))),
     defaultView: v.optional(v.union(v.literal("grid"), v.literal("list"))),
+    expandedFolders: v.optional(v.array(v.id("folders"))), // Track which folders are expanded in sidebar
 
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -31,7 +32,9 @@ export default defineSchema({
 
     // Metadata
     isPinned: v.optional(v.boolean()),
+    isFavorite: v.optional(v.boolean()), // For favorites section
     color: v.optional(v.string()),
+    position: v.optional(v.number()), // For custom ordering via drag-drop
 
     // Soft delete
     isDeleted: v.optional(v.boolean()),
@@ -45,6 +48,7 @@ export default defineSchema({
     .index("by_folder", ["folderId"])
     .index("by_user_not_deleted", ["userId", "isDeleted"])
     .index("by_user_and_folder", ["userId", "folderId"])
+    .index("by_user_favorite", ["userId", "isFavorite"]) // Index for favorites
     .searchIndex("search_title", {
       searchField: "title",
       filterFields: ["userId", "isDeleted"],
@@ -59,6 +63,7 @@ export default defineSchema({
     userId: v.id("users"),
     name: v.string(),
     color: v.optional(v.string()),
+    position: v.optional(v.number()), // For custom ordering via drag-drop
 
     // For nested folders (optional)
     parentId: v.optional(v.id("folders")),
@@ -66,7 +71,8 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index("by_user", ["userId"])
-    .index("by_parent", ["parentId"]),
+    .index("by_parent", ["parentId"])
+    .index("by_user_and_parent", ["userId", "parentId"]), // Index for querying folders by user and parent
 
   // Tags table
   tags: defineTable({
