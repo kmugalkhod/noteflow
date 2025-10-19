@@ -9,7 +9,21 @@ import { NoteListItem } from "./NoteListItem";
 import { Loader2, FileText } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-export function NotesList() {
+interface NotesListProps {
+  onToggleSidebar?: () => void;
+  isSidebarCollapsed?: boolean;
+  onToggleNotesPanel?: () => void;
+  isCollapsed?: boolean;
+  width?: number;
+}
+
+export function NotesList({
+  onToggleSidebar,
+  isSidebarCollapsed = false,
+  onToggleNotesPanel,
+  isCollapsed = false,
+  width = 300,
+}: NotesListProps) {
   const convexUser = useConvexUser();
   const router = useRouter();
   const { selectedFolderId, selectedNoteId, setSelectedNoteId } = useNotes();
@@ -73,13 +87,24 @@ export function NotesList() {
     router.push(`/note/${noteId}`);
   };
 
+  // If collapsed, don't render
+  if (isCollapsed) {
+    return null;
+  }
+
   return (
-    <div className="w-[240px] h-screen bg-notes-list-bg border-r border-sidebar-border flex flex-col flex-shrink-0">
+    <div
+      className="h-screen bg-notes-list-bg border-r border-sidebar-border flex flex-col flex-shrink-0 transition-all"
+      style={{ width: `${width}px` }}
+    >
       {/* Toolbar */}
       <NotesListToolbar
         onNewNote={handleNewNote}
         canDelete={!!selectedNoteId}
         onDelete={handleDeleteNote}
+        onToggleSidebar={onToggleSidebar}
+        isSidebarCollapsed={isSidebarCollapsed}
+        onToggleNotesPanel={onToggleNotesPanel}
       />
 
       {/* Notes List */}

@@ -89,7 +89,7 @@ export function FolderTreeItem({
         <div
           onClick={handleFolderClick}
           className={`
-            flex items-center gap-2 py-2 pr-3 rounded-md cursor-pointer group transition-colors
+            flex items-center gap-2 py-1.5 pr-3 rounded-md cursor-pointer group transition-colors
             ${
               isSelected
                 ? "bg-folder-selected-bg text-foreground font-medium"
