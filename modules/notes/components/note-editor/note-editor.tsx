@@ -178,7 +178,7 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
   return (
     <div className="h-full flex flex-col bg-editor-bg">
       {/* Minimal Editor - Apple Notes Style with Rich Editing */}
-      <div className="flex-1 overflow-auto px-16 py-12 max-w-4xl mx-auto w-full">
+      <div className="flex-1 overflow-auto px-5 py-16 w-full">
         <Input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -193,7 +193,7 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
             initialContent={serializeBlocks(blocks)}
             placeholder="Type '/' for commands or just start writing..."
             onChange={handleRichEditorChange}
-            className="min-h-[calc(100vh-12rem)]"
+            className="min-h-[calc(100vh-16rem)]"
           />
         ) : !isInitialized ? (
           <div className="flex items-center justify-center min-h-[200px]">
@@ -204,7 +204,7 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
             value={content}
             onChange={(e) => handlePlainTextChange(e.target.value)}
             placeholder="Start writing..."
-            className="w-full min-h-[calc(100vh-12rem)] text-base leading-relaxed border-none outline-none bg-transparent placeholder:text-muted-foreground/40 resize-none font-[inherit]"
+            className="w-full min-h-[calc(100vh-16rem)] text-base leading-relaxed border-none outline-none bg-transparent placeholder:text-muted-foreground/40 resize-none font-[inherit]"
           />
         )}
       </div>

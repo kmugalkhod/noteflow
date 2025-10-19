@@ -11,7 +11,11 @@ import { useConvexUser } from "@/modules/shared/hooks/use-convex-user";
 import { ThemeToggle } from "@/modules/shared/components/theme-toggle";
 import { UserButton, useUser } from "@clerk/nextjs";
 
-export function FolderSidebar() {
+interface FolderSidebarProps {
+  isCollapsed?: boolean;
+}
+
+export function FolderSidebar({ isCollapsed = false }: FolderSidebarProps) {
   const folderTreeRef = useRef<FolderTreeRef>(null);
   const { selectedFolderId, setSelectedFolderId, setSelectedNoteId } = useNotes();
   const convexUser = useConvexUser();
@@ -38,6 +42,11 @@ export function FolderSidebar() {
   // Get display name from user
   const displayName = user?.fullName || user?.firstName || user?.username || "User";
 
+  // If collapsed, don't render
+  if (isCollapsed) {
+    return null;
+  }
+
   return (
     <aside className="w-[235px] h-screen bg-sidebar border-r border-sidebar-border flex flex-col flex-shrink-0">
       {/* Header */}
@@ -51,7 +60,7 @@ export function FolderSidebar() {
         <button
           onClick={handleSelectAllNotes}
           className={`
-            w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm mb-2
+            w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-sm mb-1
             transition-colors
             ${
               isAllNotesSelected

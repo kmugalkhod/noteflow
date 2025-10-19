@@ -160,13 +160,13 @@
   --sidebar-ring: #007aff;
 
   /* Folder-specific colors (Dark Mode) */
-  --folder-selected-bg: #c9a445;  /* Gold highlight */
+  --folder-selected-bg: #ffd60a;  /* Bright gold highlight - same as light mode */
   --folder-icon-color: #f5b32d;  /* Gold icon */
   --folder-hover-bg: #2c2c2e;  /* Dark hover */
 
   /* Apple Notes Three-Column Layout Colors (Dark Mode) */
-  --notes-list-bg: #3a3a3c;  /* Middle panel background */
-  --editor-bg: #1c1c1e;  /* Right panel/editor background */
+  --notes-list-bg: #242426;  /* Middle panel background - DARKEST panel */
+  --editor-bg: #1c1c1e;  /* Right panel/editor background - very dark */
 }
 
 @layer base {
