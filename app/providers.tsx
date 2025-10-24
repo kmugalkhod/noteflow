@@ -5,6 +5,7 @@ import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { ConvexReactClient } from "convex/react";
 import { ReactNode } from "react";
 import { ThemeProvider } from "@/modules/shared/components";
+import { Toaster } from "sonner";
 
 const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
@@ -16,6 +17,7 @@ export function Providers({ children }: { children: ReactNode }) {
       <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
         <ThemeProvider defaultTheme="system" storageKey="noteflow-ui-theme">
           {children}
+          <Toaster position="bottom-right" richColors />
         </ThemeProvider>
       </ConvexProviderWithClerk>
     </ClerkProvider>
