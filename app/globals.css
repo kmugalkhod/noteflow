@@ -69,7 +69,7 @@
   --secondary-foreground: #000000;
 
   --muted: #f2f2f7; /* Muted light gray */
-  --muted-foreground: #8e8e93; /* Gray text */
+  --muted-foreground: #6e6e73; /* Gray text - enhanced contrast */
 
   --accent: #e8e8ed; /* Light accent */
   --accent-foreground: #000000;
@@ -97,8 +97,8 @@
   --sidebar-ring: #007aff;
 
   /* Folder-specific colors (Light Mode) */
-  --folder-selected-bg: #ffd60a; /* Bright gold highlight */
-  --folder-icon-color: #ffb300; /* Gold icon */
+  --folder-selected-bg: #e0e0e5; /* Subtle gray highlight - professional */
+  --folder-icon-color: #007aff; /* Apple blue icon for selected */
   --folder-hover-bg: #e8e8ed; /* Light hover */
 
   /* Apple Notes Layout Colors (Light Mode) */
@@ -128,7 +128,7 @@
   --secondary-foreground: #ffffff;
 
   --muted: #2c2c2e;  /* Subtle backgrounds */
-  --muted-foreground: #8e8e93;  /* Gray text */
+  --muted-foreground: #98989d;  /* Gray text - enhanced contrast for dark mode */
 
   /* Accent - Hover and active states */
   --accent: #2c2c2e;  /* Hover backgrounds */
@@ -160,8 +160,8 @@
   --sidebar-ring: #007aff;
 
   /* Folder-specific colors (Dark Mode) */
-  --folder-selected-bg: #ffd60a;  /* Bright gold highlight - same as light mode */
-  --folder-icon-color: #f5b32d;  /* Gold icon */
+  --folder-selected-bg: #3a3a3c;  /* Subtle dark gray highlight - professional */
+  --folder-icon-color: #007aff;  /* Apple blue icon for selected */
   --folder-hover-bg: #2c2c2e;  /* Dark hover */
 
   /* Apple Notes Three-Column Layout Colors (Dark Mode) */
@@ -176,6 +176,23 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Smooth transitions for interactive elements */
+  button, a, [role="button"] {
+    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Smooth color transitions for theme switching */
+  * {
+    transition-property: background-color, border-color, color;
+    transition-duration: 200ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Disable transitions during initial page load */
+  .preload * {
+    transition: none !important;
+  }
 }
 
 /* Drag and Drop Visual Feedback */
@@ -189,4 +206,113 @@
 
 [draggable="true"]:active {
   cursor: grabbing;
+}
+
+/* Custom Animation Keyframes */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes scaleOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+/* Utility animation classes */
+.animate-shimmer {
+  background: linear-gradient(
+    to right,
+    var(--muted) 0%,
+    var(--muted-foreground) 20%,
+    var(--muted) 40%,
+    var(--muted) 100%
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 2s linear infinite;
+}
+
+.animate-fade-in {
+  animation: fadeIn 200ms cubic-bezier(0.0, 0, 0.2, 1);
+}
+
+.animate-fade-out {
+  animation: fadeOut 150ms cubic-bezier(0.4, 0, 1, 1);
+}
+
+.animate-slide-up {
+  animation: slideUp 250ms cubic-bezier(0.0, 0, 0.2, 1);
+}
+
+.animate-slide-down {
+  animation: slideDown 250ms cubic-bezier(0.0, 0, 0.2, 1);
+}
+
+.animate-scale-in {
+  animation: scaleIn 200ms cubic-bezier(0.0, 0, 0.2, 1);
+}
+
+.animate-scale-out {
+  animation: scaleOut 150ms cubic-bezier(0.4, 0, 1, 1);
 }

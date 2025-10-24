@@ -6,6 +6,7 @@ import { useConvexUser } from "@/modules/shared/hooks/use-convex-user";
 import { TrashNoteCard } from "@/modules/notes/components/trash-note-card";
 import { Trash2, Loader2 } from "lucide-react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,6 +21,7 @@ import { Id } from "@/convex/_generated/dataModel";
 
 export function TrashView() {
   const convexUser = useConvexUser();
+  const router = useRouter();
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [noteToDelete, setNoteToDelete] = useState<Id<"notes"> | null>(null);
 
@@ -33,9 +35,14 @@ export function TrashView() {
 
   const handleRestore = async (noteId: string) => {
     try {
+      console.log("Restoring note:", noteId);
       await restoreNote({ noteId: noteId as Id<"notes"> });
+      console.log("Note restored successfully");
+      // Redirect back to main view
+      router.push("/");
     } catch (error) {
       console.error("Failed to restore note:", error);
+      alert("Failed to restore note. Please try again.");
     }
   };
 

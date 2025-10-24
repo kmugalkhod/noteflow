@@ -318,6 +318,29 @@ export const RichEditor = forwardRef<RichEditorRef, RichEditorProps>(({
 
     const currentBlock = editorState.blocks[blockIndex];
 
+    // For code blocks, create a new paragraph block below and focus it
+    if (currentBlock.type === 'code') {
+      const newBlock = createBlock('paragraph', '');
+      const newBlocks = [...editorState.blocks];
+      newBlocks.splice(blockIndex + 1, 0, newBlock);
+
+      isUserChangeRef.current = true;
+      setEditorState(prev => ({
+        ...prev,
+        blocks: newBlocks,
+        focusedBlockId: newBlock.id,
+      }));
+
+      setTimeout(() => {
+        const blockElement = blockRefs.current.get(newBlock.id);
+        if (blockElement) {
+          const input = blockElement.querySelector('input, textarea, [contenteditable]') as HTMLElement;
+          if (input) input.focus();
+        }
+      }, 10);
+      return;
+    }
+
     // Convert non-paragraph blocks to paragraph
     if (currentBlock.type !== 'paragraph') {
       const newBlocks = [...editorState.blocks];
@@ -790,10 +813,33 @@ export const RichEditor = forwardRef<RichEditorRef, RichEditorProps>(({
         // Focus last block if clicking in empty space
         if (e.target === editorRef.current && editorState.blocks.length > 0) {
           const lastBlock = editorState.blocks[editorState.blocks.length - 1];
-          const blockElement = blockRefs.current.get(lastBlock.id);
-          if (blockElement) {
-            const input = blockElement.querySelector('input, textarea, [contenteditable]') as HTMLElement;
-            if (input) input.focus();
+
+          // If the last block is a code block or another special block, create a new paragraph
+          if (lastBlock.type === 'code' || lastBlock.type === 'divider' || lastBlock.type === 'table' || lastBlock.type === 'image') {
+            const newBlock = createBlock('paragraph', '');
+            const newBlocks = [...editorState.blocks, newBlock];
+
+            isUserChangeRef.current = true;
+            setEditorState(prev => ({
+              ...prev,
+              blocks: newBlocks,
+              focusedBlockId: newBlock.id,
+            }));
+
+            setTimeout(() => {
+              const blockElement = blockRefs.current.get(newBlock.id);
+              if (blockElement) {
+                const input = blockElement.querySelector('input, textarea, [contenteditable]') as HTMLElement;
+                if (input) input.focus();
+              }
+            }, 10);
+          } else {
+            // Otherwise just focus the last block
+            const blockElement = blockRefs.current.get(lastBlock.id);
+            if (blockElement) {
+              const input = blockElement.querySelector('input, textarea, [contenteditable]') as HTMLElement;
+              if (input) input.focus();
+            }
           }
         }
       }}

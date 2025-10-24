@@ -56,13 +56,13 @@ export function FormattingToolbar({
   activeFormats,
 }: FormattingToolbarProps) {
   return (
-    <div className="flex items-center gap-1 p-2 bg-background border border-border rounded-lg shadow-lg">
+    <div className="flex items-center gap-1 p-2 bg-background border border-border rounded-lg shadow-lg animate-scale-in">
       {/* Text Formatting */}
       <Button
         variant={activeFormats.bold ? "default" : "ghost"}
         size="sm"
         onClick={() => onFormat('bold')}
-        className="h-8 w-8 p-0"
+        className="h-8 w-8 p-0 transition-transform hover:scale-110"
         title="Bold (Cmd+B)"
       >
         <Bold className="h-4 w-4" />
@@ -72,7 +72,7 @@ export function FormattingToolbar({
         variant={activeFormats.italic ? "default" : "ghost"}
         size="sm"
         onClick={() => onFormat('italic')}
-        className="h-8 w-8 p-0"
+        className="h-8 w-8 p-0 transition-transform hover:scale-110"
         title="Italic (Cmd+I)"
       >
         <Italic className="h-4 w-4" />
@@ -82,7 +82,7 @@ export function FormattingToolbar({
         variant={activeFormats.underline ? "default" : "ghost"}
         size="sm"
         onClick={() => onFormat('underline')}
-        className="h-8 w-8 p-0"
+        className="h-8 w-8 p-0 transition-transform hover:scale-110"
         title="Underline (Cmd+U)"
       >
         <Underline className="h-4 w-4" />
@@ -92,7 +92,7 @@ export function FormattingToolbar({
         variant={activeFormats.strikethrough ? "default" : "ghost"}
         size="sm"
         onClick={() => onFormat('strikethrough')}
-        className="h-8 w-8 p-0"
+        className="h-8 w-8 p-0 transition-transform hover:scale-110"
         title="Strikethrough"
       >
         <Strikethrough className="h-4 w-4" />

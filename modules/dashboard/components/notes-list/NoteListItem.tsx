@@ -33,11 +33,11 @@ export function NoteListItem({
       onClick={onClick}
       className={`
         px-4 py-2.5 cursor-pointer border-b border-border/50
-        transition-colors
+        transition-all duration-200 ease-out
         ${
           isSelected
-            ? "bg-secondary"
-            : "hover:bg-secondary/50"
+            ? "bg-secondary shadow-sm"
+            : "hover:bg-secondary/50 hover:shadow-sm hover:scale-[1.01]"
         }
       `}
     >

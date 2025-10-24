@@ -54,6 +54,9 @@ export function NotesList({
   // Sort notes by most recent
   const sortedNotes = [...notes].sort((a, b) => b.updatedAt - a.updatedAt);
 
+  // Find selected note for title
+  const selectedNote = sortedNotes.find((note) => note._id === selectedNoteId);
+
   const handleNewNote = async () => {
     if (!convexUser) return;
 
@@ -105,6 +108,7 @@ export function NotesList({
         onToggleSidebar={onToggleSidebar}
         isSidebarCollapsed={isSidebarCollapsed}
         onToggleNotesPanel={onToggleNotesPanel}
+        selectedNoteTitle={selectedNote?.title}
       />
 
       {/* Notes List */}
