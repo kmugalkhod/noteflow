@@ -332,4 +332,11 @@
   .note-list-item {
     @apply px-4 py-3;
   }
+
+  /* Touch-friendly hover states for mobile */
+  @media (hover: none) {
+    button:active, [role="button"]:active {
+      transform: scale(0.97);
+    }
+  }
 }
