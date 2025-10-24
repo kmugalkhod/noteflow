@@ -32,7 +32,7 @@ export const SlashMenu = ({ state, menuRef, onSelectCommand }: SlashMenuProps) =
   return (
     <div
       ref={menuRef}
-      className="fixed z-50 w-80 max-h-96 overflow-y-auto bg-popover border border-border rounded-md shadow-lg"
+      className="fixed z-50 w-80 max-h-96 overflow-y-auto bg-popover border border-border rounded-md shadow-lg animate-slide-up"
       style={{
         left: `${state.position.x}px`,
         top: `${state.position.y}px`,

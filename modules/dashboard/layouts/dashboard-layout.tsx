@@ -123,7 +123,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         )}
 
         {/* Column 3: Note Editor/Content */}
-        <main className="flex-1 overflow-auto bg-editor-bg relative">
+        <main className="flex-1 overflow-auto bg-editor-bg relative transition-all duration-200">
           {/* Show notes panel button when collapsed */}
           {isNotesPanelCollapsed && (
             <button

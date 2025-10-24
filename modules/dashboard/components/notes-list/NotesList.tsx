@@ -54,6 +54,9 @@ export function NotesList({
   // Sort notes by most recent
   const sortedNotes = [...notes].sort((a, b) => b.updatedAt - a.updatedAt);
 
+  // Find selected note for title
+  const selectedNote = sortedNotes.find((note) => note._id === selectedNoteId);
+
   const handleNewNote = async () => {
     if (!convexUser) return;
 
@@ -105,18 +108,24 @@ export function NotesList({
         onToggleSidebar={onToggleSidebar}
         isSidebarCollapsed={isSidebarCollapsed}
         onToggleNotesPanel={onToggleNotesPanel}
+        selectedNoteTitle={selectedNote?.title}
       />
 
       {/* Notes List */}
       <div className="flex-1 overflow-y-auto">
         {!convexUser || allNotes === undefined ? (
-          <div className="flex items-center justify-center h-32">
-            <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+          <div className="p-4 space-y-3">
+            <div className="h-20 bg-muted/30 rounded-md animate-pulse" />
+            <div className="h-20 bg-muted/20 rounded-md animate-pulse" />
+            <div className="h-20 bg-muted/10 rounded-md animate-pulse" />
           </div>
         ) : sortedNotes.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full px-4 text-center">
-            <FileText className="w-8 h-8 text-muted-foreground/50 mb-2" />
-            <p className="text-sm text-muted-foreground">No Notes</p>
+          <div className="flex flex-col items-center justify-center h-full px-4 text-center animate-fade-in">
+            <FileText className="w-16 h-16 text-muted-foreground/30 mb-4" />
+            <h3 className="text-base font-semibold text-foreground mb-1">No notes yet</h3>
+            <p className="text-sm text-muted-foreground max-w-[200px]">
+              Click the + button to create your first note
+            </p>
           </div>
         ) : (
           sortedNotes.map((note) => (

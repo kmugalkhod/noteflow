@@ -32,22 +32,22 @@ export function NoteListItem({
     <div
       onClick={onClick}
       className={`
-        px-4 py-2.5 cursor-pointer border-b border-border/50
-        transition-colors
+        px-5 py-3.5 cursor-pointer border-b border-border/50
+        transition-all duration-200 ease-out
         ${
           isSelected
-            ? "bg-secondary"
-            : "hover:bg-secondary/50"
+            ? "bg-secondary shadow-sm"
+            : "hover:bg-secondary/50 hover:shadow-sm hover:scale-[1.01]"
         }
       `}
     >
-      <h3 className={`text-sm font-semibold mb-1 truncate ${isSelected ? "text-foreground" : "text-foreground"}`}>
+      <h3 className={`text-sm font-semibold mb-1.5 truncate leading-snug ${isSelected ? "text-foreground" : "text-foreground"}`}>
         {title || "Untitled"}
       </h3>
-      <p className="text-xs text-muted-foreground mb-1 line-clamp-2">
+      <p className="text-xs text-muted-foreground mb-1.5 line-clamp-2 leading-relaxed">
         {preview || "No content"}
       </p>
-      <time className="text-xs text-muted-foreground">
+      <time className="text-xs text-muted-foreground font-medium">
         {timeAgo}
       </time>
     </div>

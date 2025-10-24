@@ -37,6 +37,7 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [showSavedIndicator, setShowSavedIndicator] = useState(false);
 
   const richEditorRef = useRef<RichEditorRef>(null);
   const debouncedTitle = useDebounce(title, 500);
@@ -114,6 +115,12 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
         .then(() => {
           setLastSaved(new Date());
           setIsSaving(false);
+          setShowSavedIndicator(true);
+
+          // Hide "Saved" message after 2 seconds
+          setTimeout(() => {
+            setShowSavedIndicator(false);
+          }, 2000);
         })
         .catch((error) => {
           console.error("Failed to save:", error);
@@ -151,11 +158,16 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
     }
   };
 
-  // Show loader while fetching
+  // Show skeleton loader while fetching
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      <div className="h-full flex flex-col bg-editor-bg px-5 py-16 space-y-6">
+        <div className="h-12 bg-muted/30 rounded-md animate-pulse w-2/3" />
+        <div className="space-y-3">
+          <div className="h-4 bg-muted/20 rounded animate-pulse w-full" />
+          <div className="h-4 bg-muted/20 rounded animate-pulse w-5/6" />
+          <div className="h-4 bg-muted/20 rounded animate-pulse w-4/5" />
+        </div>
       </div>
     );
   }
@@ -176,14 +188,14 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
   }
 
   return (
-    <div className="h-full flex flex-col bg-editor-bg">
+    <div className="h-full flex flex-col bg-editor-bg animate-fade-in">
       {/* Minimal Editor - Apple Notes Style with Rich Editing */}
-      <div className="flex-1 overflow-auto px-5 py-16 w-full">
+      <div className="flex-1 overflow-auto px-8 py-20 w-full max-w-4xl mx-auto">
         <Input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Untitled"
-          className="text-4xl font-bold border-none focus-visible:ring-0 px-0 mb-6 placeholder:text-muted-foreground/40 h-auto bg-transparent"
+          className="text-4xl font-bold border-none focus-visible:ring-0 px-0 mb-6 placeholder:text-muted-foreground/30 h-auto bg-transparent leading-tight tracking-tight"
         />
 
         {isInitialized && isRichMode ? (
@@ -210,10 +222,19 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
       </div>
 
       {/* Auto-save indicator (minimal, bottom-right corner) */}
-      {isSaving && (
-        <div className="fixed bottom-4 right-4 flex items-center gap-2 text-xs text-muted-foreground bg-background/80 backdrop-blur-sm px-3 py-1.5 rounded-full border border-border">
-          <Loader2 className="w-3 h-3 animate-spin" />
-          <span>Saving...</span>
+      {(isSaving || showSavedIndicator) && (
+        <div className="fixed bottom-4 right-4 flex items-center gap-2 text-xs bg-background/80 backdrop-blur-sm px-3 py-1.5 rounded-full border border-border shadow-sm animate-slide-up">
+          {isSaving ? (
+            <>
+              <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />
+              <span className="text-muted-foreground">Saving...</span>
+            </>
+          ) : showSavedIndicator ? (
+            <>
+              <Check className="w-3 h-3 text-green-500 animate-scale-in" />
+              <span className="text-green-600 dark:text-green-400">Saved</span>
+            </>
+          ) : null}
         </div>
       )}
     </div>

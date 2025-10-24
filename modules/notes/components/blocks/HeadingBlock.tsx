@@ -44,11 +44,11 @@ export const HeadingBlock = ({
   };
 
   const getHeadingStyles = (level: number, fontSize: string) => {
-    // Base styles by level
+    // Base styles by level with improved typography
     const baseStyles = {
-      1: { small: "text-3xl", normal: "text-4xl", large: "text-5xl", weight: "font-bold", leading: "leading-tight" },
-      2: { small: "text-2xl", normal: "text-3xl", large: "text-4xl", weight: "font-bold", leading: "leading-tight" },
-      3: { small: "text-xl", normal: "text-2xl", large: "text-3xl", weight: "font-semibold", leading: "leading-snug" }
+      1: { small: "text-3xl", normal: "text-4xl", large: "text-5xl", weight: "font-bold", leading: "leading-tight tracking-tight" },
+      2: { small: "text-2xl", normal: "text-3xl", large: "text-4xl", weight: "font-bold", leading: "leading-tight tracking-tight" },
+      3: { small: "text-xl", normal: "text-2xl", large: "text-3xl", weight: "font-semibold", leading: "leading-snug tracking-tight" }
     };
 
     const style = baseStyles[level as keyof typeof baseStyles] || baseStyles[1];
@@ -116,7 +116,7 @@ export const HeadingBlock = ({
       onMouseUp={handleSelect}
       onKeyUp={handleSelect}
       placeholder={headingPlaceholder}
-      className={`w-full border-none outline-none bg-transparent placeholder:text-muted-foreground/40 py-[3px] px-2 ${getHeadingStyles(level, fontSize)}`}
+      className={`w-full border-none outline-none bg-transparent placeholder:text-muted-foreground/30 py-[3px] px-2 ${getHeadingStyles(level, fontSize)}`}
       autoFocus={isFocused}
     />
   );
