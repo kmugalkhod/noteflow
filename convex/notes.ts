@@ -5,7 +5,7 @@ import { mutation, query } from "./_generated/server";
 export const getNotes = query({
   args: {
     userId: v.id("users"),
-    folderId: v.optional(v.id("folders")),
+    folderId: v.optional(v.union(v.id("folders"), v.null())),
   },
   handler: async (ctx, { userId, folderId }) => {
     const notesQuery = ctx.db
@@ -16,13 +16,62 @@ export const getNotes = query({
 
     const notes = await notesQuery.collect();
 
-    // Filter by folder if specified
-    if (folderId !== undefined) {
-      const filteredNotes = notes.filter((note) => note.folderId === folderId);
-      return filteredNotes;
+    // Filter by folder
+    if (folderId === null) {
+      // null means show only uncategorized notes (no folder)
+      return notes.filter((note) => !note.folderId).sort((a, b) => b.updatedAt - a.updatedAt);
+    } else if (folderId !== undefined) {
+      // Specific folder ID
+      return notes.filter((note) => note.folderId === folderId).sort((a, b) => b.updatedAt - a.updatedAt);
     }
 
+    // undefined means all notes
     return notes.sort((a, b) => b.updatedAt - a.updatedAt);
+  },
+});
+
+// Get notes with minimal data (no content) - for list view performance
+export const getNotesMinimal = query({
+  args: {
+    userId: v.id("users"),
+    folderId: v.optional(v.union(v.id("folders"), v.null())),
+  },
+  handler: async (ctx, { userId, folderId }) => {
+    const notesQuery = ctx.db
+      .query("notes")
+      .withIndex("by_user_not_deleted", (q) =>
+        q.eq("userId", userId).eq("isDeleted", false)
+      );
+
+    const notes = await notesQuery.collect();
+
+    // Filter by folder
+    let filteredNotes = notes;
+    if (folderId === null) {
+      // null means show only uncategorized notes (no folder)
+      filteredNotes = notes.filter((note) => !note.folderId);
+    } else if (folderId !== undefined) {
+      // Specific folder ID
+      filteredNotes = notes.filter((note) => note.folderId === folderId);
+    }
+
+    // Return only essential fields (exclude content and blocks for performance)
+    return filteredNotes
+      .map((note) => ({
+        _id: note._id,
+        _creationTime: note._creationTime,
+        userId: note.userId,
+        folderId: note.folderId,
+        title: note.title,
+        updatedAt: note.updatedAt,
+        createdAt: note.createdAt,
+        isPinned: note.isPinned,
+        isFavorite: note.isFavorite,
+        isDeleted: note.isDeleted,
+        // Provide a short preview from content (first 100 chars)
+        contentPreview: note.content?.substring(0, 100) || "",
+      }))
+      .sort((a, b) => b.updatedAt - a.updatedAt);
   },
 });
 
@@ -31,6 +80,24 @@ export const getNote = query({
   args: { noteId: v.id("notes") },
   handler: async (ctx, { noteId }) => {
     return await ctx.db.get(noteId);
+  },
+});
+
+// Get note content for editor (optimized - includes title for page refresh case)
+export const getNoteContent = query({
+  args: { noteId: v.id("notes") },
+  handler: async (ctx, { noteId }) => {
+    const note = await ctx.db.get(noteId);
+    if (!note) return null;
+
+    // Return title + content/blocks (title is used only on initial load if context is empty)
+    return {
+      _id: note._id,
+      title: note.title,
+      content: note.content,
+      blocks: note.blocks,
+      contentType: note.contentType,
+    };
   },
 });
 
@@ -268,6 +335,29 @@ export const getFavoriteNotes = query({
   },
 });
 
+// Get note counts for sidebar (optimized - single query)
+export const getNoteCounts = query({
+  args: { userId: v.id("users") },
+  handler: async (ctx, { userId }) => {
+    const notes = await ctx.db
+      .query("notes")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    const activeNotes = notes.filter((n) => !n.isDeleted);
+    const deletedNotes = notes.filter((n) => n.isDeleted);
+    const favoriteNotes = notes.filter((n) => n.isFavorite && !n.isDeleted);
+    const uncategorizedNotes = activeNotes.filter((n) => !n.folderId);
+
+    return {
+      total: activeNotes.length,
+      uncategorized: uncategorizedNotes.length,
+      deleted: deletedNotes.length,
+      favorites: favoriteNotes.length,
+    };
+  },
+});
+
 // Move note to different folder
 export const moveNoteToFolder = mutation({
   args: {
@@ -316,5 +406,30 @@ export const getRecentNotes = query({
     return notes
       .sort((a, b) => b.updatedAt - a.updatedAt)
       .slice(0, limit);
+  },
+});
+
+// Get workspace notes (pinned + recent) - optimized for workspace view
+export const getWorkspaceNotes = query({
+  args: { userId: v.id("users"), recentLimit: v.optional(v.number()) },
+  handler: async (ctx, { userId, recentLimit = 10 }) => {
+    const notes = await ctx.db
+      .query("notes")
+      .withIndex("by_user_not_deleted", (q) =>
+        q.eq("userId", userId).eq("isDeleted", false)
+      )
+      .collect();
+
+    const sortedNotes = notes.sort((a, b) => b.updatedAt - a.updatedAt);
+    const pinnedNotes = sortedNotes.filter((note) => note.isPinned);
+    const recentNotes = sortedNotes
+      .filter((note) => !note.isPinned)
+      .slice(0, recentLimit);
+
+    return {
+      pinnedNotes,
+      recentNotes,
+      totalCount: notes.length,
+    };
   },
 });

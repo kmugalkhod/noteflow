@@ -1,9 +1,10 @@
 "use client";
 
+import { useMemo, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useConvexUser } from "@/modules/shared/hooks/use-convex-user";
-import { useNotes } from "../../contexts/NotesContext";
+import { useNotesStore } from "../../store/useNotesStore";
 import { NotesListToolbar } from "./NotesListToolbar";
 import { NoteListItem } from "./NoteListItem";
 import { Loader2, FileText } from "lucide-react";
@@ -26,38 +27,45 @@ export function NotesList({
 }: NotesListProps) {
   const convexUser = useConvexUser();
   const router = useRouter();
-  const { selectedFolderId, selectedNoteId, setSelectedNoteId } = useNotes();
+
+  // Zustand store - select only what we need
+  const selectedFolderId = useNotesStore((state) => state.selectedFolderId);
+  const selectedNoteId = useNotesStore((state) => state.selectedNoteId);
+  const setSelectedNoteId = useNotesStore((state) => state.setSelectedNoteId);
+
   const createNote = useMutation(api.notes.createNote);
   const deleteNote = useMutation(api.notes.deleteNote);
   const toggleFavorite = useMutation(api.notes.toggleFavorite);
   const moveNoteToFolder = useMutation(api.notes.moveNoteToFolder);
 
-  // Get notes based on selected folder
-  const allNotes = useQuery(
-    api.notes.getNotes,
-    convexUser ? { userId: convexUser._id } : "skip"
-  );
-
-  const folderNotes = useQuery(
-    api.folders.getFolderWithNotes,
-    selectedFolderId && selectedFolderId !== "all"
-      ? { folderId: selectedFolderId }
+  // Get notes with minimal data (no content for performance)
+  const notes = useQuery(
+    api.notes.getNotesMinimal,
+    convexUser
+      ? {
+          userId: convexUser._id,
+          // null = uncategorized notes, undefined = all notes, specific ID = notes in that folder
+          folderId: selectedFolderId === "all" ? null : selectedFolderId || undefined,
+        }
       : "skip"
   );
 
-  // Determine which notes to display
-  let notes: typeof allNotes = [];
-  if (selectedFolderId === "all") {
-    notes = allNotes || [];
-  } else if (folderNotes) {
-    notes = folderNotes.notes || [];
-  }
+  // Sort notes by most recent (no position tracking - natural order)
+  const sortedNotes = useMemo(() => {
+    if (!notes) return [];
+    // Simple sort by updatedAt - most recent first
+    return [...notes].sort((a, b) => b.updatedAt - a.updatedAt);
+  }, [notes]);
 
-  // Sort notes by most recent
-  const sortedNotes = [...notes].sort((a, b) => b.updatedAt - a.updatedAt);
-
-  // Find selected note for title
+  // Find selected note
   const selectedNote = sortedNotes.find((note) => note._id === selectedNoteId);
+
+  // Display title directly from database - no cache to prevent flicker
+  // Show actual title, or "Untitled" if note exists but has no title
+  // Return undefined if note is still loading (selectedNoteId exists but selectedNote doesn't)
+  const displayTitle = selectedNoteId && !selectedNote
+    ? undefined // Loading
+    : selectedNote?.title || "Untitled"; // Show title or "Untitled" if empty
 
   const handleNewNote = async () => {
     if (!convexUser) return;
@@ -67,7 +75,8 @@ export function NotesList({
         userId: convexUser._id,
         title: "Untitled",
         content: "",
-        folderId: selectedFolderId && selectedFolderId !== "all" ? selectedFolderId : undefined,
+        // If in "Uncategorized" view, create note without folder
+        folderId: selectedFolderId === "all" ? undefined : (selectedFolderId || undefined),
       });
       setSelectedNoteId(noteId);
       router.push(`/note/${noteId}`);
@@ -88,6 +97,7 @@ export function NotesList({
   };
 
   const handleSelectNote = (noteId: string) => {
+    // Only update noteId - title comes from database
     setSelectedNoteId(noteId as any);
     router.push(`/note/${noteId}`);
   };
@@ -110,12 +120,12 @@ export function NotesList({
         onToggleSidebar={onToggleSidebar}
         isSidebarCollapsed={isSidebarCollapsed}
         onToggleNotesPanel={onToggleNotesPanel}
-        selectedNoteTitle={selectedNote?.title}
+        selectedNoteTitle={displayTitle}
       />
 
       {/* Notes List */}
       <div className="flex-1 overflow-y-auto">
-        {!convexUser || allNotes === undefined ? (
+        {!convexUser || notes === undefined ? (
           <div className="p-4 space-y-3">
             <div className="h-20 bg-muted/30 rounded-md animate-pulse" />
             <div className="h-20 bg-muted/20 rounded-md animate-pulse" />
@@ -135,7 +145,7 @@ export function NotesList({
               key={note._id}
               id={note._id}
               title={note.title}
-              content={note.content}
+              content={note.contentPreview}
               updatedAt={note.updatedAt}
               isSelected={selectedNoteId === note._id}
               isFavorite={note.isFavorite}

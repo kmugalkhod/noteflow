@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { formatDistanceToNow } from "date-fns";
 import type { Id } from "@/convex/_generated/dataModel";
 import { Star } from "lucide-react";
@@ -16,7 +17,7 @@ interface NoteListItemProps {
   onDragStart?: (noteId: Id<"notes">) => void;
 }
 
-export function NoteListItem({
+export const NoteListItem = memo(function NoteListItem({
   id,
   title,
   content,
@@ -81,4 +82,4 @@ export function NoteListItem({
       </time>
     </div>
   );
-}
+});
