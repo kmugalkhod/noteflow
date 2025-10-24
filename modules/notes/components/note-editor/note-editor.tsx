@@ -158,11 +158,16 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
     }
   };
 
-  // Show loader while fetching
+  // Show skeleton loader while fetching
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      <div className="h-full flex flex-col bg-editor-bg px-5 py-16 space-y-6">
+        <div className="h-12 bg-muted/30 rounded-md animate-pulse w-2/3" />
+        <div className="space-y-3">
+          <div className="h-4 bg-muted/20 rounded animate-pulse w-full" />
+          <div className="h-4 bg-muted/20 rounded animate-pulse w-5/6" />
+          <div className="h-4 bg-muted/20 rounded animate-pulse w-4/5" />
+        </div>
       </div>
     );
   }

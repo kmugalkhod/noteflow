@@ -92,9 +92,9 @@ export function TrashView() {
       </div>
 
       {deletedNotes.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
+        <div className="flex flex-col items-center justify-center py-16 text-center animate-fade-in">
           <Trash2 className="h-16 w-16 text-muted-foreground/30 mb-4" />
-          <h2 className="text-xl font-semibold mb-2">Trash is empty</h2>
+          <h2 className="text-xl font-bold mb-2 tracking-tight">Trash is empty</h2>
           <p className="text-muted-foreground">
             Deleted notes will appear here.
           </p>

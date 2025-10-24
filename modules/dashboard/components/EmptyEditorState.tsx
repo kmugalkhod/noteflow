@@ -4,17 +4,17 @@ import { FileText, Sparkles } from "lucide-react";
 
 export function EmptyEditorState() {
   return (
-    <div className="h-full flex items-center justify-center bg-editor-bg">
+    <div className="h-full flex items-center justify-center bg-editor-bg animate-fade-in">
       <div className="text-center max-w-md px-6">
-        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-muted mb-6">
-          <FileText className="w-10 h-10 text-muted-foreground" />
+        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-muted/50 mb-6 animate-pulse">
+          <FileText className="w-10 h-10 text-muted-foreground/50" />
         </div>
 
-        <h2 className="text-2xl font-semibold mb-3 text-foreground">
+        <h2 className="text-2xl font-bold mb-3 text-foreground tracking-tight">
           No Note Selected
         </h2>
 
-        <p className="text-muted-foreground mb-6 leading-relaxed">
+        <p className="text-muted-foreground mb-6 leading-relaxed text-base">
           Select a note from the list to start editing, or create a new note to begin writing.
         </p>
 
