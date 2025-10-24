@@ -62,12 +62,12 @@ export function FolderSidebar({ isCollapsed = false }: FolderSidebarProps) {
   return (
     <aside className="w-[235px] h-screen bg-sidebar border-r border-sidebar-border flex flex-col flex-shrink-0">
       {/* Header */}
-      <div className="p-4 border-b border-sidebar-border">
+      <div className="px-5 py-4 border-b border-sidebar-border">
         <h1 className="text-xl font-bold text-sidebar-foreground tracking-tight">noteflow</h1>
       </div>
 
       {/* Folders Navigation */}
-      <nav className="flex-1 px-3 py-4 pb-3 overflow-y-auto flex flex-col">
+      <nav className="flex-1 px-4 py-4 pb-3 overflow-y-auto flex flex-col">
         {/* All Notes */}
         <button
           onClick={handleSelectAllNotes}

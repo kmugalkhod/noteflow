@@ -154,7 +154,7 @@ export function FolderTreeItem({
         )}
 
           {/* Folder Content */}
-          <div className="flex items-center gap-2 flex-1 min-w-0 text-sm">
+          <div className="flex items-center gap-2.5 flex-1 min-w-0 text-sm">
             <Folder
               className={`
                 w-4 h-4 flex-shrink-0 transition-all duration-200

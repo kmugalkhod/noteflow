@@ -32,7 +32,7 @@ export function NoteListItem({
     <div
       onClick={onClick}
       className={`
-        px-4 py-2.5 cursor-pointer border-b border-border/50
+        px-5 py-3.5 cursor-pointer border-b border-border/50
         transition-all duration-200 ease-out
         ${
           isSelected

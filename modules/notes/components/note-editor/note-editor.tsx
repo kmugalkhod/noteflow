@@ -190,7 +190,7 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
   return (
     <div className="h-full flex flex-col bg-editor-bg animate-fade-in">
       {/* Minimal Editor - Apple Notes Style with Rich Editing */}
-      <div className="flex-1 overflow-auto px-5 py-16 w-full">
+      <div className="flex-1 overflow-auto px-8 py-20 w-full max-w-4xl mx-auto">
         <Input
           value={title}
           onChange={(e) => setTitle(e.target.value)}

@@ -29,8 +29,8 @@ export function NotesListToolbar({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   return (
-    <div className="flex items-center justify-between p-2 border-b border-sidebar-border bg-notes-list-bg">
-      <div className="flex items-center gap-1">
+    <div className="flex items-center justify-between px-3 py-2.5 border-b border-sidebar-border bg-notes-list-bg">
+      <div className="flex items-center gap-0.5">
         {onToggleSidebar && (
           <Button
             variant="ghost"
@@ -73,7 +73,7 @@ export function NotesListToolbar({
           </Button>
         )}
       </div>
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-0.5">
         <Button
           variant="ghost"
           size="icon"
