@@ -29,6 +29,8 @@ export function NotesList({
   const { selectedFolderId, selectedNoteId, setSelectedNoteId } = useNotes();
   const createNote = useMutation(api.notes.createNote);
   const deleteNote = useMutation(api.notes.deleteNote);
+  const toggleFavorite = useMutation(api.notes.toggleFavorite);
+  const moveNoteToFolder = useMutation(api.notes.moveNoteToFolder);
 
   // Get notes based on selected folder
   const allNotes = useQuery(
@@ -44,7 +46,7 @@ export function NotesList({
   );
 
   // Determine which notes to display
-  let notes = [];
+  let notes: typeof allNotes = [];
   if (selectedFolderId === "all") {
     notes = allNotes || [];
   } else if (folderNotes) {
@@ -136,7 +138,15 @@ export function NotesList({
               content={note.content}
               updatedAt={note.updatedAt}
               isSelected={selectedNoteId === note._id}
+              isFavorite={note.isFavorite}
               onClick={() => handleSelectNote(note._id)}
+              onFavorite={async () => {
+                await toggleFavorite({ noteId: note._id });
+              }}
+              onDragStart={(noteId) => {
+                // Store the dragged note ID for drop handling
+                sessionStorage.setItem("draggedNoteId", noteId);
+              }}
             />
           ))
         )}

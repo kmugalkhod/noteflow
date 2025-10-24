@@ -17,6 +17,7 @@ export function WorkspaceView() {
   );
   const deleteNote = useMutation(api.notes.deleteNote);
   const togglePin = useMutation(api.notes.togglePin);
+  const toggleFavorite = useMutation(api.notes.toggleFavorite);
 
   if (!convexUser || notes === undefined) {
     return (
@@ -77,11 +78,15 @@ export function WorkspaceView() {
                 content={note.content}
                 updatedAt={note.updatedAt}
                 isPinned={note.isPinned}
+                isFavorite={note.isFavorite}
                 onDelete={async () => {
                   await deleteNote({ noteId: note._id });
                 }}
                 onPin={async () => {
                   await togglePin({ noteId: note._id });
+                }}
+                onFavorite={async () => {
+                  await toggleFavorite({ noteId: note._id });
                 }}
               />
             ))}
@@ -110,11 +115,15 @@ export function WorkspaceView() {
                 content={note.content}
                 updatedAt={note.updatedAt}
                 isPinned={note.isPinned}
+                isFavorite={note.isFavorite}
                 onDelete={async () => {
                   await deleteNote({ noteId: note._id });
                 }}
                 onPin={async () => {
                   await togglePin({ noteId: note._id });
+                }}
+                onFavorite={async () => {
+                  await toggleFavorite({ noteId: note._id });
                 }}
               />
             ))}

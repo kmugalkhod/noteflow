@@ -8,9 +8,12 @@
  * @module
  */
 
+import type * as cron from "../cron.js";
 import type * as folders from "../folders.js";
 import type * as notes from "../notes.js";
 import type * as tags from "../tags.js";
+import type * as trash from "../trash.js";
+import type * as types_audit from "../types/audit.js";
 import type * as users from "../users.js";
 
 import type {
@@ -28,9 +31,12 @@ import type {
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  cron: typeof cron;
   folders: typeof folders;
   notes: typeof notes;
   tags: typeof tags;
+  trash: typeof trash;
+  "types/audit": typeof types_audit;
   users: typeof users;
 }>;
 declare const fullApiWithMounts: typeof fullApi;

@@ -17,38 +17,43 @@ interface NoteListProps {
   selectedTag?: string;
 }
 
-export function NoteList({ 
-  userId, 
-  folderId, 
-  sortBy = "updatedAt", 
+export function NoteList({
+  userId,
+  folderId,
+  sortBy = "updatedAt",
   sortDirection = "desc",
   viewMode = "grid",
-  selectedTag 
+  selectedTag
 }: NoteListProps) {
-  const notes = useQuery(api.notes.getNotes, { userId, folderId });
+  // Fetch notes by tag if selected, otherwise fetch all notes
+  const notesByTag = useQuery(
+    api.tags.getNotesForTagByName,
+    selectedTag ? { userId, tagName: selectedTag } : "skip"
+  );
+
+  const allNotes = useQuery(
+    api.notes.getNotes,
+    !selectedTag ? { userId, folderId } : "skip"
+  );
+
   const deleteNote = useMutation(api.notes.deleteNote);
   const togglePin = useMutation(api.notes.togglePin);
+  const toggleFavorite = useMutation(api.notes.toggleFavorite);
+
+  // Use the appropriate data source based on whether tag is selected
+  const notes = selectedTag ? notesByTag : allNotes;
 
   // Sort and filter notes
   const sortedAndFilteredNotes = useMemo(() => {
     if (!notes) return undefined;
 
-    let filtered = notes;
-
-    // Filter by tag if selected
-    if (selectedTag) {
-      // This would require a more complex query - for now we'll implement basic client-side filtering
-      // In a real app, you'd want to do this on the backend
-      filtered = notes.filter(() => 
-        // This is a placeholder - you'd need to fetch note tags and filter
-        true // TODO: Implement tag filtering
-      );
-    }
+    // Filter out null values (defensive programming)
+    let filtered = notes.filter((note): note is NonNullable<typeof note> => note !== null);
 
     // Sort notes
     const sorted = [...filtered].sort((a, b) => {
       let comparison = 0;
-      
+
       switch (sortBy) {
         case "title":
           comparison = a.title.localeCompare(b.title);
@@ -71,7 +76,7 @@ export function NoteList({
       if (!a.isPinned && b.isPinned) return 1;
       return 0;
     });
-  }, [notes, sortBy, sortDirection, selectedTag]);
+  }, [notes, sortBy, sortDirection]);
 
   if (sortedAndFilteredNotes === undefined) {
     return (
@@ -111,12 +116,16 @@ export function NoteList({
           content={note.content}
           updatedAt={note.updatedAt}
           isPinned={note.isPinned}
+          isFavorite={note.isFavorite}
           viewMode={viewMode}
           onDelete={async () => {
             await deleteNote({ noteId: note._id });
           }}
           onPin={async () => {
             await togglePin({ noteId: note._id });
+          }}
+          onFavorite={async () => {
+            await toggleFavorite({ noteId: note._id });
           }}
         />
       ))}

@@ -5,19 +5,21 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { Input } from "@/components/ui/input";
-import { Check, Loader2, FileText, Sparkles } from "lucide-react";
+import { Check, Loader2, FileText, Sparkles, Download } from "lucide-react";
 import { useDebounce } from "@/modules/shared/hooks/use-debounce";
 import { FolderSelector } from "../folder-selector";
 import { TagInput } from "@/modules/tags/components";
 import { RichEditor, type RichEditorRef } from "../rich-editor";
 import { Button } from "@/components/ui/button";
-import { 
-  serializeBlocks, 
-  deserializeBlocks, 
-  textToBlocks, 
+import {
+  serializeBlocks,
+  deserializeBlocks,
+  textToBlocks,
   blocksToText,
-  type Block 
+  type Block
 } from "../../types/blocks";
+import { exportNoteToMarkdown } from "../../utils/exportToMarkdown";
+import { toast } from "sonner";
 
 interface NoteEditorProps {
   noteId: Id<"notes">;
@@ -145,7 +147,7 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
   const toggleEditorMode = () => {
     const newIsRichMode = !isRichMode;
     setIsRichMode(newIsRichMode);
-    
+
     if (newIsRichMode) {
       // Convert plain text to blocks
       const newBlocks = textToBlocks(content);
@@ -155,6 +157,17 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
       // Convert blocks to plain text
       const plainText = blocksToText(blocks);
       setContent(plainText);
+    }
+  };
+
+  // Export note to Markdown
+  const handleExport = () => {
+    try {
+      exportNoteToMarkdown(title || "Untitled", blocks);
+      toast.success("Note exported successfully");
+    } catch (error) {
+      console.error("Failed to export note:", error);
+      toast.error("Failed to export note");
     }
   };
 
@@ -189,6 +202,19 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
 
   return (
     <div className="h-full flex flex-col bg-editor-bg animate-fade-in">
+      {/* Export Button - Top Right */}
+      <div className="fixed top-4 right-4 z-10">
+        <Button
+          onClick={handleExport}
+          variant="outline"
+          size="sm"
+          className="gap-2 shadow-sm"
+        >
+          <Download className="w-4 h-4" />
+          Export as Markdown
+        </Button>
+      </div>
+
       {/* Minimal Editor - Apple Notes Style with Rich Editing */}
       <div className="flex-1 overflow-auto px-8 py-20 w-full max-w-4xl mx-auto">
         <Input

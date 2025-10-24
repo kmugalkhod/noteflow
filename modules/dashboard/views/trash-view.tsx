@@ -3,8 +3,7 @@
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useConvexUser } from "@/modules/shared/hooks/use-convex-user";
-import { TrashNoteCard } from "@/modules/notes/components/trash-note-card";
-import { Trash2, Loader2 } from "lucide-react";
+import { Trash2, Loader2, RotateCcw, FileText, Folder } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -18,6 +17,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Id } from "@/convex/_generated/dataModel";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export function TrashView() {
   const convexUser = useConvexUser();
@@ -26,23 +27,21 @@ export function TrashView() {
   const [noteToDelete, setNoteToDelete] = useState<Id<"notes"> | null>(null);
 
   const deletedNotes = useQuery(
-    api.notes.getDeletedNotes,
+    api.trash.getDeletedItems,
     convexUser ? { userId: convexUser._id } : "skip"
   );
 
   const restoreNote = useMutation(api.notes.restoreNote);
   const permanentDeleteNote = useMutation(api.notes.permanentDeleteNote);
 
-  const handleRestore = async (noteId: string) => {
+  const handleRestore = async (noteId: string, noteTitle: string, originalFolder?: string | null) => {
     try {
-      console.log("Restoring note:", noteId);
       await restoreNote({ noteId: noteId as Id<"notes"> });
-      console.log("Note restored successfully");
-      // Redirect back to main view
-      router.push("/");
+      const location = originalFolder || "All Notes";
+      toast.success(`"${noteTitle}" restored to ${location}`);
     } catch (error) {
       console.error("Failed to restore note:", error);
-      alert("Failed to restore note. Please try again.");
+      toast.error("Failed to restore note. Please try again.");
     }
   };
 
@@ -80,42 +79,81 @@ export function TrashView() {
   }
 
   return (
-    <div className="p-8">
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <Trash2 className="h-6 w-6 text-muted-foreground" />
-          <h1 className="text-3xl font-bold">Trash</h1>
+    <div className="h-screen flex flex-col bg-background">
+      {/* Header */}
+      <div className="border-b border-border px-6 py-4">
+        <div className="flex items-center gap-3 mb-1">
+          <Trash2 className="h-5 w-5 text-muted-foreground" />
+          <h1 className="text-2xl font-semibold">Trash</h1>
         </div>
-        <p className="text-muted-foreground">
-          Notes in trash will be permanently deleted after 30 days.
+        <p className="text-sm text-muted-foreground">
+          Pages in Trash for over 30 days will be automatically deleted
         </p>
       </div>
 
-      {deletedNotes.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center animate-fade-in">
-          <Trash2 className="h-16 w-16 text-muted-foreground/30 mb-4" />
-          <h2 className="text-xl font-bold mb-2 tracking-tight">Trash is empty</h2>
-          <p className="text-muted-foreground">
-            Deleted notes will appear here.
-          </p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {deletedNotes.map((note) => (
-            <TrashNoteCard
-              key={note._id}
-              note={note}
-              onRestore={handleRestore}
-              onPermanentDelete={handlePermanentDelete}
-            />
-          ))}
-        </div>
-      )}
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto">
+        {deletedNotes.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-center">
+            <Trash2 className="h-16 w-16 text-muted-foreground/30 mb-4" />
+            <h2 className="text-xl font-semibold mb-2">Trash is empty</h2>
+            <p className="text-sm text-muted-foreground">
+              Deleted notes will appear here.
+            </p>
+          </div>
+        ) : (
+          <div className="divide-y divide-border">
+            {deletedNotes.map((note) => (
+              <div
+                key={note._id}
+                className="px-6 py-3 hover:bg-accent/50 transition-colors group flex items-center justify-between"
+              >
+                {/* Left side - Note info */}
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium truncate">{note.title}</div>
+                    {note.originalFolderName && (
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
+                        <Folder className="h-3 w-3" />
+                        <span className="truncate">{note.originalFolderName}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
 
+                {/* Right side - Action buttons */}
+                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleRestore(note._id, note.title, note.originalFolderName)}
+                    className="h-8 gap-1.5"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                    Restore
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handlePermanentDelete(note._id)}
+                    className="h-8 gap-1.5 text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogTitle>Delete permanently?</AlertDialogTitle>
             <AlertDialogDescription>
               This action cannot be undone. This will permanently delete the
               note and remove it from our servers.

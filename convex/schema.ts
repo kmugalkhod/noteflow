@@ -40,6 +40,10 @@ export default defineSchema({
     isDeleted: v.optional(v.boolean()),
     deletedAt: v.optional(v.number()),
 
+    // Original Location Tracking (for smart restore)
+    deletedFromFolderId: v.optional(v.id("folders")), // Track original folder before deletion
+    deletedFromPath: v.optional(v.string()), // Full path (e.g., "Work > Projects")
+
     // Timestamps
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -49,6 +53,8 @@ export default defineSchema({
     .index("by_user_not_deleted", ["userId", "isDeleted"])
     .index("by_user_and_folder", ["userId", "folderId"])
     .index("by_user_favorite", ["userId", "isFavorite"]) // Index for favorites
+    .index("by_deleted_date", ["isDeleted", "deletedAt"]) // For expiration queries
+    .index("by_deleted_folder", ["deletedFromFolderId"]) // For location filtering
     .searchIndex("search_title", {
       searchField: "title",
       filterFields: ["userId", "isDeleted"],
@@ -68,11 +74,19 @@ export default defineSchema({
     // For nested folders (optional)
     parentId: v.optional(v.id("folders")),
 
+    // Soft delete support
+    isDeleted: v.optional(v.boolean()),
+    deletedAt: v.optional(v.number()),
+    deletedFromParentId: v.optional(v.id("folders")), // Original parent for restore
+
     createdAt: v.number(),
+    updatedAt: v.optional(v.number()), // Add updatedAt for consistency
   })
     .index("by_user", ["userId"])
     .index("by_parent", ["parentId"])
-    .index("by_user_and_parent", ["userId", "parentId"]), // Index for querying folders by user and parent
+    .index("by_user_and_parent", ["userId", "parentId"]) // Index for querying folders by user and parent
+    .index("by_user_not_deleted", ["userId", "isDeleted"]) // For filtering out deleted folders
+    .index("by_deleted_date", ["isDeleted", "deletedAt"]), // For expiration queries
 
   // Tags table
   tags: defineTable({
@@ -93,4 +107,18 @@ export default defineSchema({
     .index("by_note", ["noteId"])
     .index("by_tag", ["tagId"])
     .index("by_note_and_tag", ["noteId", "tagId"]),
+
+  // Trash Audit Log table (for tracking auto-deletions and restore operations)
+  trashAuditLog: defineTable({
+    userId: v.id("users"),
+    action: v.string(), // "auto_delete", "restore", "permanent_delete", "bulk_restore", "bulk_delete", "empty_trash"
+    itemType: v.string(), // "note" or "folder"
+    itemId: v.string(), // ID of the deleted/restored item
+    itemTitle: v.string(), // Title/name of the item
+    timestamp: v.number(),
+    metadata: v.optional(v.any()), // Additional context (deletedAt, expirationDate, etc.)
+  })
+    .index("by_user", ["userId"])
+    .index("by_timestamp", ["timestamp"])
+    .index("by_user_and_action", ["userId", "action"]), // For filtering by action type
 });

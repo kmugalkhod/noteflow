@@ -4,7 +4,7 @@ import { useRef } from "react";
 import { FolderTree, type FolderTreeRef } from "../folder-tree";
 import { CreateFolderButton } from "@/modules/folders/components";
 import { useNotes } from "../../contexts/NotesContext";
-import { Folder, Trash2 } from "lucide-react";
+import { Folder, Trash2, Star } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useConvexUser } from "@/modules/shared/hooks/use-convex-user";
@@ -36,6 +36,12 @@ export function FolderSidebar({ isCollapsed = false }: FolderSidebarProps) {
     convexUser ? { userId: convexUser._id } : "skip"
   );
 
+  // Get favorite notes count for "Favorites" section
+  const favoriteNotes = useQuery(
+    api.notes.getFavoriteNotes,
+    convexUser ? { userId: convexUser._id } : "skip"
+  );
+
   const handleNewFolder = () => {
     folderTreeRef.current?.startCreatingFolder();
   };
@@ -48,8 +54,10 @@ export function FolderSidebar({ isCollapsed = false }: FolderSidebarProps) {
 
   const allNotesCount = notes?.length || 0;
   const deletedNotesCount = deletedNotes?.length || 0;
+  const favoriteNotesCount = favoriteNotes?.length || 0;
   const isTrashSelected = pathname === "/trash";
-  const isAllNotesSelected = selectedFolderId === "all" && !isTrashSelected;
+  const isFavoritesSelected = pathname === "/favorites";
+  const isAllNotesSelected = selectedFolderId === "all" && !isTrashSelected && !isFavoritesSelected;
 
   // Get display name from user
   const displayName = user?.fullName || user?.firstName || user?.username || "User";
@@ -84,6 +92,24 @@ export function FolderSidebar({ isCollapsed = false }: FolderSidebarProps) {
           <Folder className={`w-4 h-4 ${isAllNotesSelected ? "text-folder-icon-color" : "text-muted-foreground"}`} />
           <span className="flex-1 text-left">All Notes</span>
           <span className="text-xs text-muted-foreground">{allNotesCount}</span>
+        </button>
+
+        {/* Favorites */}
+        <button
+          onClick={() => router.push("/favorites")}
+          className={`
+            w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-sm mb-1
+            transition-colors
+            ${
+              isFavoritesSelected
+                ? "bg-folder-selected-bg text-foreground font-medium"
+                : "text-sidebar-foreground hover:bg-folder-hover-bg"
+            }
+          `}
+        >
+          <Star className={`w-4 h-4 ${isFavoritesSelected ? "text-yellow-400 fill-yellow-400" : "text-muted-foreground"}`} />
+          <span className="flex-1 text-left">Favorites</span>
+          <span className="text-xs text-muted-foreground">{favoriteNotesCount}</span>
         </button>
 
         {/* Trash */}

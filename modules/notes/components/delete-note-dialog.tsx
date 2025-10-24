@@ -17,6 +17,7 @@ interface DeleteNoteDialogProps {
   onConfirm: () => void;
   noteTitle?: string;
   isPermanent?: boolean;
+  folderName?: string | null; // Original folder location
 }
 
 export function DeleteNoteDialog({
@@ -25,6 +26,7 @@ export function DeleteNoteDialog({
   onConfirm,
   noteTitle = "this note",
   isPermanent = false,
+  folderName,
 }: DeleteNoteDialogProps) {
   const handleConfirm = () => {
     onConfirm();
@@ -38,18 +40,27 @@ export function DeleteNoteDialog({
           <AlertDialogTitle>
             {isPermanent ? "Permanently Delete Note?" : "Move to Trash?"}
           </AlertDialogTitle>
-          <AlertDialogDescription>
-            {isPermanent ? (
-              <>
-                Are you sure you want to permanently delete <strong>"{noteTitle}"</strong>?
-                This action cannot be undone.
-              </>
-            ) : (
-              <>
-                <strong>"{noteTitle}"</strong> will be moved to trash.
-                You can restore it within 30 days.
-              </>
-            )}
+          <AlertDialogDescription asChild>
+            <div className="space-y-2">
+              {isPermanent ? (
+                <p>
+                  Are you sure you want to permanently delete <strong>"{noteTitle}"</strong>?
+                  This action cannot be undone.
+                </p>
+              ) : (
+                <>
+                  <p>
+                    <strong>"{noteTitle}"</strong> will be moved to trash.
+                    You can restore it within 30 days.
+                  </p>
+                  {folderName && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Currently in: <span className="font-medium">{folderName}</span>
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

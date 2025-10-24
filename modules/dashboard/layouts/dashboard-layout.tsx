@@ -71,9 +71,11 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // Show empty state when on workspace, stories, shared, blog, or trash pages (not viewing a specific note)
+  // Show empty state only when on workspace, stories, shared, or blog pages (not viewing a specific note, trash, or favorites)
   const isViewingNote = pathname?.startsWith("/note/");
-  const showEmptyState = !isViewingNote;
+  const isTrashPage = pathname === "/trash";
+  const isFavoritesPage = pathname === "/favorites";
+  const showEmptyState = !isViewingNote && !isTrashPage && !isFavoritesPage;
 
   // Resize handlers
   const handleResizeStart = (e: React.MouseEvent) => {
@@ -108,24 +110,28 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         {/* Column 1: Folders Sidebar */}
         <FolderSidebar isCollapsed={isSidebarCollapsed} />
 
-        {/* Column 2: Notes List */}
-        <NotesList
-          onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          isSidebarCollapsed={isSidebarCollapsed}
-          onToggleNotesPanel={() => setIsNotesPanelCollapsed(!isNotesPanelCollapsed)}
-          isCollapsed={isNotesPanelCollapsed}
-          width={notesPanelWidth}
-        />
+        {/* Column 2: Notes List - Hide on trash and favorites pages */}
+        {!isTrashPage && !isFavoritesPage && (
+          <>
+            <NotesList
+              onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+              isSidebarCollapsed={isSidebarCollapsed}
+              onToggleNotesPanel={() => setIsNotesPanelCollapsed(!isNotesPanelCollapsed)}
+              isCollapsed={isNotesPanelCollapsed}
+              width={notesPanelWidth}
+            />
 
-        {/* Resize Handle */}
-        {!isNotesPanelCollapsed && (
-          <ResizeHandle onMouseDown={handleResizeStart} isResizing={isResizing} />
+            {/* Resize Handle */}
+            {!isNotesPanelCollapsed && (
+              <ResizeHandle onMouseDown={handleResizeStart} isResizing={isResizing} />
+            )}
+          </>
         )}
 
         {/* Column 3: Note Editor/Content */}
         <main className="flex-1 overflow-auto bg-editor-bg relative transition-all duration-200">
-          {/* Show notes panel button when collapsed */}
-          {isNotesPanelCollapsed && (
+          {/* Show notes panel button when collapsed - but not on trash or favorites pages */}
+          {isNotesPanelCollapsed && !isTrashPage && !isFavoritesPage && (
             <button
               onClick={() => setIsNotesPanelCollapsed(false)}
               className="fixed top-4 left-4 z-10 p-2 rounded-md bg-muted hover:bg-muted/80 transition-colors shadow-md"

@@ -101,6 +101,30 @@ export function useDragDrop() {
         e.currentTarget.classList.remove("drag-over");
       }
 
+      // Check for dragged note from sessionStorage (from NoteListItem)
+      const draggedNoteId = sessionStorage.getItem("draggedNoteId");
+
+      if (draggedNoteId) {
+        // Clear sessionStorage
+        sessionStorage.removeItem("draggedNoteId");
+
+        // Get drop target folder ID
+        const targetFolderId = target.type === "folder" ? target.folderId : null;
+
+        try {
+          await moveNoteToFolder({
+            noteId: draggedNoteId as Id<"notes">,
+            folderId: targetFolderId as Id<"folders"> | null,
+          });
+          console.log(`Moved note to ${target.type === "root" ? "All Notes" : "folder"}`);
+        } catch (error) {
+          console.error("Failed to move note:", error);
+        }
+
+        setIsDragging(false);
+        return;
+      }
+
       if (!draggedItem) return;
 
       // Get drop target folder ID (undefined for root)

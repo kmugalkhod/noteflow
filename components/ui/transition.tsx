@@ -49,7 +49,7 @@ export function Transition({
 }: TransitionProps) {
   const [shouldRender, setShouldRender] = useState(show);
   const [isAnimating, setIsAnimating] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   useEffect(() => {
     if (show) {

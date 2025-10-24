@@ -135,22 +135,71 @@ export const updateNote = mutation({
 export const deleteNote = mutation({
   args: { noteId: v.id("notes") },
   handler: async (ctx, { noteId }) => {
+    const note = await ctx.db.get(noteId);
+    if (!note) throw new Error("Note not found");
+
+    // Capture original folder location for smart restore
+    let deletedFromPath: string | undefined = undefined;
+    if (note.folderId) {
+      const folder = await ctx.db.get(note.folderId);
+      if (folder) {
+        // Build full path (simplified for now - could be recursive for nested folders)
+        deletedFromPath = folder.name;
+        // TODO: Implement full path building for nested folders
+      }
+    }
+
     await ctx.db.patch(noteId, {
       isDeleted: true,
       deletedAt: Date.now(),
+      deletedFromFolderId: note.folderId,
+      deletedFromPath,
     });
+
+    return { success: true, noteId };
   },
 });
 
 // Restore a note from trash
 export const restoreNote = mutation({
-  args: { noteId: v.id("notes") },
-  handler: async (ctx, { noteId }) => {
+  args: {
+    noteId: v.id("notes"),
+    restoreToFolderId: v.optional(v.id("folders")), // Optional override
+  },
+  handler: async (ctx, { noteId, restoreToFolderId }) => {
+    const note = await ctx.db.get(noteId);
+    if (!note || !note.isDeleted) {
+      throw new Error("Note not found or not deleted");
+    }
+
+    // Determine target folder (smart restore logic)
+    let targetFolderId = restoreToFolderId;
+    if (!targetFolderId) {
+      // Try to restore to original location
+      targetFolderId = note.deletedFromFolderId;
+
+      // Verify original folder still exists and is not deleted
+      if (targetFolderId) {
+        const folder = await ctx.db.get(targetFolderId);
+        if (!folder || folder.isDeleted) {
+          targetFolderId = undefined; // Fallback to root
+        }
+      }
+    }
+
     await ctx.db.patch(noteId, {
       isDeleted: false,
       deletedAt: undefined,
+      folderId: targetFolderId,
       updatedAt: Date.now(),
     });
+
+    return {
+      success: true,
+      noteId,
+      restoredToFolderId: targetFolderId,
+      restoredToOriginal: targetFolderId === note.deletedFromFolderId,
+    };
   },
 });
 
