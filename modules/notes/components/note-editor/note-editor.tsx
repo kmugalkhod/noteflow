@@ -7,6 +7,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { Input } from "@/components/ui/input";
 import { Check, Loader2, FileText, Sparkles, Download } from "lucide-react";
 import { useDebounce } from "@/modules/shared/hooks/use-debounce";
+import { useNotesStore } from "@/modules/dashboard/store/useNotesStore";
 import { FolderSelector } from "../folder-selector";
 import { TagInput } from "@/modules/tags/components";
 import { RichEditor, type RichEditorRef } from "../rich-editor";
@@ -26,10 +27,15 @@ interface NoteEditorProps {
 }
 
 export function NoteEditor({ noteId }: NoteEditorProps) {
-  const note = useQuery(api.notes.getNote, { noteId });
+  // Fetch content including title
+  const noteContent = useQuery(api.notes.getNoteContent, { noteId });
   const noteTags = useQuery(api.tags.getTagsForNote, { noteId });
   const updateNote = useMutation(api.notes.updateNote);
 
+  // Zustand store - for syncing selected note
+  const setSelectedNoteId = useNotesStore((state) => state.setSelectedNoteId);
+
+  // Initialize title empty - will load from database
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [blocks, setBlocks] = useState<Block[]>([]);
@@ -41,50 +47,65 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [showSavedIndicator, setShowSavedIndicator] = useState(false);
 
+  // Track last saved values for change detection (instead of comparing with server)
+  const [lastSavedTitle, setLastSavedTitle] = useState("");
+  const [lastSavedContent, setLastSavedContent] = useState("");
+  const [lastSavedBlocks, setLastSavedBlocks] = useState<string | undefined>(undefined);
+
   const richEditorRef = useRef<RichEditorRef>(null);
-  const debouncedTitle = useDebounce(title, 500);
-  const debouncedContent = useDebounce(content, 500);
-  const debouncedBlocks = useDebounce(blocks, 500);
+  const currentNoteIdRef = useRef(noteId); // Track current note to prevent stale saves
+  const debouncedTitle = useDebounce(title, 1500);
+  const debouncedContent = useDebounce(content, 1500);
+  const debouncedBlocks = useDebounce(blocks, 1500);
+
+  // Sync noteId with context when note page loads
+  useEffect(() => {
+    setSelectedNoteId(noteId);
+  }, [noteId, setSelectedNoteId]);
 
   // Reset when noteId changes
   useEffect(() => {
+    currentNoteIdRef.current = noteId; // Update ref to track current note
     setIsInitialized(false);
-    setTitle("");
-    setContent("");
-    setBlocks([]);
-    setTags([]);
-    setIsRichMode(true); // Default to rich mode
+    setIsLoading(true);
     setLastSaved(null);
   }, [noteId]);
 
-  // Check if note exists after loading
+  // Check if note content exists after loading
   useEffect(() => {
-    if (note !== undefined) {
+    if (noteContent !== undefined) {
       setIsLoading(false);
     }
-  }, [note]);
+  }, [noteContent]);
 
   // Initialize from Convex data ONLY ONCE per note
   useEffect(() => {
-    if (note && !isInitialized) {
-      setTitle(note.title);
-      setContent(note.content);
+    if (noteContent && !isInitialized) {
+      const initialContent = noteContent.content || "";
+      const initialTitle = noteContent.title || "";
 
-      // Always use rich mode, but load content appropriately
+      // Set all state including title, content, blocks, and last saved values
+      setTitle(initialTitle);
+      setContent(initialContent);
       setIsRichMode(true);
 
-      if (note.blocks && note.contentType === "rich") {
-        // Load existing rich content
-        const deserializedBlocks = deserializeBlocks(note.blocks);
-        setBlocks(deserializedBlocks.length > 0 ? deserializedBlocks : textToBlocks(note.content));
+      if (noteContent.blocks && noteContent.contentType === "rich") {
+        const deserializedBlocks = deserializeBlocks(noteContent.blocks);
+        const initialBlocks = deserializedBlocks.length > 0 ? deserializedBlocks : textToBlocks(initialContent);
+        setBlocks(initialBlocks);
       } else {
-        // Convert plain text to rich blocks
-        setBlocks(textToBlocks(note.content || ""));
+        const initialBlocks = textToBlocks(initialContent);
+        setBlocks(initialBlocks);
       }
+
+      // Set last saved values to match current values (prevents spurious saves)
+      setLastSavedTitle(initialTitle);
+      setLastSavedContent(initialContent);
+      setLastSavedBlocks(noteContent.blocks);
 
       setIsInitialized(true);
     }
-  }, [note, isInitialized]);
+  }, [noteContent, isInitialized]);
 
   // Update tags when noteTags changes
   useEffect(() => {
@@ -95,15 +116,31 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
 
   // Auto-save when debounced values change
   useEffect(() => {
-    if (!note || !isInitialized) return;
+    // Don't save if not initialized or if noteId has changed (stale debounced values)
+    if (!isInitialized || currentNoteIdRef.current !== noteId) return;
+
+    // CRITICAL: Only save if debounced values match current state
+    // This prevents saving stale debounced values from a previous note
+    const currentPlainContent = isRichMode ? blocksToText(blocks) : content;
+    const debouncedPlainContent = isRichMode ? blocksToText(debouncedBlocks) : debouncedContent;
+
+    const debouncedMatchesCurrent =
+      debouncedTitle === title &&
+      debouncedPlainContent === currentPlainContent;
+
+    if (!debouncedMatchesCurrent) {
+      // Debounced values haven't caught up yet, don't save
+      return;
+    }
 
     const currentContent = isRichMode ? blocksToText(debouncedBlocks) : debouncedContent;
     const currentBlocks = isRichMode ? serializeBlocks(debouncedBlocks) : undefined;
-    
+
+    // Compare with last saved values (not server values) to detect changes
     const hasChanges =
-      debouncedTitle !== note.title || 
-      currentContent !== note.content ||
-      (isRichMode && currentBlocks !== note.blocks);
+      debouncedTitle !== lastSavedTitle ||
+      currentContent !== lastSavedContent ||
+      (isRichMode && currentBlocks !== lastSavedBlocks);
 
     if (hasChanges) {
       setIsSaving(true);
@@ -115,21 +152,28 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
         blocks: currentBlocks,
       })
         .then(() => {
-          setLastSaved(new Date());
-          setIsSaving(false);
-          setShowSavedIndicator(true);
+          // Only update last saved values if we're still on the same note
+          if (currentNoteIdRef.current === noteId) {
+            setLastSavedTitle(debouncedTitle);
+            setLastSavedContent(currentContent);
+            setLastSavedBlocks(currentBlocks);
 
-          // Hide "Saved" message after 2 seconds
-          setTimeout(() => {
-            setShowSavedIndicator(false);
-          }, 2000);
+            setLastSaved(new Date());
+            setIsSaving(false);
+            setShowSavedIndicator(true);
+
+            // Hide "Saved" message after 2 seconds
+            setTimeout(() => {
+              setShowSavedIndicator(false);
+            }, 2000);
+          }
         })
         .catch((error) => {
           console.error("Failed to save:", error);
           setIsSaving(false);
         });
     }
-  }, [debouncedTitle, debouncedContent, debouncedBlocks, isRichMode, isInitialized, note]);
+  }, [debouncedTitle, debouncedContent, debouncedBlocks, title, content, blocks, isRichMode, isInitialized, lastSavedTitle, lastSavedContent, lastSavedBlocks, noteId, updateNote]);
 
   // Handle rich editor changes
   const handleRichEditorChange = (newBlocks: Block[], serialized: string) => {
@@ -185,8 +229,8 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
     );
   }
 
-  // Show error state if note doesn't exist
-  if (!note) {
+  // Show error state if note content doesn't exist
+  if (!noteContent) {
     return (
       <div className="flex flex-col items-center justify-center h-full bg-editor-bg px-6">
         <div className="text-center max-w-md">

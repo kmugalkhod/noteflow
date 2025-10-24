@@ -9,7 +9,7 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { FolderContextMenu } from "./FolderContextMenu";
-import { useNotes } from "../../contexts/NotesContext";
+import { useNotesStore } from "../../store/useNotesStore";
 
 interface FolderData {
   _id: Id<"folders">;
@@ -50,7 +50,10 @@ export function FolderTreeItem({
   dragHandlers,
   isDragging = false,
 }: FolderTreeItemProps) {
-  const { selectedFolderId, setSelectedFolderId, setSelectedNoteId } = useNotes();
+  // Zustand store
+  const selectedFolderId = useNotesStore((state) => state.selectedFolderId);
+  const setSelectedFolderId = useNotesStore((state) => state.setSelectedFolderId);
+  const setSelectedNoteId = useNotesStore((state) => state.setSelectedNoteId);
 
   // Fetch child folders if expanded
   const childFolders = useQuery(

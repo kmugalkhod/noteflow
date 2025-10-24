@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Trash2, Plus, PanelLeft, PanelLeftClose, PanelRightClose } from "lucide-react";
+import { Trash2, Plus, PanelLeft, PanelLeftClose, PanelRightClose, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNotes } from "../../contexts/NotesContext";
 import { DeleteNoteDialog } from "@/modules/notes/components/delete-note-dialog";
@@ -13,7 +13,7 @@ interface NotesListToolbarProps {
   onToggleSidebar?: () => void;
   isSidebarCollapsed?: boolean;
   onToggleNotesPanel?: () => void;
-  selectedNoteTitle?: string;
+  selectedNoteTitle?: string; // undefined = loading, string = loaded (can be "Untitled")
 }
 
 export function NotesListToolbar({

@@ -11,15 +11,15 @@ import { useUser } from "@clerk/nextjs";
 export function WorkspaceView() {
   const convexUser = useConvexUser();
   const { user } = useUser();
-  const notes = useQuery(
-    api.notes.getNotes,
-    convexUser ? { userId: convexUser._id } : "skip"
+  const workspaceData = useQuery(
+    api.notes.getWorkspaceNotes,
+    convexUser ? { userId: convexUser._id, recentLimit: 10 } : "skip"
   );
   const deleteNote = useMutation(api.notes.deleteNote);
   const togglePin = useMutation(api.notes.togglePin);
   const toggleFavorite = useMutation(api.notes.toggleFavorite);
 
-  if (!convexUser || notes === undefined) {
+  if (!convexUser || workspaceData === undefined) {
     return (
       <div className="flex items-center justify-center h-full">
         <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
@@ -27,13 +27,7 @@ export function WorkspaceView() {
     );
   }
 
-  // Split notes into pinned and recent
-  const pinnedNotes = notes.filter((note) => note.isPinned);
-  const recentNotes = notes
-    .filter((note) => !note.isPinned)
-    .slice(0, 10); // Only show 10 most recent
-
-  const totalNotes = notes.length;
+  const { pinnedNotes, recentNotes, totalCount: totalNotes } = workspaceData;
   const greeting = user?.firstName ? `Welcome back, ${user.firstName}!` : "Welcome back!";
 
   return (

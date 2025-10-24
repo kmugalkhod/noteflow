@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import { FolderTree, type FolderTreeRef } from "../folder-tree";
 import { CreateFolderButton } from "@/modules/folders/components";
-import { useNotes } from "../../contexts/NotesContext";
+import { useNotesStore } from "../../store/useNotesStore";
 import { Folder, Trash2, Star } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -18,27 +18,20 @@ interface FolderSidebarProps {
 
 export function FolderSidebar({ isCollapsed = false }: FolderSidebarProps) {
   const folderTreeRef = useRef<FolderTreeRef>(null);
-  const { selectedFolderId, setSelectedFolderId, setSelectedNoteId } = useNotes();
+
+  // Zustand store
+  const selectedFolderId = useNotesStore((state) => state.selectedFolderId);
+  const setSelectedFolderId = useNotesStore((state) => state.setSelectedFolderId);
+  const setSelectedNoteId = useNotesStore((state) => state.setSelectedNoteId);
+
   const convexUser = useConvexUser();
   const { user } = useUser();
   const router = useRouter();
   const pathname = usePathname();
 
-  // Get all notes count for "All Notes" section
-  const notes = useQuery(
-    api.notes.getNotes,
-    convexUser ? { userId: convexUser._id } : "skip"
-  );
-
-  // Get deleted notes count for "Trash" section
-  const deletedNotes = useQuery(
-    api.notes.getDeletedNotes,
-    convexUser ? { userId: convexUser._id } : "skip"
-  );
-
-  // Get favorite notes count for "Favorites" section
-  const favoriteNotes = useQuery(
-    api.notes.getFavoriteNotes,
+  // Get note counts with single optimized query
+  const noteCounts = useQuery(
+    api.notes.getNoteCounts,
     convexUser ? { userId: convexUser._id } : "skip"
   );
 
@@ -52,12 +45,12 @@ export function FolderSidebar({ isCollapsed = false }: FolderSidebarProps) {
     router.push("/");
   };
 
-  const allNotesCount = notes?.length || 0;
-  const deletedNotesCount = deletedNotes?.length || 0;
-  const favoriteNotesCount = favoriteNotes?.length || 0;
+  const uncategorizedCount = noteCounts?.uncategorized || 0;
+  const deletedNotesCount = noteCounts?.deleted || 0;
+  const favoriteNotesCount = noteCounts?.favorites || 0;
   const isTrashSelected = pathname === "/trash";
   const isFavoritesSelected = pathname === "/favorites";
-  const isAllNotesSelected = selectedFolderId === "all" && !isTrashSelected && !isFavoritesSelected;
+  const isUncategorizedSelected = selectedFolderId === "all" && !isTrashSelected && !isFavoritesSelected;
 
   // Get display name from user
   const displayName = user?.fullName || user?.firstName || user?.username || "User";
@@ -76,22 +69,22 @@ export function FolderSidebar({ isCollapsed = false }: FolderSidebarProps) {
 
       {/* Folders Navigation */}
       <nav className="flex-1 px-4 py-4 pb-3 overflow-y-auto flex flex-col">
-        {/* All Notes */}
+        {/* Uncategorized Notes */}
         <button
           onClick={handleSelectAllNotes}
           className={`
             w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-sm mb-1
             transition-colors
             ${
-              isAllNotesSelected
+              isUncategorizedSelected
                 ? "bg-folder-selected-bg text-foreground font-medium"
                 : "text-sidebar-foreground hover:bg-folder-hover-bg"
             }
           `}
         >
-          <Folder className={`w-4 h-4 ${isAllNotesSelected ? "text-folder-icon-color" : "text-muted-foreground"}`} />
-          <span className="flex-1 text-left">All Notes</span>
-          <span className="text-xs text-muted-foreground">{allNotesCount}</span>
+          <Folder className={`w-4 h-4 ${isUncategorizedSelected ? "text-folder-icon-color" : "text-muted-foreground"}`} />
+          <span className="flex-1 text-left">Uncategorized</span>
+          <span className="text-xs text-muted-foreground">{uncategorizedCount}</span>
         </button>
 
         {/* Favorites */}

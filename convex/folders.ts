@@ -131,41 +131,50 @@ export const deleteFolder = mutation({
   },
 });
 
-// Get folders with note counts
+// Get folders with note counts (optimized - single query for all notes)
 export const getFoldersWithCounts = query({
   args: { userId: v.id("users") },
   handler: async (ctx, { userId }) => {
+    // Get all folders
     const folders = await ctx.db
       .query("folders")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .collect();
 
-    // Get note counts for each folder
-    const foldersWithCounts = await Promise.all(
-      folders.map(async (folder) => {
-        const notes = await ctx.db
-          .query("notes")
-          .withIndex("by_folder", (q) => q.eq("folderId", folder._id))
-          .collect();
+    // Get all active notes for this user once
+    const allNotes = await ctx.db
+      .query("notes")
+      .withIndex("by_user_not_deleted", (q) =>
+        q.eq("userId", userId).eq("isDeleted", false)
+      )
+      .collect();
 
-        const activeNotes = notes.filter((note) => !note.isDeleted);
+    // Count notes by folder in memory
+    const noteCountByFolder = new Map<string, number>();
+    for (const note of allNotes) {
+      if (note.folderId) {
+        noteCountByFolder.set(
+          note.folderId,
+          (noteCountByFolder.get(note.folderId) || 0) + 1
+        );
+      }
+    }
 
-        return {
-          ...folder,
-          noteCount: activeNotes.length,
-        };
-      })
-    );
+    // Attach counts to folders
+    const foldersWithCounts = folders.map((folder) => ({
+      ...folder,
+      noteCount: noteCountByFolder.get(folder._id) || 0,
+    }));
 
     return foldersWithCounts.sort((a, b) => a.name.localeCompare(b.name));
   },
 });
 
-// Get nested folder tree with counts
+// Get nested folder tree with counts (lazy loading optimized - only queries needed data)
 export const getNestedFolders = query({
   args: { userId: v.id("users"), parentId: v.optional(v.id("folders")) },
   handler: async (ctx, { userId, parentId }) => {
-    // Get folders at this level
+    // Get folders at this level only
     const folders = await ctx.db
       .query("folders")
       .withIndex("by_user_and_parent", (q) =>
@@ -173,7 +182,7 @@ export const getNestedFolders = query({
       )
       .collect();
 
-    // Sort by position (if exists) then by name
+    // Sort folders first
     const sortedFolders = folders.sort((a, b) => {
       if (a.position !== undefined && b.position !== undefined) {
         return a.position - b.position;
@@ -181,27 +190,28 @@ export const getNestedFolders = query({
       return a.name.localeCompare(b.name);
     });
 
-    // For each folder, get note count and subfolder count
+    // Lazily count notes and subfolders for only these specific folders
     const foldersWithCounts = await Promise.all(
       sortedFolders.map(async (folder) => {
-        // Get direct notes in this folder
+        // Count only notes in this specific folder
         const notes = await ctx.db
           .query("notes")
           .withIndex("by_folder", (q) => q.eq("folderId", folder._id))
           .collect();
-        const activeNotes = notes.filter((note) => !note.isDeleted);
+        const activeNoteCount = notes.filter((n) => !n.isDeleted).length;
 
-        // Get subfolders
+        // Count only immediate children of this folder
         const subfolders = await ctx.db
           .query("folders")
           .withIndex("by_parent", (q) => q.eq("parentId", folder._id))
           .collect();
+        const subfolderCount = subfolders.length;
 
         return {
           ...folder,
-          noteCount: activeNotes.length,
-          subfolderCount: subfolders.length,
-          hasChildren: subfolders.length > 0,
+          noteCount: activeNoteCount,
+          subfolderCount,
+          hasChildren: subfolderCount > 0,
         };
       })
     );
