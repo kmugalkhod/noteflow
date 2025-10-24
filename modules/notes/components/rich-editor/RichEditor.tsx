@@ -808,7 +808,7 @@ export const RichEditor = forwardRef<RichEditorRef, RichEditorProps>(({
   return (
     <div
       ref={editorRef}
-      className={`rich-editor relative ${className}`}
+      className={`rich-editor relative text-base leading-relaxed ${className}`}
       onClick={(e) => {
         // Focus last block if clicking in empty space
         if (e.target === editorRef.current && editorState.blocks.length > 0) {

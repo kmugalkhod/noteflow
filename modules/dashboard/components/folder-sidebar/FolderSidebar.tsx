@@ -63,7 +63,7 @@ export function FolderSidebar({ isCollapsed = false }: FolderSidebarProps) {
     <aside className="w-[235px] h-screen bg-sidebar border-r border-sidebar-border flex flex-col flex-shrink-0">
       {/* Header */}
       <div className="p-4 border-b border-sidebar-border">
-        <h1 className="text-xl font-bold text-sidebar-foreground">noteflow</h1>
+        <h1 className="text-xl font-bold text-sidebar-foreground tracking-tight">noteflow</h1>
       </div>
 
       {/* Folders Navigation */}
@@ -106,7 +106,7 @@ export function FolderSidebar({ isCollapsed = false }: FolderSidebarProps) {
 
         {/* Folders Section Header */}
         <div className="px-3 pt-4 pb-2">
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+          <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
             Folders
           </h3>
         </div>

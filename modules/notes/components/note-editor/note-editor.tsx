@@ -190,7 +190,7 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Untitled"
-          className="text-4xl font-bold border-none focus-visible:ring-0 px-0 mb-6 placeholder:text-muted-foreground/40 h-auto bg-transparent"
+          className="text-4xl font-bold border-none focus-visible:ring-0 px-0 mb-6 placeholder:text-muted-foreground/30 h-auto bg-transparent leading-tight tracking-tight"
         />
 
         {isInitialized && isRichMode ? (

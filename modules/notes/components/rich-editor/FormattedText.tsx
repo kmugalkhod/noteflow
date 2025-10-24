@@ -28,13 +28,13 @@ function FormattedSegment({ segment }: { segment: FormattedTextSegment }) {
   let classes = '';
   let styles: React.CSSProperties = {};
 
-  // Apply formatting classes
+  // Apply formatting classes with better visual emphasis
   if (segment.bold) classes += ' font-bold';
   if (segment.italic) classes += ' italic';
-  if (segment.underline) classes += ' underline';
-  if (segment.strikethrough) classes += ' line-through';
+  if (segment.underline) classes += ' underline underline-offset-2';
+  if (segment.strikethrough) classes += ' line-through decoration-2';
   if (segment.code) {
-    classes += ' font-mono bg-accent px-1.5 py-0.5 rounded text-sm';
+    classes += ' font-mono bg-accent px-1.5 py-0.5 rounded text-sm font-medium';
   }
 
   // Apply color

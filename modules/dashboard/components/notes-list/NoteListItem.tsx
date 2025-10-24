@@ -41,13 +41,13 @@ export function NoteListItem({
         }
       `}
     >
-      <h3 className={`text-sm font-semibold mb-1 truncate ${isSelected ? "text-foreground" : "text-foreground"}`}>
+      <h3 className={`text-sm font-semibold mb-1.5 truncate leading-snug ${isSelected ? "text-foreground" : "text-foreground"}`}>
         {title || "Untitled"}
       </h3>
-      <p className="text-xs text-muted-foreground mb-1 line-clamp-2">
+      <p className="text-xs text-muted-foreground mb-1.5 line-clamp-2 leading-relaxed">
         {preview || "No content"}
       </p>
-      <time className="text-xs text-muted-foreground">
+      <time className="text-xs text-muted-foreground font-medium">
         {timeAgo}
       </time>
     </div>
