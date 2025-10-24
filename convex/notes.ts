@@ -139,7 +139,7 @@ export const deleteNote = mutation({
     if (!note) throw new Error("Note not found");
 
     // Capture original folder location for smart restore
-    let deletedFromPath = null;
+    let deletedFromPath: string | undefined = undefined;
     if (note.folderId) {
       const folder = await ctx.db.get(note.folderId);
       if (folder) {

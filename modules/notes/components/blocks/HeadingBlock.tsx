@@ -43,7 +43,7 @@ export const HeadingBlock = ({
     }
   };
 
-  const getHeadingStyles = (level: number, fontSize: string) => {
+  const getHeadingStyles = (level: number, fontSize: 'small' | 'normal' | 'large') => {
     // Base styles by level with improved typography
     const baseStyles = {
       1: { small: "text-3xl", normal: "text-4xl", large: "text-5xl", weight: "font-bold", leading: "leading-tight tracking-tight" },
@@ -52,7 +52,7 @@ export const HeadingBlock = ({
     };
 
     const style = baseStyles[level as keyof typeof baseStyles] || baseStyles[1];
-    const sizeClass = style[fontSize as keyof typeof style.small] || style.normal;
+    const sizeClass = style[fontSize] || style.normal;
 
     return `${sizeClass} ${style.weight} ${style.leading} mb-1`;
   };

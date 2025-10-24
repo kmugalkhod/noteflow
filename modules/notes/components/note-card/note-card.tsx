@@ -1,7 +1,7 @@
 "use client";
 
 import { formatDistanceToNow } from "date-fns";
-import { FileText, MoreVertical, Pin } from "lucide-react";
+import { FileText, MoreVertical, Pin, Star } from "lucide-react";
 import Link from "next/link";
 import {
   DropdownMenu,
@@ -19,9 +19,11 @@ interface NoteCardProps {
   content: string;
   updatedAt: number;
   isPinned?: boolean;
+  isFavorite?: boolean;
   viewMode?: ViewMode;
   onDelete?: () => void;
   onPin?: () => void;
+  onFavorite?: () => void;
 }
 
 export function NoteCard({
@@ -30,9 +32,11 @@ export function NoteCard({
   content,
   updatedAt,
   isPinned,
+  isFavorite,
   viewMode = "grid",
   onDelete,
   onPin,
+  onFavorite,
 }: NoteCardProps) {
   // Extract plain text from content (assuming it might be JSON or HTML)
   const getPreview = (text: string) => {
@@ -75,12 +79,27 @@ export function NoteCard({
         </div>
       </Link>
 
+      {/* Favorite Star Button */}
+      {onFavorite && (
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onFavorite();
+          }}
+          className="absolute top-2 left-2 z-20 p-1.5 rounded-md bg-background/90 hover:bg-accent border border-border shadow-sm hover:scale-105 transition-all"
+          title={isFavorite ? "Remove from Favorites" : "Add to Favorites"}
+        >
+          <Star className={`w-4 h-4 ${isFavorite ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground hover:text-yellow-400"}`} />
+        </button>
+      )}
+
       {/* Actions Menu */}
-      <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="absolute top-2 right-2 z-20">
         <DropdownMenu>
           <DropdownMenuTrigger
             onClick={(e) => e.stopPropagation()}
-            className="p-1 rounded-md hover:bg-accent"
+            className="p-1.5 rounded-md hover:bg-accent bg-background/90 border border-border shadow-sm transition-all"
           >
             <MoreVertical className="w-4 h-4" />
           </DropdownMenuTrigger>
@@ -92,6 +111,15 @@ export function NoteCard({
               }}>
                 <Pin className="w-4 h-4 mr-2" />
                 {isPinned ? "Unpin" : "Pin"}
+              </DropdownMenuItem>
+            )}
+            {onFavorite && (
+              <DropdownMenuItem onClick={(e) => {
+                e.stopPropagation();
+                onFavorite();
+              }}>
+                <Star className={`w-4 h-4 mr-2 ${isFavorite ? "fill-yellow-400 text-yellow-400" : ""}`} />
+                {isFavorite ? "Remove from Favorites" : "Add to Favorites"}
               </DropdownMenuItem>
             )}
             {onDelete && (

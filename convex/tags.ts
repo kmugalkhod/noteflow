@@ -58,6 +58,46 @@ export const getNotesForTag = query({
   },
 });
 
+// Get notes for a specific tag by name
+export const getNotesForTagByName = query({
+  args: {
+    userId: v.id("users"),
+    tagName: v.string()
+  },
+  handler: async (ctx, { userId, tagName }) => {
+    // Find the tag by name
+    const tag = await ctx.db
+      .query("tags")
+      .withIndex("by_user_and_name", (q) =>
+        q.eq("userId", userId).eq("name", tagName)
+      )
+      .first();
+
+    if (!tag) {
+      return [];
+    }
+
+    // Get note-tag relationships
+    const noteTags = await ctx.db
+      .query("noteTags")
+      .withIndex("by_tag", (q) => q.eq("tagId", tag._id))
+      .collect();
+
+    // Fetch all notes
+    const notes = await Promise.all(
+      noteTags.map(async (noteTag) => {
+        const note = await ctx.db.get(noteTag.noteId);
+        return note;
+      })
+    );
+
+    // Filter out deleted notes and null values
+    return notes
+      .filter((note) => note !== null && !note.isDeleted)
+      .sort((a, b) => b!.updatedAt - a!.updatedAt);
+  },
+});
+
 // Create a new tag
 export const createTag = mutation({
   args: {

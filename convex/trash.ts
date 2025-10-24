@@ -24,11 +24,14 @@ export const cleanupExpiredTrash = internalMutation({
     const expirationThreshold = now - TRASH_RETENTION_MS;
 
     // Find expired notes
-    const expiredNotes = await ctx.db
+    const allDeletedNotes = await ctx.db
       .query("notes")
       .withIndex("by_deleted_date", (q) => q.eq("isDeleted", true))
-      .filter((note) => (note.deletedAt || 0) < expirationThreshold)
       .collect();
+
+    const expiredNotes = allDeletedNotes.filter(
+      (note) => (note.deletedAt || 0) < expirationThreshold
+    );
 
     // Permanently delete expired notes
     for (const note of expiredNotes) {
@@ -61,11 +64,14 @@ export const cleanupExpiredTrash = internalMutation({
     }
 
     // Find expired folders
-    const expiredFolders = await ctx.db
+    const allDeletedFolders = await ctx.db
       .query("folders")
       .withIndex("by_deleted_date", (q) => q.eq("isDeleted", true))
-      .filter((folder) => (folder.deletedAt || 0) < expirationThreshold)
       .collect();
+
+    const expiredFolders = allDeletedFolders.filter(
+      (folder) => (folder.deletedAt || 0) < expirationThreshold
+    );
 
     // Permanently delete expired folders
     for (const folder of expiredFolders) {

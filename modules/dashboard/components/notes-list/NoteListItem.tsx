@@ -2,6 +2,7 @@
 
 import { formatDistanceToNow } from "date-fns";
 import type { Id } from "@/convex/_generated/dataModel";
+import { Star } from "lucide-react";
 
 interface NoteListItemProps {
   id: Id<"notes">;
@@ -9,7 +10,10 @@ interface NoteListItemProps {
   content: string;
   updatedAt: number;
   isSelected: boolean;
+  isFavorite?: boolean;
   onClick: () => void;
+  onFavorite?: () => void;
+  onDragStart?: (noteId: Id<"notes">) => void;
 }
 
 export function NoteListItem({
@@ -18,7 +22,10 @@ export function NoteListItem({
   content,
   updatedAt,
   isSelected,
+  isFavorite,
   onClick,
+  onFavorite,
+  onDragStart,
 }: NoteListItemProps) {
   // Extract plain text from content (remove any markdown/formatting)
   const getPreviewText = (text: string) => {
@@ -31,9 +38,17 @@ export function NoteListItem({
   return (
     <div
       onClick={onClick}
+      draggable={!!onDragStart}
+      onDragStart={(e) => {
+        if (onDragStart) {
+          e.dataTransfer.effectAllowed = "move";
+          e.dataTransfer.setData("noteId", id);
+          onDragStart(id);
+        }
+      }}
       className={`
-        px-5 py-3.5 cursor-pointer border-b border-border/50
-        transition-all duration-200 ease-out
+        relative px-5 py-3.5 cursor-pointer border-b border-border/50
+        transition-all duration-200 ease-out group
         ${
           isSelected
             ? "bg-secondary shadow-sm"
@@ -41,7 +56,21 @@ export function NoteListItem({
         }
       `}
     >
-      <h3 className={`text-sm font-semibold mb-1.5 truncate leading-snug ${isSelected ? "text-foreground" : "text-foreground"}`}>
+      {/* Favorite Star Button */}
+      {onFavorite && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onFavorite();
+          }}
+          className="absolute top-3 right-3 p-1 rounded hover:bg-accent transition-colors"
+          title={isFavorite ? "Remove from Favorites" : "Add to Favorites"}
+        >
+          <Star className={`w-4 h-4 ${isFavorite ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/60 group-hover:text-muted-foreground"}`} />
+        </button>
+      )}
+
+      <h3 className={`text-sm font-semibold mb-1.5 truncate leading-snug pr-8 ${isSelected ? "text-foreground" : "text-foreground"}`}>
         {title || "Untitled"}
       </h3>
       <p className="text-xs text-muted-foreground mb-1.5 line-clamp-2 leading-relaxed">

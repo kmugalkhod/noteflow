@@ -40,27 +40,27 @@ export function DeleteNoteDialog({
           <AlertDialogTitle>
             {isPermanent ? "Permanently Delete Note?" : "Move to Trash?"}
           </AlertDialogTitle>
-          <AlertDialogDescription className="space-y-2">
-            {isPermanent ? (
-              <>
+          <AlertDialogDescription asChild>
+            <div className="space-y-2">
+              {isPermanent ? (
                 <p>
                   Are you sure you want to permanently delete <strong>"{noteTitle}"</strong>?
                   This action cannot be undone.
                 </p>
-              </>
-            ) : (
-              <>
-                <p>
-                  <strong>"{noteTitle}"</strong> will be moved to trash.
-                  You can restore it within 30 days.
-                </p>
-                {folderName && (
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Currently in: <span className="font-medium">{folderName}</span>
+              ) : (
+                <>
+                  <p>
+                    <strong>"{noteTitle}"</strong> will be moved to trash.
+                    You can restore it within 30 days.
                   </p>
-                )}
-              </>
-            )}
+                  {folderName && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Currently in: <span className="font-medium">{folderName}</span>
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

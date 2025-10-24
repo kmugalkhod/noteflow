@@ -275,7 +275,12 @@ export const EditorBlock = forwardRef<HTMLDivElement, EditorBlockProps>(({
         return <QuoteBlock {...baseProps} />;
 
       case 'divider':
-        return <DividerBlock {...baseProps} />;
+        return <DividerBlock
+          isFocused={isFocused}
+          onFocus={onFocus}
+          onBlur={onBlur}
+          onKeyDown={handleReactKeyDown}
+        />;
 
       case 'code':
         return <CodeBlock {...baseProps} properties={block.properties} />;
@@ -284,10 +289,30 @@ export const EditorBlock = forwardRef<HTMLDivElement, EditorBlockProps>(({
         return <CalloutBlock {...baseProps} properties={block.properties} />;
 
       case 'image':
-        return <ImageBlock {...baseProps} properties={block.properties} />;
+        return <ImageBlock
+          content={typeof block.content === 'string' ? block.content : segmentsToString(block.content)}
+          placeholder={placeholder}
+          isFocused={isFocused}
+          properties={block.properties}
+          onChange={handleContentChange}
+          onPropertyChange={handlePropertyChange}
+          onKeyDown={handleReactKeyDown}
+          onFocus={onFocus}
+          onBlur={onBlur}
+        />;
 
       case 'table':
-        return <TableBlock {...baseProps} properties={block.properties} />;
+        return <TableBlock
+          content={typeof block.content === 'string' ? block.content : segmentsToString(block.content)}
+          placeholder={placeholder}
+          isFocused={isFocused}
+          properties={block.properties}
+          onChange={handleContentChange}
+          onPropertyChange={handlePropertyChange}
+          onKeyDown={handleReactKeyDown}
+          onFocus={onFocus}
+          onBlur={onBlur}
+        />;
 
       default:
         return <TextBlock {...baseProps} />;

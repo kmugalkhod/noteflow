@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { List, Grid3x3, Trash2, Plus, PanelLeft, PanelLeftClose, PanelRight, PanelRightClose } from "lucide-react";
+import { Trash2, Plus, PanelLeft, PanelLeftClose, PanelRightClose } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNotes } from "../../contexts/NotesContext";
 import { DeleteNoteDialog } from "@/modules/notes/components/delete-note-dialog";
@@ -25,7 +25,6 @@ export function NotesListToolbar({
   onToggleNotesPanel,
   selectedNoteTitle,
 }: NotesListToolbarProps) {
-  const { viewMode, setViewMode } = useNotes();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   return (
@@ -46,22 +45,6 @@ export function NotesListToolbar({
             )}
           </Button>
         )}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 transition-all duration-150 hover:scale-110"
-          onClick={() => setViewMode("list")}
-        >
-          <List className={`h-4 w-4 transition-colors ${viewMode === "list" ? "text-primary" : "text-muted-foreground"}`} />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 transition-all duration-150 hover:scale-110"
-          onClick={() => setViewMode("grid")}
-        >
-          <Grid3x3 className={`h-4 w-4 transition-colors ${viewMode === "grid" ? "text-primary" : "text-muted-foreground"}`} />
-        </Button>
         {canDelete && onDelete && (
           <Button
             variant="ghost"
