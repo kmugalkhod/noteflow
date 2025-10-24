@@ -51,12 +51,12 @@
 
 ### Implementation for User Story 1
 
-- [ ] T008 [P] [US1] Create trash constants file with retention period in modules/trash/utils/constants.ts
-- [ ] T009 [P] [US1] Implement expiration calculation helpers in modules/trash/utils/expirationHelpers.ts
-- [ ] T010 [US1] Create ExpirationBadge component in modules/trash/components/expiration-badge.tsx
-- [ ] T011 [P] [US1] Create scheduled cleanup mutation in convex/trash.ts (cleanupExpiredTrash)
-- [ ] T012 [P] [US1] Create cron job configuration in convex/cron.ts
-- [ ] T013 [US1] Update getDeletedNotes query to include expiration metadata in convex/trash.ts
+- [X] T008 [P] [US1] Create trash constants file with retention period in modules/trash/utils/constants.ts
+- [X] T009 [P] [US1] Implement expiration calculation helpers in modules/trash/utils/expirationHelpers.ts
+- [X] T010 [US1] Create ExpirationBadge component in modules/trash/components/expiration-badge.tsx
+- [X] T011 [P] [US1] Create scheduled cleanup mutation in convex/trash.ts (cleanupExpiredTrash)
+- [X] T012 [P] [US1] Create cron job configuration in convex/cron.ts
+- [X] T013 [US1] Update getDeletedNotes query to include expiration metadata in convex/trash.ts
 - [ ] T014 [US1] Integrate ExpirationBadge into TrashNoteCard in modules/notes/components/trash-note-card.tsx
 - [ ] T015 [US1] Add expiration warning styling for urgent items (< 3 days) in modules/trash/components/expiration-badge.tsx
 - [ ] T016 [US1] Add audit logging to cleanup mutation in convex/trash.ts
@@ -77,10 +77,10 @@
 ### Implementation for User Story 2
 
 - [ ] T017 [P] [US2] Create OriginalLocationBadge component in modules/trash/components/original-location-badge.tsx
-- [ ] T018 [P] [US2] Implement folder path building helper in modules/trash/utils/restoreHelpers.ts
-- [ ] T019 [US2] Update deleteNote mutation to capture deletedFromFolderId and path in convex/notes.ts
-- [ ] T020 [P] [US2] Update restoreNote mutation with smart folder restoration logic in convex/notes.ts
-- [ ] T021 [P] [US2] Update getDeletedItems query to include original folder metadata in convex/trash.ts
+- [X] T018 [P] [US2] Implement folder path building helper in modules/trash/utils/restoreHelpers.ts
+- [X] T019 [US2] Update deleteNote mutation to capture deletedFromFolderId and path in convex/notes.ts
+- [X] T020 [P] [US2] Update restoreNote mutation with smart folder restoration logic in convex/notes.ts
+- [X] T021 [P] [US2] Update getDeletedItems query to include original folder metadata in convex/trash.ts
 - [ ] T022 [US2] Integrate OriginalLocationBadge into TrashNoteCard in modules/notes/components/trash-note-card.tsx
 - [ ] T023 [US2] Add fallback notification when original folder is missing in modules/notes/components/trash-note-card.tsx
 - [ ] T024 [US2] Update DeleteNoteDialog to show original location before deletion in modules/notes/components/delete-note-dialog.tsx
