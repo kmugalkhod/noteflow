@@ -45,7 +45,7 @@ export function TrashView() {
     }
   };
 
-  const handlePermanentDelete = (noteId: string) => {
+  const handlePermanentDelete = (noteId: string, noteTitle: string) => {
     setNoteToDelete(noteId as Id<"notes">);
     setDeleteConfirmOpen(true);
   };
@@ -53,12 +53,18 @@ export function TrashView() {
   const confirmPermanentDelete = async () => {
     if (!noteToDelete) return;
 
+    // Find the note to get its title
+    const note = deletedNotes?.find(n => n._id === noteToDelete);
+    const noteTitle = note?.title || "Untitled";
+
     try {
       await permanentDeleteNote({ noteId: noteToDelete });
       setDeleteConfirmOpen(false);
       setNoteToDelete(null);
+      toast.success(`"${noteTitle}" permanently deleted`);
     } catch (error) {
       console.error("Failed to permanently delete note:", error);
+      toast.error("Failed to permanently delete note. Please try again.");
     }
   };
 
@@ -136,7 +142,7 @@ export function TrashView() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handlePermanentDelete(note._id)}
+                    onClick={() => handlePermanentDelete(note._id, note.title)}
                     className="h-8 gap-1.5 text-destructive hover:text-destructive"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
