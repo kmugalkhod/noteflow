@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Trash2, Plus, PanelLeft, PanelLeftClose, PanelRightClose, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNotes } from "../../contexts/NotesContext";
 import { DeleteNoteDialog } from "@/modules/notes/components/delete-note-dialog";
 
 interface NotesListToolbarProps {

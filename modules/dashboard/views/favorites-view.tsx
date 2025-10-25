@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useConvexUser } from "@/modules/shared/hooks/use-convex-user";
@@ -20,7 +21,16 @@ export function FavoritesView() {
   const togglePin = useMutation(api.notes.togglePin);
   const toggleFavorite = useMutation(api.notes.toggleFavorite);
 
-  const handleFavorite = async (noteId: Id<"notes">, noteTitle: string) => {
+  // Memoized handlers to prevent creating new functions on every render
+  const handleDelete = useCallback((noteId: Id<"notes">) => {
+    deleteNote({ noteId });
+  }, [deleteNote]);
+
+  const handlePin = useCallback((noteId: Id<"notes">) => {
+    togglePin({ noteId });
+  }, [togglePin]);
+
+  const handleFavorite = useCallback(async (noteId: Id<"notes">, noteTitle: string) => {
     try {
       await toggleFavorite({ noteId });
       toast.success(`"${noteTitle}" removed from favorites`);
@@ -28,7 +38,7 @@ export function FavoritesView() {
       console.error("Failed to remove from favorites:", error);
       toast.error("Failed to update favorite status");
     }
-  };
+  }, [toggleFavorite]);
 
   if (!convexUser) {
     return (
@@ -81,15 +91,9 @@ export function FavoritesView() {
                 isPinned={note.isPinned}
                 isFavorite={note.isFavorite}
                 viewMode="grid"
-                onDelete={async () => {
-                  await deleteNote({ noteId: note._id });
-                }}
-                onPin={async () => {
-                  await togglePin({ noteId: note._id });
-                }}
-                onFavorite={async () => {
-                  await handleFavorite(note._id, note.title);
-                }}
+                onDelete={() => handleDelete(note._id)}
+                onPin={() => handlePin(note._id)}
+                onFavorite={() => handleFavorite(note._id, note.title)}
               />
             ))}
           </div>

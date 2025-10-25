@@ -39,8 +39,7 @@ export interface EditorBlockProps {
   canMoveUp?: boolean;
   canMoveDown?: boolean;
   canDelete?: boolean;
-  allBlocks?: Block[];
-  blockIndex?: number;
+  listNumber?: number;
 }
 
 export const EditorBlock = forwardRef<HTMLDivElement, EditorBlockProps>(({
@@ -65,28 +64,9 @@ export const EditorBlock = forwardRef<HTMLDivElement, EditorBlockProps>(({
   canMoveUp = false,
   canMoveDown = false,
   canDelete = true,
-  allBlocks = [],
-  blockIndex = 0,
+  listNumber = 1,
 }, ref) => {
   const blockRef = useRef<HTMLDivElement>(null);
-
-  // Calculate list number for numbered lists
-  const calculateListNumber = useCallback((): number => {
-    if (block.type !== 'numberedList' || !allBlocks.length) return 1;
-
-    let number = 1;
-    // Count backwards from current block to find the start of this numbered list
-    for (let i = blockIndex - 1; i >= 0; i--) {
-      if (allBlocks[i].type === 'numberedList') {
-        number++;
-      } else {
-        // Different block type breaks the numbered list sequence
-        break;
-      }
-    }
-
-    return number;
-  }, [block.type, allBlocks, blockIndex]);
 
   // Handle content changes and slash trigger detection
   const handleContentChange = useCallback((newContent: string, element?: HTMLElement) => {
@@ -263,7 +243,7 @@ export const EditorBlock = forwardRef<HTMLDivElement, EditorBlockProps>(({
 
       case 'bulletList':
       case 'numberedList':
-        return <ListBlock {...baseProps} properties={block.properties} listType={block.type === 'bulletList' ? 'bullet' : 'numbered'} listNumber={calculateListNumber()} />;
+        return <ListBlock {...baseProps} properties={block.properties} listType={block.type === 'bulletList' ? 'bullet' : 'numbered'} listNumber={listNumber} />;
 
       case 'todo':
         return <TodoBlock {...baseProps} properties={block.properties} />;

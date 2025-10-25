@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useConvexUser } from "@/modules/shared/hooks/use-convex-user";
@@ -7,6 +8,7 @@ import { NoteCard } from "@/modules/notes/components/note-card";
 import { useMutation } from "convex/react";
 import { Loader2, Pin, FileText } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
+import type { Id } from "@/convex/_generated/dataModel";
 
 export function WorkspaceView() {
   const convexUser = useConvexUser();
@@ -18,6 +20,19 @@ export function WorkspaceView() {
   const deleteNote = useMutation(api.notes.deleteNote);
   const togglePin = useMutation(api.notes.togglePin);
   const toggleFavorite = useMutation(api.notes.toggleFavorite);
+
+  // Memoized handlers to prevent creating new functions on every render
+  const handleDelete = useCallback((noteId: Id<"notes">) => {
+    deleteNote({ noteId });
+  }, [deleteNote]);
+
+  const handlePin = useCallback((noteId: Id<"notes">) => {
+    togglePin({ noteId });
+  }, [togglePin]);
+
+  const handleFavorite = useCallback((noteId: Id<"notes">) => {
+    toggleFavorite({ noteId });
+  }, [toggleFavorite]);
 
   if (!convexUser || workspaceData === undefined) {
     return (
@@ -73,15 +88,9 @@ export function WorkspaceView() {
                 updatedAt={note.updatedAt}
                 isPinned={note.isPinned}
                 isFavorite={note.isFavorite}
-                onDelete={async () => {
-                  await deleteNote({ noteId: note._id });
-                }}
-                onPin={async () => {
-                  await togglePin({ noteId: note._id });
-                }}
-                onFavorite={async () => {
-                  await toggleFavorite({ noteId: note._id });
-                }}
+                onDelete={() => handleDelete(note._id)}
+                onPin={() => handlePin(note._id)}
+                onFavorite={() => handleFavorite(note._id)}
               />
             ))}
           </div>
@@ -110,15 +119,9 @@ export function WorkspaceView() {
                 updatedAt={note.updatedAt}
                 isPinned={note.isPinned}
                 isFavorite={note.isFavorite}
-                onDelete={async () => {
-                  await deleteNote({ noteId: note._id });
-                }}
-                onPin={async () => {
-                  await togglePin({ noteId: note._id });
-                }}
-                onFavorite={async () => {
-                  await toggleFavorite({ noteId: note._id });
-                }}
+                onDelete={() => handleDelete(note._id)}
+                onPin={() => handlePin(note._id)}
+                onFavorite={() => handleFavorite(note._id)}
               />
             ))}
           </div>
