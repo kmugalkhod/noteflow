@@ -42,7 +42,7 @@ export function FolderSidebar({ isCollapsed = false }: FolderSidebarProps) {
   const handleSelectAllNotes = () => {
     setSelectedFolderId("all");
     setSelectedNoteId(null);
-    router.push("/");
+    router.push("/workspace");
   };
 
   const uncategorizedCount = noteCounts?.uncategorized || 0;

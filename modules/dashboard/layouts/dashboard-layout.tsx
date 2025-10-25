@@ -129,7 +129,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         )}
 
         {/* Column 3: Note Editor/Content */}
-        <main className="flex-1 overflow-auto bg-editor-bg relative transition-all duration-200">
+        <main className="flex-1 overflow-auto bg-editor-bg relative">
           {/* Show notes panel button when collapsed - but not on trash or favorites pages */}
           {isNotesPanelCollapsed && !isTrashPage && !isFavoritesPage && (
             <button
