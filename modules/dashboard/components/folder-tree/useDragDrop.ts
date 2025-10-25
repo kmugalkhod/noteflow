@@ -4,6 +4,8 @@ import { useState, useCallback } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { useNotesStore } from "../../store/useNotesStore";
+import { useRouter } from "next/navigation";
 
 type DragItem = {
   type: "folder" | "note";
@@ -25,6 +27,11 @@ export function useDragDrop() {
   // Mutations
   const moveFolderToFolder = useMutation(api.folders.moveFolderToFolder);
   const moveNoteToFolder = useMutation(api.notes.moveNoteToFolder);
+
+  // Zustand store
+  const selectedNoteId = useNotesStore((state) => state.selectedNoteId);
+  const setSelectedNoteId = useNotesStore((state) => state.setSelectedNoteId);
+  const router = useRouter();
 
   // Start dragging
   const handleDragStart = useCallback(
@@ -117,6 +124,12 @@ export function useDragDrop() {
             folderId: targetFolderId as Id<"folders"> | null,
           });
           console.log(`Moved note to ${target.type === "root" ? "All Notes" : "folder"}`);
+
+          // If the moved note was currently selected, clear selection and navigate to workspace
+          if (selectedNoteId === draggedNoteId) {
+            setSelectedNoteId(null);
+            router.push("/workspace");
+          }
         } catch (error) {
           console.error("Failed to move note:", error);
         }
@@ -162,6 +175,12 @@ export function useDragDrop() {
           });
 
           console.log(`Moved note "${draggedItem.name}" to ${target.type === "root" ? "root" : "folder"}`);
+
+          // If the moved note was currently selected, clear selection and navigate to workspace
+          if (selectedNoteId === draggedItem.id) {
+            setSelectedNoteId(null);
+            router.push("/workspace");
+          }
         }
       } catch (error) {
         console.error("Failed to move item:", error);
@@ -172,7 +191,7 @@ export function useDragDrop() {
         setIsDragging(false);
       }
     },
-    [draggedItem, moveFolderToFolder, moveNoteToFolder]
+    [draggedItem, moveFolderToFolder, moveNoteToFolder, selectedNoteId, setSelectedNoteId, router]
   );
 
   return {
