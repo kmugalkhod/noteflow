@@ -9,6 +9,7 @@ import { NotesListToolbar } from "./NotesListToolbar";
 import { NoteListItem } from "./NoteListItem";
 import { Loader2, FileText } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 interface NotesListProps {
   onToggleSidebar?: () => void;
@@ -88,11 +89,15 @@ export function NotesList({
   const handleDeleteNote = async () => {
     if (!selectedNoteId) return;
 
+    const noteTitle = displayTitle || "Untitled";
+
     try {
       await deleteNote({ noteId: selectedNoteId });
       setSelectedNoteId(null);
+      toast.success(`"${noteTitle}" moved to trash`);
     } catch (error) {
       console.error("Failed to delete note:", error);
+      toast.error("Failed to delete note. Please try again.");
     }
   };
 

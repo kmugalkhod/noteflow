@@ -10,6 +10,7 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { FolderContextMenu } from "./FolderContextMenu";
 import { useNotesStore } from "../../store/useNotesStore";
+import { useRouter, usePathname } from "next/navigation";
 
 interface FolderData {
   _id: Id<"folders">;
@@ -55,6 +56,9 @@ export function FolderTreeItem({
   const setSelectedFolderId = useNotesStore((state) => state.setSelectedFolderId);
   const setSelectedNoteId = useNotesStore((state) => state.setSelectedNoteId);
 
+  const router = useRouter();
+  const pathname = usePathname();
+
   // Fetch child folders if expanded
   const childFolders = useQuery(
     api.folders.getNestedFolders,
@@ -74,6 +78,12 @@ export function FolderTreeItem({
     }
     setSelectedFolderId(folder._id);
     setSelectedNoteId(null);
+
+    // Navigate to root if currently on trash or favorites page
+    // This ensures the notes panel becomes visible
+    if (pathname === "/trash" || pathname === "/favorites") {
+      router.push("/");
+    }
   };
 
   // Calculate indentation (each level adds 16px)
