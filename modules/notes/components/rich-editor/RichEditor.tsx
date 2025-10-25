@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, useImperativeHandle, forwardRef } from 'react';
+import { useState, useEffect, useRef, useCallback, useImperativeHandle, forwardRef, useMemo } from 'react';
 import { EditorBlock } from './EditorBlock';
 import { SlashMenu, useSlashMenu, type SlashCommand } from '../slash-menu';
 import { FormattingToolbar } from './FormattingToolbar';
@@ -561,16 +561,23 @@ export const RichEditor = forwardRef<RichEditorRef, RichEditorProps>(({
     }));
   }, [textSelection, editorState.blocks]);
 
-  // Get active formats at current selection
-  const getActiveFormats = useCallback(() => {
+  // Create indexed Map of blocks for O(1) lookup instead of O(n) array search
+  const blocksMap = useMemo(() => {
+    const map = new Map<string, Block>();
+    editorState.blocks.forEach(block => map.set(block.id, block));
+    return map;
+  }, [editorState.blocks]);
+
+  // Get active formats at current selection - optimized with useMemo
+  const getActiveFormats = useMemo(() => {
     if (!textSelection) return {};
 
     const { blockId, start } = textSelection;
-    const block = editorState.blocks.find(b => b.id === blockId);
+    const block = blocksMap.get(blockId);
     if (!block) return {};
 
     return getActiveFormatsAtPosition(block.content, start);
-  }, [textSelection, editorState.blocks]);
+  }, [textSelection, blocksMap]);
 
   // Handle undo
   const handleUndo = useCallback(() => {
@@ -852,50 +859,63 @@ export const RichEditor = forwardRef<RichEditorRef, RichEditorProps>(({
             onColorChange={handleApplyColor}
             onHighlightChange={handleApplyHighlight}
             onFontSizeChange={handleApplyFontSize}
-            activeFormats={getActiveFormats()}
+            activeFormats={getActiveFormats}
           />
         </div>
       )}
 
-      {editorState.blocks.map((block, index) => (
-        <EditorBlock
-          key={block.id}
-          block={block}
-          isFocused={editorState.focusedBlockId === block.id}
-          placeholder={
-            block.content === '' && editorState.focusedBlockId === block.id
-              ? placeholder
-              : undefined
-          }
-          onChange={(content, properties) => handleBlockChange(block.id, content, properties)}
-          onFocus={() => handleBlockFocus(block.id)}
-          onBlur={handleBlockBlur}
-          onEnterKey={(cursorPosition, isEmptyBlock, shiftKey) => handleEnterKey(block.id, cursorPosition, isEmptyBlock, shiftKey)}
-          onEscapeKey={() => handleEscapeKey(block.id)}
-          onBackspaceAtStart={() => handleBackspaceAtStart(block.id)}
-          onSlashTrigger={(position, query, element) => handleSlashTrigger(block.id, position, query, element)}
-          onClearSlashTrigger={handleClearSlashTrigger}
-          onMarkdownTransform={(newType, newContent, cursorPosition) => handleMarkdownTransform(block.id, newType, newContent, cursorPosition)}
-          onTextSelect={(start, end) => handleTextSelection(block.id, start, end)}
-          onDuplicate={() => handleDuplicateBlock(block.id)}
-          onDelete={() => handleDeleteBlock(block.id)}
-          onTransform={(newType) => handleTransformBlock(block.id, newType)}
-          onMoveUp={() => handleMoveBlock(block.id, 'up')}
-          onMoveDown={() => handleMoveBlock(block.id, 'down')}
-          canMoveUp={index > 0}
-          canMoveDown={index < editorState.blocks.length - 1}
-          canDelete={editorState.blocks.length > 1}
-          allBlocks={editorState.blocks}
-          blockIndex={index}
-          ref={(el) => {
-            if (el) {
-              blockRefs.current.set(block.id, el);
+      {editorState.blocks.map((block, index) => {
+        // Calculate list number for numbered lists without passing entire blocks array
+        let listNumber = 1;
+        if (block.type === 'numberedList' && index > 0) {
+          for (let i = index - 1; i >= 0; i--) {
+            if (editorState.blocks[i].type === 'numberedList') {
+              listNumber++;
             } else {
-              blockRefs.current.delete(block.id);
+              break;
             }
-          }}
-        />
-      ))}
+          }
+        }
+
+        return (
+          <EditorBlock
+            key={block.id}
+            block={block}
+            isFocused={editorState.focusedBlockId === block.id}
+            placeholder={
+              block.content === '' && editorState.focusedBlockId === block.id
+                ? placeholder
+                : undefined
+            }
+            onChange={(content, properties) => handleBlockChange(block.id, content, properties)}
+            onFocus={() => handleBlockFocus(block.id)}
+            onBlur={handleBlockBlur}
+            onEnterKey={(cursorPosition, isEmptyBlock, shiftKey) => handleEnterKey(block.id, cursorPosition, isEmptyBlock, shiftKey)}
+            onEscapeKey={() => handleEscapeKey(block.id)}
+            onBackspaceAtStart={() => handleBackspaceAtStart(block.id)}
+            onSlashTrigger={(position, query, element) => handleSlashTrigger(block.id, position, query, element)}
+            onClearSlashTrigger={handleClearSlashTrigger}
+            onMarkdownTransform={(newType, newContent, cursorPosition) => handleMarkdownTransform(block.id, newType, newContent, cursorPosition)}
+            onTextSelect={(start, end) => handleTextSelection(block.id, start, end)}
+            onDuplicate={() => handleDuplicateBlock(block.id)}
+            onDelete={() => handleDeleteBlock(block.id)}
+            onTransform={(newType) => handleTransformBlock(block.id, newType)}
+            onMoveUp={() => handleMoveBlock(block.id, 'up')}
+            onMoveDown={() => handleMoveBlock(block.id, 'down')}
+            canMoveUp={index > 0}
+            canMoveDown={index < editorState.blocks.length - 1}
+            canDelete={editorState.blocks.length > 1}
+            listNumber={listNumber}
+            ref={(el) => {
+              if (el) {
+                blockRefs.current.set(block.id, el);
+              } else {
+                blockRefs.current.delete(block.id);
+              }
+            }}
+          />
+        );
+      })}
 
       {/* Slash Menu */}
       <SlashMenu

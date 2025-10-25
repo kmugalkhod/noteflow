@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { NotesProvider } from "../contexts/NotesContext";
 import { FolderSidebar } from "../components/folder-sidebar";
 import { NotesList } from "../components/notes-list";
 import { CommandPalette } from "@/modules/search/components";
@@ -105,8 +104,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <NotesProvider>
-      <div className="flex h-screen bg-background overflow-hidden">
+    <div className="flex h-screen bg-background overflow-hidden">
         {/* Column 1: Folders Sidebar */}
         <FolderSidebar isCollapsed={isSidebarCollapsed} />
 
@@ -162,6 +160,5 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           onClose={() => setCommandPaletteOpen(false)}
         />
       </div>
-    </NotesProvider>
   );
 }

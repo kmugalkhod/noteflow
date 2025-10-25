@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { FileText, MoreVertical, Pin, Star } from "lucide-react";
 import Link from "next/link";
@@ -26,7 +27,7 @@ interface NoteCardProps {
   onFavorite?: () => void;
 }
 
-export function NoteCard({
+export const NoteCard = memo(function NoteCard({
   id,
   title,
   content,
@@ -138,4 +139,4 @@ export function NoteCard({
       </div>
     </Card>
   );
-}
+});

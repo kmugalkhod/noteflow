@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import {
   Folder,
   ChevronRight,
@@ -42,7 +43,7 @@ interface FolderTreeItemProps {
   isDragging?: boolean;
 }
 
-export function FolderTreeItem({
+export const FolderTreeItem = memo(function FolderTreeItem({
   folder,
   depth,
   isExpanded,
@@ -202,4 +203,4 @@ export function FolderTreeItem({
       )}
     </>
   );
-}
+});
