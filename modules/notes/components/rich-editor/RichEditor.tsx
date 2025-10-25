@@ -867,10 +867,19 @@ export const RichEditor = forwardRef<RichEditorRef, RichEditorProps>(({
       {editorState.blocks.map((block, index) => {
         // Calculate list number for numbered lists without passing entire blocks array
         let listNumber = 1;
-        if (block.type === 'numberedList' && index > 0) {
+        if (block.type === 'numberedList') {
+          const currentLevel = (block.properties as any)?.level || 0;
           for (let i = index - 1; i >= 0; i--) {
-            if (editorState.blocks[i].type === 'numberedList') {
-              listNumber++;
+            const prevBlock = editorState.blocks[i];
+            if (prevBlock.type === 'numberedList') {
+              const prevLevel = (prevBlock.properties as any)?.level || 0;
+              if (prevLevel === currentLevel) {
+                listNumber++;
+              } else if (prevLevel < currentLevel) {
+                // Started a new nested level, reset to 1
+                break;
+              }
+              // If prevLevel > currentLevel, continue scanning
             } else {
               break;
             }
