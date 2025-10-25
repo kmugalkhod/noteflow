@@ -11,6 +11,7 @@ import { useNotesStore } from "@/modules/dashboard/store/useNotesStore";
 import { FolderSelector } from "../folder-selector";
 import { TagInput } from "@/modules/tags/components";
 import { RichEditor, type RichEditorRef } from "../rich-editor";
+import { CoverImage } from "../cover-image";
 import { Button } from "@/components/ui/button";
 import {
   serializeBlocks,
@@ -39,6 +40,7 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [blocks, setBlocks] = useState<Block[]>([]);
+  const [coverImage, setCoverImage] = useState<string | undefined>(undefined);
   const [tags, setTags] = useState<string[]>([]);
   const [isRichMode, setIsRichMode] = useState(true); // Default to rich mode
   const [isSaving, setIsSaving] = useState(false);
@@ -51,12 +53,14 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
   const [lastSavedTitle, setLastSavedTitle] = useState("");
   const [lastSavedContent, setLastSavedContent] = useState("");
   const [lastSavedBlocks, setLastSavedBlocks] = useState<string | undefined>(undefined);
+  const [lastSavedCoverImage, setLastSavedCoverImage] = useState<string | undefined>(undefined);
 
   const richEditorRef = useRef<RichEditorRef>(null);
   const currentNoteIdRef = useRef(noteId); // Track current note to prevent stale saves
   const debouncedTitle = useDebounce(title, 1500);
   const debouncedContent = useDebounce(content, 1500);
   const debouncedBlocks = useDebounce(blocks, 1500);
+  const debouncedCoverImage = useDebounce(coverImage, 1500);
 
   // Sync noteId with context when note page loads
   useEffect(() => {
@@ -83,10 +87,12 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
     if (noteContent && !isInitialized) {
       const initialContent = noteContent.content || "";
       const initialTitle = noteContent.title || "";
+      const initialCoverImage = (noteContent as any).coverImage;
 
-      // Set all state including title, content, blocks, and last saved values
+      // Set all state including title, content, blocks, coverImage, and last saved values
       setTitle(initialTitle);
       setContent(initialContent);
+      setCoverImage(initialCoverImage);
       setIsRichMode(true);
 
       if (noteContent.blocks && noteContent.contentType === "rich") {
@@ -102,6 +108,7 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
       setLastSavedTitle(initialTitle);
       setLastSavedContent(initialContent);
       setLastSavedBlocks(noteContent.blocks);
+      setLastSavedCoverImage(initialCoverImage);
 
       setIsInitialized(true);
     }
@@ -140,7 +147,8 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
     const hasChanges =
       debouncedTitle !== lastSavedTitle ||
       currentContent !== lastSavedContent ||
-      (isRichMode && currentBlocks !== lastSavedBlocks);
+      (isRichMode && currentBlocks !== lastSavedBlocks) ||
+      debouncedCoverImage !== lastSavedCoverImage;
 
     if (hasChanges) {
       setIsSaving(true);
@@ -150,6 +158,7 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
         content: currentContent,
         contentType: isRichMode ? "rich" : "plain",
         blocks: currentBlocks,
+        coverImage: debouncedCoverImage,
       })
         .then(() => {
           // Only update last saved values if we're still on the same note
@@ -157,6 +166,7 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
             setLastSavedTitle(debouncedTitle);
             setLastSavedContent(currentContent);
             setLastSavedBlocks(currentBlocks);
+            setLastSavedCoverImage(debouncedCoverImage);
 
             setLastSaved(new Date());
             setIsSaving(false);
@@ -173,7 +183,7 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
           setIsSaving(false);
         });
     }
-  }, [debouncedTitle, debouncedContent, debouncedBlocks, title, content, blocks, isRichMode, isInitialized, lastSavedTitle, lastSavedContent, lastSavedBlocks, noteId, updateNote]);
+  }, [debouncedTitle, debouncedContent, debouncedBlocks, debouncedCoverImage, title, content, blocks, coverImage, isRichMode, isInitialized, lastSavedTitle, lastSavedContent, lastSavedBlocks, lastSavedCoverImage, noteId, updateNote]);
 
   // Handle rich editor changes
   const handleRichEditorChange = (newBlocks: Block[], serialized: string) => {
@@ -259,8 +269,15 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
         </Button>
       </div>
 
+      {/* Cover Image */}
+      <CoverImage
+        coverImage={coverImage}
+        onCoverChange={setCoverImage}
+        editable={true}
+      />
+
       {/* Minimal Editor - Apple Notes Style with Rich Editing */}
-      <div className="flex-1 overflow-auto px-8 py-20 w-full max-w-4xl mx-auto">
+      <div className="flex-1 overflow-auto px-8 py-12 w-full max-w-4xl mx-auto">
         <Input
           value={title}
           onChange={(e) => setTitle(e.target.value)}

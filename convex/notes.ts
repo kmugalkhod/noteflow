@@ -90,13 +90,14 @@ export const getNoteContent = query({
     const note = await ctx.db.get(noteId);
     if (!note) return null;
 
-    // Return title + content/blocks (title is used only on initial load if context is empty)
+    // Return title + content/blocks + coverImage (title is used only on initial load if context is empty)
     return {
       _id: note._id,
       title: note.title,
       content: note.content,
       blocks: note.blocks,
       contentType: note.contentType,
+      coverImage: note.coverImage,
     };
   },
 });
@@ -184,13 +185,14 @@ export const updateNote = mutation({
     folderId: v.optional(v.union(v.id("folders"), v.null())),
     isPinned: v.optional(v.boolean()),
     color: v.optional(v.string()),
+    coverImage: v.optional(v.string()),
   },
   handler: async (ctx, { noteId, folderId, ...updates }) => {
     const updateData = {
       ...updates,
       updatedAt: Date.now(),
-      ...(folderId !== undefined && { 
-        folderId: folderId === null ? undefined : folderId 
+      ...(folderId !== undefined && {
+        folderId: folderId === null ? undefined : folderId
       }),
     };
 

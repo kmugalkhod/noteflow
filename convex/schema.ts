@@ -30,6 +30,9 @@ export default defineSchema({
     contentType: v.optional(v.union(v.literal("plain"), v.literal("rich"))), // Content format
     blocks: v.optional(v.string()), // JSON string for structured block content
 
+    // Cover image
+    coverImage: v.optional(v.string()), // URL to cover image
+
     // Metadata
     isPinned: v.optional(v.boolean()),
     isFavorite: v.optional(v.boolean()), // For favorites section
