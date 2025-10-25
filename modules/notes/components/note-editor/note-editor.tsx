@@ -278,11 +278,17 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
 
       {/* Minimal Editor - Apple Notes Style with Rich Editing */}
       <div className="flex-1 overflow-auto px-8 py-12 w-full max-w-4xl mx-auto">
-        <Input
+        <textarea
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Untitled"
-          className="text-4xl font-bold border-none focus-visible:ring-0 px-0 mb-6 placeholder:text-muted-foreground/30 h-auto bg-transparent leading-tight tracking-tight"
+          rows={1}
+          onInput={(e) => {
+            const target = e.target as HTMLTextAreaElement;
+            target.style.height = 'auto';
+            target.style.height = target.scrollHeight + 'px';
+          }}
+          className="w-full text-5xl font-semibold border-none focus:outline-none px-0 mb-8 placeholder:text-muted-foreground/20 bg-transparent leading-[1.15] tracking-[-0.02em] resize-none overflow-hidden text-foreground transition-colors"
         />
 
         {isInitialized && isRichMode ? (
