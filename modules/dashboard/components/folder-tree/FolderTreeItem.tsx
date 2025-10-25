@@ -79,10 +79,10 @@ export function FolderTreeItem({
     setSelectedFolderId(folder._id);
     setSelectedNoteId(null);
 
-    // Navigate to root if currently on trash or favorites page
+    // Navigate to workspace if currently on trash or favorites page
     // This ensures the notes panel becomes visible
     if (pathname === "/trash" || pathname === "/favorites") {
-      router.push("/");
+      router.push("/workspace");
     }
   };
 
