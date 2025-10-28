@@ -6,55 +6,152 @@ A beautiful, modern note-taking application built with Next.js 15, Convex, and C
 ![Next.js](https://img.shields.io/badge/Next.js-15-black)
 ![Convex](https://img.shields.io/badge/Convex-Backend-blue)
 ![Clerk](https://img.shields.io/badge/Clerk-Auth-purple)
+![Docker](https://img.shields.io/badge/Docker-Ready-blue)
 
 ## ✨ Features
 
 ### ✅ Fully Implemented
-- **🎨 Purple/Lavender Theme** - Beautiful, calming color scheme
+- **🎨 Beautiful UI/UX** - Professional animations with 60 FPS performance
 - **📝 Note Management** - Create, edit, delete notes with auto-save
 - **🏠 Dashboard** - Clean sidebar navigation with folder organization
 - **👤 User Authentication** - Secure login/register with Clerk
 - **⚡ Real-time Sync** - Instant updates across all devices via Convex
 - **📌 Pin Notes** - Keep important notes at the top
-- **🗂️ Folder Organization** - Organize notes into folders (UI ready)
+- **🗂️ Folder Organization** - Drag & drop folder management
+- **🏷️ Tags** - Flexible note organization with tags
 - **📊 Writing Stats** - Track your writing progress
 - **🎯 Auto-save** - Never lose your work (saves every 500ms)
+- **♿ Accessibility** - WCAG 2.1 AA compliant with keyboard navigation
+- **🎭 Animation System** - Respects `prefers-reduced-motion`
+- **⌨️ Keyboard Shortcuts** - Cmd/Ctrl+K for command palette
 
-## 🚀 Getting Started
+---
 
-### Prerequisites
-- Node.js 18+ installed
-- Convex account (sign up at [convex.dev](https://convex.dev))
-- Clerk account (sign up at [clerk.com](https://clerk.com))
+## 🚀 Quick Start
 
-### Installation
+### Option 1: Docker Setup (Recommended for Quick Start)
+
+**Prerequisites:**
+- Docker Desktop installed ([Download](https://www.docker.com/products/docker-desktop))
+- Convex account ([Sign up](https://convex.dev))
+- Clerk account ([Sign up](https://clerk.com))
+
+**Steps:**
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/kmugalkhod/noteflow.git
+   cd noteflow
+   ```
+
+2. **Set up environment variables**
+   ```bash
+   cp .env.local.example .env.local
+   ```
+
+   Edit `.env.local` with your credentials:
+   ```env
+   # Convex (get from https://dashboard.convex.dev)
+   CONVEX_DEPLOYMENT=dev:your-deployment-name
+   NEXT_PUBLIC_CONVEX_URL=https://your-deployment.convex.cloud
+
+   # Clerk (get from https://dashboard.clerk.com)
+   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+   CLERK_SECRET_KEY=sk_test_...
+
+   # Clerk URLs (already configured)
+   NEXT_PUBLIC_CLERK_SIGN_IN_URL=/login
+   NEXT_PUBLIC_CLERK_SIGN_UP_URL=/register
+   NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/workspace
+   NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/workspace
+   ```
+
+3. **Start with Docker Compose**
+   ```bash
+   docker-compose up -d
+   ```
+
+4. **Access the application**
+   - **App**: http://localhost:3000
+   - **Health Check**: http://localhost:3000/api/health
+
+5. **View logs** (optional)
+   ```bash
+   # All services
+   docker-compose logs -f
+
+   # Specific service
+   docker-compose logs -f noteflow-app
+   docker-compose logs -f convex-dev
+   ```
+
+6. **Stop the services**
+   ```bash
+   docker-compose down
+   ```
+
+---
+
+### Option 2: Local Development Setup
+
+**Prerequisites:**
+- Node.js 20+ installed ([Download](https://nodejs.org))
+- npm or yarn package manager
+- Convex account ([Sign up](https://convex.dev))
+- Clerk account ([Sign up](https://clerk.com))
+
+**Steps:**
 
 1. **Clone and install dependencies**
    ```bash
+   git clone https://github.com/kmugalkhod/noteflow.git
    cd noteflow
    npm install
    ```
 
 2. **Set up Convex**
    ```bash
+   # Initialize Convex (creates deployment)
    npx convex dev
    ```
-   Copy the deployment URL to `.env.local`
+
+   This will:
+   - Create a Convex deployment
+   - Generate `.env.local` with `CONVEX_DEPLOYMENT` and `NEXT_PUBLIC_CONVEX_URL`
+   - Watch for schema changes
 
 3. **Set up Clerk**
-   - Create application at [clerk.com](https://clerk.com)
-   - Copy API keys to `.env.local`
-   - Disable email verification for development (see [CLERK_SETUP.md](CLERK_SETUP.md))
 
-4. **Configure environment variables**
+   **Create Clerk Application:**
+   - Go to [clerk.com](https://clerk.com) and create an account
+   - Create a new application
+   - Copy API keys to `.env.local`:
+     ```env
+     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+     CLERK_SECRET_KEY=sk_test_...
+     ```
+
+   **Configure Clerk Settings (Important):**
+   - Go to Clerk Dashboard → User & Authentication → Email, Phone, Username
+   - **Disable email verification** for development:
+     - Settings → Email → Email verification → Toggle OFF
+   - Add sign-in/sign-up URLs:
+     - Settings → Paths → Sign-in URL: `/login`
+     - Settings → Paths → Sign-up URL: `/register`
+
+4. **Complete environment configuration**
+
+   Your final `.env.local` should look like:
    ```env
-   # .env.local
-   CONVEX_DEPLOYMENT=dev:your-deployment
-   NEXT_PUBLIC_CONVEX_URL=https://your-deployment.convex.cloud
+   # Convex (auto-generated by npx convex dev)
+   CONVEX_DEPLOYMENT=dev:amazing-animal-123
+   NEXT_PUBLIC_CONVEX_URL=https://amazing-animal-123.convex.cloud
 
+   # Clerk (from dashboard.clerk.com)
    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
    CLERK_SECRET_KEY=sk_test_...
 
+   # Clerk URLs (already configured)
    NEXT_PUBLIC_CLERK_SIGN_IN_URL=/login
    NEXT_PUBLIC_CLERK_SIGN_UP_URL=/register
    NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/workspace
@@ -62,112 +159,463 @@ A beautiful, modern note-taking application built with Next.js 15, Convex, and C
    ```
 
 5. **Start development servers**
-   ```bash
-   # Terminal 1: Convex
-   npx convex dev
 
-   # Terminal 2: Next.js
+   Open **two terminal windows**:
+
+   **Terminal 1 - Convex Backend:**
+   ```bash
+   npx convex dev
+   ```
+
+   **Terminal 2 - Next.js Frontend:**
+   ```bash
    npm run dev
    ```
 
 6. **Open your browser**
    Navigate to [http://localhost:3000](http://localhost:3000)
 
+---
+
+## 📋 Environment Variables Reference
+
+| Variable | Required | Description | Example |
+|----------|----------|-------------|---------|
+| `CONVEX_DEPLOYMENT` | ✅ Yes | Convex deployment ID | `dev:amazing-animal-123` |
+| `NEXT_PUBLIC_CONVEX_URL` | ✅ Yes | Convex backend URL | `https://amazing-animal-123.convex.cloud` |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | ✅ Yes | Clerk public key | `pk_test_...` |
+| `CLERK_SECRET_KEY` | ✅ Yes | Clerk secret key | `sk_test_...` |
+| `NEXT_PUBLIC_CLERK_SIGN_IN_URL` | ⚠️ Optional | Custom sign-in path | `/login` |
+| `NEXT_PUBLIC_CLERK_SIGN_UP_URL` | ⚠️ Optional | Custom sign-up path | `/register` |
+| `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL` | ⚠️ Optional | Redirect after sign-in | `/workspace` |
+| `NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL` | ⚠️ Optional | Redirect after sign-up | `/workspace` |
+
+---
+
+## 🐳 Docker Commands
+
+### Development
+
+```bash
+# Start all services
+docker-compose up -d
+
+# Stop all services
+docker-compose down
+
+# Rebuild containers
+docker-compose up -d --build
+
+# View logs
+docker-compose logs -f
+
+# View specific service logs
+docker-compose logs -f noteflow-app
+
+# Restart a service
+docker-compose restart noteflow-app
+
+# Execute commands in container
+docker-compose exec noteflow-app sh
+docker-compose exec noteflow-app npm install
+
+# Check service health
+docker-compose ps
+```
+
+### Production Build
+
+```bash
+# Build production image
+docker build -t noteflow:production --target production .
+
+# Run production container
+docker run -p 3000:3000 \
+  --env-file .env.local \
+  noteflow:production
+```
+
+### Clean Up
+
+```bash
+# Stop and remove all containers, networks, volumes
+docker-compose down -v
+
+# Remove all unused Docker resources
+docker system prune -a
+```
+
+---
+
 ## 📁 Project Structure
 
 ```
 noteflow/
-├── app/                    # Next.js App Router
-│   ├── (auth)/            # Authentication routes
-│   ├── (dashboard)/       # Dashboard routes
-│   └── providers.tsx      # Convex + Clerk providers
-├── modules/               # Feature-based modules
-│   ├── auth/             # Authentication
-│   ├── dashboard/        # Sidebar, navigation
-│   ├── notes/            # Note management
-│   ├── folders/          # Folder organization
-│   ├── tags/             # Tag system
-│   └── shared/           # Shared utilities
-├── components/           # shadcn/ui components
-├── convex/              # Convex backend
-│   ├── schema.ts        # Database schema
-│   ├── notes.ts         # Note functions
-│   ├── folders.ts       # Folder functions
-│   └── users.ts         # User functions
-└── lib/                 # Utilities
-
+├── app/                           # Next.js App Router
+│   ├── (auth)/                   # Authentication routes
+│   │   ├── login/               # Login page
+│   │   └── register/            # Register page
+│   ├── (dashboard)/             # Dashboard routes
+│   │   ├── workspace/           # All notes
+│   │   ├── stories/             # Story notes
+│   │   ├── favorites/           # Favorited notes
+│   │   ├── trash/               # Deleted notes
+│   │   └── folders/[id]/        # Folder view
+│   ├── api/                      # API routes
+│   │   └── health/              # Health check endpoint
+│   ├── globals.css              # Global styles + animations
+│   └── providers.tsx            # Convex + Clerk providers
+│
+├── modules/                      # Feature-based modules
+│   ├── auth/                    # Authentication
+│   │   ├── components/         # Login/Register forms
+│   │   └── views/              # Auth page layouts
+│   ├── dashboard/              # Dashboard features
+│   │   ├── components/        # Sidebar, navigation, notes list
+│   │   └── views/             # Dashboard pages
+│   ├── notes/                  # Note management
+│   │   ├── components/        # Note editor, filters
+│   │   └── hooks/             # useNotes, useNote
+│   ├── folders/                # Folder organization
+│   │   ├── components/        # Folder tree, dialogs
+│   │   └── hooks/             # useFolders
+│   ├── tags/                   # Tag system
+│   │   ├── components/        # Tag input, manager
+│   │   └── hooks/             # useTags
+│   └── shared/                 # Shared utilities
+│       ├── components/        # Reusable UI components
+│       ├── hooks/             # Animation, keyboard, focus
+│       ├── stores/            # Zustand stores
+│       ├── lib/               # Utilities, configs
+│       └── types/             # TypeScript definitions
+│
+├── components/                  # shadcn/ui components
+│   └── ui/                     # Button, Dialog, Input, etc.
+│
+├── convex/                      # Convex backend
+│   ├── schema.ts               # Database schema
+│   ├── auth.ts                 # Convex Auth setup
+│   ├── notes.ts                # Note CRUD functions
+│   ├── folders.ts              # Folder CRUD functions
+│   ├── tags.ts                 # Tag functions
+│   ├── trash.ts                # Trash functions
+│   └── users.ts                # User functions
+│
+├── specs/                       # Feature specifications
+│   ├── 003-bidirectional-links/
+│   └── 004-ui-refinement-ux/
+│
+├── lib/                         # Shared utilities
+│   └── utils.ts                # cn() helper
+│
+├── docker-compose.yml          # Docker orchestration
+├── Dockerfile                  # Multi-stage Docker build
+├── .dockerignore              # Docker ignore rules
+├── .env.local.example         # Environment template
+└── README.md                  # This file
 ```
 
-## 🎯 Usage
+---
+
+## 🎯 Usage Guide
 
 ### Creating a Note
-1. Click "New story" in the sidebar
+1. Click **"New story"** button in sidebar
 2. Start typing - auto-saves every 500ms
 3. Give it a title or leave as "Untitled"
+4. Add tags for organization
+5. Move to folders via drag & drop
 
-### Organizing Notes
-1. Create folders using the "+" button
-2. Drag notes into folders (coming soon)
-3. Use tags for flexible organization (coming soon)
+### Organizing with Folders
+1. Click **"+"** button next to "Folders" in sidebar
+2. Enter folder name and choose a color
+3. Drag notes into folders
+4. Create subfolders by right-clicking a folder
+5. Delete empty folders via context menu
 
-### Finding Notes
-- Browse all notes in "All stories"
-- Filter by folder
-- Search (coming soon)
-- Pin important notes to keep them visible
+### Using Tags
+1. Open a note
+2. Click tag icon or start typing `#tagname`
+3. Select existing tags or create new ones
+4. Filter notes by tags in sidebar
+
+### Keyboard Shortcuts
+- `Cmd/Ctrl + K` - Open command palette
+- `Cmd/Ctrl + N` - Create new note
+- `Cmd/Ctrl + F` - Search notes
+- `Escape` - Close modals/dialogs
+- `Tab` - Navigate in modals
+
+### Animation Preferences
+The app respects your system's motion preferences:
+- **macOS**: System Settings → Accessibility → Display → Reduce Motion
+- **Windows**: Settings → Accessibility → Visual Effects
+- **Browser DevTools**: Cmd/Ctrl+Shift+P → "Emulate prefers-reduced-motion"
+
+---
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: Next.js 15 (App Router), React, TypeScript
-- **Styling**: Tailwind CSS v4, shadcn/ui components
-- **Backend**: Convex (real-time database)
-- **Authentication**: Clerk
+### Frontend
+- **Framework**: Next.js 15 (App Router, React Server Components)
+- **Language**: TypeScript 5.9
+- **Styling**: Tailwind CSS v4
+- **UI Components**: shadcn/ui + Radix UI
 - **Icons**: Lucide React
-- **Forms**: React Hook Form + Zod
+- **Animations**: CSS animations with GPU acceleration
+- **Forms**: React Hook Form + Zod validation
+
+### Backend
+- **Database**: Convex (real-time, serverless)
+- **Authentication**: Clerk + Convex Auth
+- **State Management**: Zustand (with persist middleware)
+- **Real-time**: Convex subscriptions
+
+### DevOps
+- **Containerization**: Docker + Docker Compose
+- **Build Tool**: Turbopack (Next.js)
+- **Package Manager**: npm
+
+---
 
 ## 📚 Documentation
 
+### Setup Guides
 - [SETUP.md](SETUP.md) - Detailed setup instructions
-- [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) - Architecture guide
-- [FEATURES_COMPLETE.md](FEATURES_COMPLETE.md) - Feature implementation details
 - [CLERK_SETUP.md](CLERK_SETUP.md) - Clerk configuration guide
-- [FIXES_APPLIED.md](FIXES_APPLIED.md) - Troubleshooting guide
+- [DOCKER_SETUP.md](DOCKER_SETUP.md) - Docker deployment guide
 
-## 🎨 Design
+### Feature Documentation
+- [FEATURES_COMPLETE.md](FEATURES_COMPLETE.md) - Complete feature list
+- [README_UI_UX.md](README_UI_UX.md) - UI/UX system guide
+- [ANIMATION_TESTING_GUIDE.md](ANIMATION_TESTING_GUIDE.md) - Animation testing
+
+### Testing
+- [TESTING_CHECKLIST.md](TESTING_CHECKLIST.md) - Comprehensive test cases
+- [QUICK_TEST.md](QUICK_TEST.md) - 5-minute smoke test
+
+### Architecture
+- [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) - Architecture overview
+- [FINAL_IMPLEMENTATION_REPORT.md](FINAL_IMPLEMENTATION_REPORT.md) - Implementation details
+
+### Troubleshooting
+- [FIXES_APPLIED.md](FIXES_APPLIED.md) - Common issues and solutions
+
+---
+
+## 🔧 Development Commands
+
+### Local Development
+```bash
+# Install dependencies
+npm install
+
+# Start Convex backend
+npx convex dev
+
+# Start Next.js (in separate terminal)
+npm run dev
+
+# Build for production
+npm run build
+
+# Start production server
+npm start
+
+# Run linter
+npm run lint
+```
+
+### Docker Development
+```bash
+# Start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Rebuild after changes
+docker-compose up -d --build
+
+# Stop all services
+docker-compose down
+
+# Clean rebuild
+docker-compose down -v && docker-compose up -d --build
+```
+
+---
+
+## 🎨 Design Philosophy
 
 NoteFlow features a calming purple/lavender color scheme inspired by modern writing apps. The design emphasizes:
-- Clean, distraction-free editing
-- Intuitive navigation
-- Real-time feedback
-- Responsive layout
+
+- **Clean, distraction-free editing** - Minimal UI when writing
+- **Intuitive navigation** - Everything within 2 clicks
+- **Real-time feedback** - Instant visual confirmation
+- **Responsive layout** - Works on all screen sizes
+- **Accessibility first** - WCAG 2.1 AA compliant
+- **Smooth animations** - 60 FPS with GPU acceleration
+- **Respects preferences** - Honors system motion settings
+
+---
 
 ## 🔐 Security
 
-- Secure authentication via Clerk
-- Protected API routes
-- User-scoped data (all queries filtered by user ID)
-- Environment variable protection
+- ✅ Secure authentication via Clerk
+- ✅ Protected API routes with middleware
+- ✅ User-scoped data (all queries filtered by user ID)
+- ✅ Environment variable protection
+- ✅ No client-side secrets
+- ✅ HTTPS in production (Vercel/Convex)
+- ✅ CSRF protection built-in
+
+---
 
 ## 📈 Performance
 
-- Server-side rendering with Next.js
-- Optimistic updates for instant feedback
-- Debounced auto-save to reduce network calls
-- Efficient real-time subscriptions via Convex
+- ⚡ Server-side rendering with Next.js
+- ⚡ Optimistic updates for instant feedback
+- ⚡ Debounced auto-save (reduces network calls)
+- ⚡ Efficient real-time subscriptions via Convex
+- ⚡ GPU-accelerated animations (60 FPS)
+- ⚡ Code splitting and lazy loading
+- ⚡ <10KB animation system bundle impact
+
+---
+
+## 🚀 Deployment
+
+### Vercel (Recommended)
+1. Push to GitHub
+2. Import project in [Vercel](https://vercel.com)
+3. Add environment variables from `.env.local`
+4. Deploy!
+
+### Docker Production
+```bash
+# Build production image
+docker build -t noteflow:latest --target production .
+
+# Run production container
+docker run -p 3000:3000 --env-file .env.local noteflow:latest
+```
+
+### Manual Deployment
+```bash
+# Build the app
+npm run build
+
+# Start production server
+npm start
+```
+
+---
+
+## 🐛 Troubleshooting
+
+### Docker Issues
+
+**Container won't start:**
+```bash
+# Check logs
+docker-compose logs noteflow-app
+
+# Restart services
+docker-compose restart
+
+# Clean rebuild
+docker-compose down -v
+docker-compose up -d --build
+```
+
+**Port already in use:**
+```bash
+# Change port in docker-compose.yml
+ports:
+  - "3001:3000"  # Use port 3001 instead
+```
+
+### Convex Issues
+
+**Deployment not found:**
+```bash
+# Re-initialize Convex
+npx convex dev
+
+# Check .env.local has correct CONVEX_DEPLOYMENT
+```
+
+**Schema sync fails:**
+```bash
+# Clear Convex cache
+rm -rf .convex
+npx convex dev
+```
+
+### Clerk Issues
+
+**Redirect loops:**
+- Check Clerk Dashboard → Paths settings
+- Ensure sign-in/sign-up URLs match `.env.local`
+- Disable email verification for development
+
+**401 Unauthorized:**
+- Verify `CLERK_SECRET_KEY` is correct
+- Check `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` matches environment
+- Clear browser cookies and try again
+
+### General Issues
+
+**Animations not working:**
+- Check if "Reduce Motion" is enabled in OS
+- Clear `localStorage`: `localStorage.clear()`
+- Hard refresh: Cmd/Ctrl+Shift+R
+
+**Build errors:**
+```bash
+# Clear caches
+rm -rf .next node_modules
+npm install
+npm run dev
+```
+
+---
 
 ## 🤝 Contributing
 
-This is a personal project, but suggestions are welcome!
+This is a personal project, but suggestions and feedback are welcome!
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+---
 
 ## 📝 License
 
 MIT License - feel free to use this project as inspiration for your own work.
 
+---
+
 ## 🎉 Acknowledgments
 
-- Design inspiration from Shosho and Notion
+- Design inspiration from Notion and Shosho
 - Built with amazing tools: Next.js, Convex, Clerk, shadcn/ui
+- UI/UX refinement implemented with Claude Code
+- Animation system inspired by modern design systems
+
+---
+
+## 📞 Support
+
+- 📖 **Documentation**: See files in the repository
+- 🐛 **Issues**: [GitHub Issues](https://github.com/kmugalkhod/noteflow/issues)
+- 💬 **Discussions**: [GitHub Discussions](https://github.com/kmugalkhod/noteflow/discussions)
 
 ---
 
 **Happy Writing! 📝✨**
+
+Made with ❤️ using Next.js, Convex, and Clerk
