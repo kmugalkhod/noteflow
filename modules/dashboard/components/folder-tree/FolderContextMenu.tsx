@@ -30,6 +30,7 @@ import {
   EditFolderDialog,
   DeleteFolderDialog,
 } from "@/modules/folders/components";
+import { toast } from "@/modules/shared/lib/toast";
 
 interface FolderContextMenuProps {
   folderId: Id<"folders">;
@@ -70,7 +71,7 @@ export function FolderContextMenu({
   // Get all folders for "Move to..." submenu
   const allFolders = useQuery(
     api.folders.getFoldersWithCounts,
-    convexUser ? { userId: convexUser._id } : "skip"
+    convexUser ? {} : "skip"
   );
 
   const handleNewNote = async () => {
@@ -78,15 +79,16 @@ export function FolderContextMenu({
 
     try {
       const noteId = await createNote({
-        userId: convexUser._id,
         folderId: folderId,
         title: "Untitled",
         content: "",
       });
 
+      toast.success("Note created", "A new note has been added to this folder");
       router.push(`/note/${noteId}`);
     } catch (error) {
       console.error("Failed to create note:", error);
+      toast.error("Failed to create note", "Please try again");
     }
   };
 
@@ -95,14 +97,14 @@ export function FolderContextMenu({
 
     try {
       const newFolderId = await createFolder({
-        userId: convexUser._id,
         name: "New Subfolder",
         parentId: folderId,
       });
 
-      console.log("Created subfolder:", newFolderId);
+      toast.success("Subfolder created", "A new subfolder has been added");
     } catch (error) {
       console.error("Failed to create subfolder:", error);
+      toast.error("Failed to create subfolder", "Please try again");
     }
   };
 
@@ -112,8 +114,10 @@ export function FolderContextMenu({
         folderId,
         color,
       });
+      toast.success("Color updated", "Folder color has been changed");
     } catch (error) {
       console.error("Failed to update folder color:", error);
+      toast.error("Failed to update color", "Please try again");
     }
   };
 

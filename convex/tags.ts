@@ -1,11 +1,29 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
+import { getAuthenticatedUserId, verifyNoteOwnership } from "./auth";
+
+// Helper to verify tag ownership
+async function verifyTagOwnership(
+  ctx: any,
+  tagId: Id<"tags">,
+  userId: Id<"users">
+): Promise<void> {
+  const tag = await ctx.db.get(tagId);
+  if (!tag) {
+    throw new Error("Tag not found");
+  }
+  if (tag.userId !== userId) {
+    throw new Error("Unauthorized: You don't have permission to access this tag");
+  }
+}
 
 // Get all tags for a user
 export const getTags = query({
-  args: { userId: v.id("users") },
-  handler: async (ctx, { userId }) => {
+  args: {},
+  handler: async (ctx) => {
+    // Get authenticated user ID from server-side auth context
+    const userId = await getAuthenticatedUserId(ctx);
     const tags = await ctx.db
       .query("tags")
       .withIndex("by_user", (q) => q.eq("userId", userId))
@@ -19,6 +37,12 @@ export const getTags = query({
 export const getTagsForNote = query({
   args: { noteId: v.id("notes") },
   handler: async (ctx, { noteId }) => {
+    // Get authenticated user ID
+    const userId = await getAuthenticatedUserId(ctx);
+
+    // Verify ownership of the note
+    await verifyNoteOwnership(ctx, noteId, userId);
+
     const noteTags = await ctx.db
       .query("noteTags")
       .withIndex("by_note", (q) => q.eq("noteId", noteId))
@@ -39,6 +63,12 @@ export const getTagsForNote = query({
 export const getNotesForTag = query({
   args: { tagId: v.id("tags") },
   handler: async (ctx, { tagId }) => {
+    // Get authenticated user ID
+    const userId = await getAuthenticatedUserId(ctx);
+
+    // Verify ownership of the tag
+    await verifyTagOwnership(ctx, tagId, userId);
+
     const noteTags = await ctx.db
       .query("noteTags")
       .withIndex("by_tag", (q) => q.eq("tagId", tagId))
@@ -61,10 +91,12 @@ export const getNotesForTag = query({
 // Get notes for a specific tag by name
 export const getNotesForTagByName = query({
   args: {
-    userId: v.id("users"),
     tagName: v.string()
   },
-  handler: async (ctx, { userId, tagName }) => {
+  handler: async (ctx, { tagName }) => {
+    // Get authenticated user ID from server-side auth context
+    const userId = await getAuthenticatedUserId(ctx);
+
     // Find the tag by name
     const tag = await ctx.db
       .query("tags")
@@ -101,11 +133,13 @@ export const getNotesForTagByName = query({
 // Create a new tag
 export const createTag = mutation({
   args: {
-    userId: v.id("users"),
     name: v.string(),
     color: v.optional(v.string()),
   },
-  handler: async (ctx, { userId, name, color }) => {
+  handler: async (ctx, { name, color }) => {
+    // Get authenticated user ID from server-side auth context
+    const userId = await getAuthenticatedUserId(ctx);
+
     // Check if tag with same name already exists
     const existingTag = await ctx.db
       .query("tags")
@@ -137,6 +171,12 @@ export const updateTag = mutation({
     color: v.optional(v.string()),
   },
   handler: async (ctx, { tagId, name, color }) => {
+    // Get authenticated user ID
+    const userId = await getAuthenticatedUserId(ctx);
+
+    // Verify ownership before allowing update
+    await verifyTagOwnership(ctx, tagId, userId);
+
     await ctx.db.patch(tagId, {
       ...(name !== undefined && { name }),
       ...(color !== undefined && { color }),
@@ -148,6 +188,12 @@ export const updateTag = mutation({
 export const deleteTag = mutation({
   args: { tagId: v.id("tags") },
   handler: async (ctx, { tagId }) => {
+    // Get authenticated user ID
+    const userId = await getAuthenticatedUserId(ctx);
+
+    // Verify ownership before allowing deletion
+    await verifyTagOwnership(ctx, tagId, userId);
+
     // Delete all note-tag associations
     const noteTags = await ctx.db
       .query("noteTags")
@@ -170,6 +216,13 @@ export const addTagToNote = mutation({
     tagId: v.id("tags"),
   },
   handler: async (ctx, { noteId, tagId }) => {
+    // Get authenticated user ID
+    const userId = await getAuthenticatedUserId(ctx);
+
+    // Verify ownership of both note and tag
+    await verifyNoteOwnership(ctx, noteId, userId);
+    await verifyTagOwnership(ctx, tagId, userId);
+
     // Check if association already exists
     const existing = await ctx.db
       .query("noteTags")
@@ -198,6 +251,13 @@ export const removeTagFromNote = mutation({
     tagId: v.id("tags"),
   },
   handler: async (ctx, { noteId, tagId }) => {
+    // Get authenticated user ID
+    const userId = await getAuthenticatedUserId(ctx);
+
+    // Verify ownership of both note and tag
+    await verifyNoteOwnership(ctx, noteId, userId);
+    await verifyTagOwnership(ctx, tagId, userId);
+
     const noteTag = await ctx.db
       .query("noteTags")
       .withIndex("by_note_and_tag", (q) =>
@@ -214,12 +274,17 @@ export const removeTagFromNote = mutation({
 // Create tag and add to note in one operation
 export const createAndAddTag = mutation({
   args: {
-    userId: v.id("users"),
     noteId: v.id("notes"),
     name: v.string(),
     color: v.optional(v.string()),
   },
-  handler: async (ctx, { userId, noteId, name, color }) => {
+  handler: async (ctx, { noteId, name, color }) => {
+    // Get authenticated user ID from server-side auth context
+    const userId = await getAuthenticatedUserId(ctx);
+
+    // Verify ownership of the note
+    await verifyNoteOwnership(ctx, noteId, userId);
+
     // Create or get existing tag
     const existingTag = await ctx.db
       .query("tags")

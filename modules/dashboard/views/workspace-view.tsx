@@ -15,7 +15,7 @@ export function WorkspaceView() {
   const { user } = useUser();
   const workspaceData = useQuery(
     api.notes.getWorkspaceNotes,
-    convexUser ? { userId: convexUser._id, recentLimit: 10 } : "skip"
+    convexUser ? { recentLimit: 10 } : "skip"
   );
   const deleteNote = useMutation(api.notes.deleteNote);
   const togglePin = useMutation(api.notes.togglePin);

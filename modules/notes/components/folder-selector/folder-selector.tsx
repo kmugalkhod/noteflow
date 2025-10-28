@@ -28,7 +28,7 @@ export function FolderSelector({
 
   const folders = useQuery(
     api.folders.getFolders,
-    convexUser ? { userId: convexUser._id } : "skip"
+    convexUser ? {} : "skip"
   );
 
   if (!folders) {

@@ -14,7 +14,7 @@ export function FavoritesView() {
 
   const favoriteNotes = useQuery(
     api.notes.getFavoriteNotes,
-    convexUser ? { userId: convexUser._id } : "skip"
+    convexUser ? {} : "skip"
   );
 
   const deleteNote = useMutation(api.notes.deleteNote);

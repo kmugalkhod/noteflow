@@ -14,6 +14,7 @@ import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useRouter } from "next/navigation";
 import { useConvexUser } from "@/modules/shared/hooks/use-convex-user";
+import { ThemeToggle } from "@/modules/shared/components";
 
 const navigation = [
   { name: "Workspace", href: "/workspace", icon: Home },
@@ -38,7 +39,7 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
 
     try {
       const noteId = await createNote({
-        userId: convexUser._id,
+        
         title: "Untitled",
         content: "",
       });
@@ -123,7 +124,10 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
       {/* Footer */}
       <div className="border-t border-sidebar-border p-4 space-y-3">
         <WritingStats />
-        <UserMenu />
+        <div className="flex items-center justify-between gap-2">
+          <UserMenu />
+          <ThemeToggle />
+        </div>
       </div>
     </aside>
   );

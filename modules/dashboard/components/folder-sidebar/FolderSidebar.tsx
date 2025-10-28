@@ -32,7 +32,7 @@ export function FolderSidebar({ isCollapsed = false }: FolderSidebarProps) {
   // Get note counts with single optimized query
   const noteCounts = useQuery(
     api.notes.getNoteCounts,
-    convexUser ? { userId: convexUser._id } : "skip"
+    convexUser ? {} : "skip"
   );
 
   const handleNewFolder = () => {

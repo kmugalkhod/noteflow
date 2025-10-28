@@ -9,7 +9,8 @@ import { NotesListToolbar } from "./NotesListToolbar";
 import { NoteListItem } from "./NoteListItem";
 import { Loader2, FileText } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { toast } from "@/modules/shared/lib/toast";
+import { NoteListSkeleton } from "@/modules/shared/components";
 
 interface NotesListProps {
   onToggleSidebar?: () => void;
@@ -44,7 +45,6 @@ export function NotesList({
     api.notes.getNotesMinimal,
     convexUser
       ? {
-          userId: convexUser._id,
           // null = uncategorized notes, undefined = all notes, specific ID = notes in that folder
           folderId: selectedFolderId === "all" ? null : selectedFolderId || undefined,
         }
@@ -73,7 +73,6 @@ export function NotesList({
 
     try {
       const noteId = await createNote({
-        userId: convexUser._id,
         title: "Untitled",
         content: "",
         // If in "Uncategorized" view, create note without folder
@@ -131,11 +130,7 @@ export function NotesList({
       {/* Notes List */}
       <div className="flex-1 overflow-y-auto">
         {!convexUser || notes === undefined ? (
-          <div className="p-4 space-y-3">
-            <div className="h-20 bg-muted/30 rounded-md animate-pulse" />
-            <div className="h-20 bg-muted/20 rounded-md animate-pulse" />
-            <div className="h-20 bg-muted/10 rounded-md animate-pulse" />
-          </div>
+          <NoteListSkeleton count={6} />
         ) : sortedNotes.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full px-4 text-center animate-fade-in">
             <FileText className="w-16 h-16 text-muted-foreground/30 mb-4" />

@@ -61,8 +61,7 @@ function StoriesContent() {
       />
 
       <div className="flex-1 overflow-auto">
-        <NoteList 
-          userId={convexUser._id}
+        <NoteList
           folderId={selectedFolder}
           sortBy={sortBy}
           sortDirection={sortDirection}

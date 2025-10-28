@@ -28,21 +28,20 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
   const searchResults = useQuery(
     api.notes.searchNotes,
     query.length > 1 && convexUser
-      ? { 
-          searchTerm: query,
-          userId: convexUser._id
+      ? {
+          searchTerm: query
         }
       : "skip"
   );
 
   const folders = useQuery(
     api.folders.getFolders,
-    convexUser ? { userId: convexUser._id } : "skip"
+    convexUser ? {} : "skip"
   );
 
   const tags = useQuery(
     api.tags.getTags,
-    convexUser ? { userId: convexUser._id } : "skip"
+    convexUser ? {} : "skip"
   );
 
   useEffect(() => {

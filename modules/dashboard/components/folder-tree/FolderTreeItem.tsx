@@ -1,6 +1,6 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useState } from "react";
 import {
   Folder,
   ChevronRight,
@@ -12,6 +12,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { FolderContextMenu } from "./FolderContextMenu";
 import { useNotesStore } from "../../store/useNotesStore";
 import { useRouter, usePathname } from "next/navigation";
+import { useAnimationState } from "@/modules/shared/hooks/use-animation-state";
 
 interface FolderData {
   _id: Id<"folders">;
@@ -52,6 +53,10 @@ export const FolderTreeItem = memo(function FolderTreeItem({
   dragHandlers,
   isDragging = false,
 }: FolderTreeItemProps) {
+  // Animation state
+  const { conditionalAnimationClass } = useAnimationState();
+  const [isDragOver, setIsDragOver] = useState(false);
+
   // Zustand store
   const selectedFolderId = useNotesStore((state) => state.selectedFolderId);
   const setSelectedFolderId = useNotesStore((state) => state.setSelectedFolderId);
@@ -64,7 +69,7 @@ export const FolderTreeItem = memo(function FolderTreeItem({
   const childFolders = useQuery(
     api.folders.getNestedFolders,
     isExpanded
-      ? { userId: folder.userId, parentId: folder._id }
+      ? { parentId: folder._id }
       : "skip"
   );
 
@@ -102,15 +107,16 @@ export const FolderTreeItem = memo(function FolderTreeItem({
       >
         <div
           onClick={handleFolderClick}
-          className={`
-            flex items-center gap-2 py-1.5 pr-3 rounded-md cursor-pointer group
-            transition-all duration-200 ease-out
-            ${
+          className={conditionalAnimationClass(
+            `flex items-center gap-2 py-1.5 pr-3 rounded-md cursor-pointer group transition-colors duration-200 ${
               isSelected
                 ? "bg-folder-selected-bg text-foreground font-medium"
-                : "hover:bg-folder-hover-bg text-sidebar-foreground hover:translate-x-0.5"
-            }
-          `}
+                : "hover:bg-folder-hover-bg text-sidebar-foreground"
+            } ${isDragging ? "opacity-50 scale-95" : ""} ${
+              isDragOver ? "bg-primary/10 border-2 border-primary/30 border-dashed" : ""
+            }`,
+            !isSelected && !isDragging ? "hover:translate-x-0.5" : ""
+          )}
           style={indentStyle}
           draggable={!!dragHandlers}
           onDragStart={
@@ -128,21 +134,28 @@ export const FolderTreeItem = memo(function FolderTreeItem({
           onDragOver={dragHandlers?.handleDragOver}
           onDragEnter={
             dragHandlers
-              ? (e) =>
+              ? (e) => {
+                  setIsDragOver(true);
                   dragHandlers.handleDragEnter(e, {
                     type: "folder",
                     folderId: folder._id,
-                  })
+                  });
+                }
               : undefined
           }
-          onDragLeave={dragHandlers?.handleDragLeave}
+          onDragLeave={(e) => {
+            setIsDragOver(false);
+            dragHandlers?.handleDragLeave(e);
+          }}
           onDrop={
             dragHandlers
-              ? (e) =>
+              ? (e) => {
+                  setIsDragOver(false);
                   dragHandlers.handleDrop(e, {
                     type: "folder",
                     folderId: folder._id,
-                  })
+                  });
+                }
               : undefined
           }
         >

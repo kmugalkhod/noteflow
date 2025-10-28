@@ -54,12 +54,12 @@ export function NoteFilters({
 
   const folders = useQuery(
     api.folders.getFolders,
-    convexUser ? { userId: convexUser._id } : "skip"
+    convexUser ? {} : "skip"
   );
 
   const tags = useQuery(
     api.tags.getTags,
-    convexUser ? { userId: convexUser._id } : "skip"
+    convexUser ? {} : "skip"
   );
 
   const selectedFolderName = folders?.find(f => f._id === selectedFolder)?.name;

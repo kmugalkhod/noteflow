@@ -24,7 +24,7 @@ export function TagInput({ noteId, selectedTags, onTagsChange }: TagInputProps) 
 
   const existingTags = useQuery(
     api.tags.getTags,
-    convexUser ? { userId: convexUser._id } : "skip"
+    convexUser ? {} : "skip"
   );
 
   const createTag = useMutation(api.tags.createTag);
@@ -54,7 +54,7 @@ export function TagInput({ noteId, selectedTags, onTagsChange }: TagInputProps) 
       
       if (!existingTag) {
         const tagId = await createTag({
-          userId: convexUser._id,
+          
           name: tagName,
         });
         // Add to note
