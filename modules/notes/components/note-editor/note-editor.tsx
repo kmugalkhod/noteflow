@@ -22,6 +22,7 @@ import {
 } from "../../types/blocks";
 import { exportNoteToMarkdown } from "../../utils/exportToMarkdown";
 import { toast } from "@/modules/shared/lib/toast";
+import { ShareButton } from "@/components/share/ShareButton";
 
 interface NoteEditorProps {
   noteId: Id<"notes">;
@@ -158,7 +159,8 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
         content: currentContent,
         contentType: isRichMode ? "rich" : "plain",
         blocks: currentBlocks,
-        coverImage: debouncedCoverImage,
+        // Pass null to remove cover image, storage ID to set it
+        coverImage: debouncedCoverImage || null,
       })
         .then(() => {
           // Only update last saved values if we're still on the same note
@@ -261,8 +263,9 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
 
   return (
     <div className="h-full flex flex-col bg-editor-bg animate-fade-in">
-      {/* Export Button - Top Right */}
-      <div className="fixed top-4 right-4 z-10">
+      {/* Action Buttons - Above Cover */}
+      <div className="flex justify-end gap-2 px-8 pt-4 pb-2">
+        <ShareButton noteId={noteId} noteTitle={title} />
         <Button
           onClick={handleExport}
           variant="outline"
@@ -277,6 +280,8 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
       {/* Cover Image */}
       <CoverImage
         coverImage={coverImage}
+        coverImageUrl={(noteContent as any)?.coverImageUrl}
+        noteId={noteId}
         onCoverChange={setCoverImage}
         editable={true}
       />

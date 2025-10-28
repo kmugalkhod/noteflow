@@ -124,4 +124,35 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_timestamp", ["timestamp"])
     .index("by_user_and_action", ["userId", "action"]), // For filtering by action type
+
+  // Shared Notes table (for public sharing feature)
+  sharedNotes: defineTable({
+    shareId: v.string(), // Unique nanoid (16 chars)
+    noteId: v.id("notes"),
+    userId: v.id("users"),
+    isActive: v.boolean(),
+    viewCount: v.number(),
+    lastAccessedAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_share_id", ["shareId"]) // Primary lookup for public access
+    .index("by_note", ["noteId"]) // Check if note already shared
+    .index("by_user", ["userId"]) // List user's shares
+    .index("by_user_active", ["userId", "isActive"]), // Filter active shares
+
+  // Files table (for Convex FileStorage tracking)
+  files: defineTable({
+    storageId: v.string(), // Convex storage ID
+    userId: v.id("users"),
+    noteId: v.optional(v.id("notes")), // Optional: file may not be attached to note yet
+    fileName: v.string(),
+    fileSize: v.number(), // Size in bytes
+    fileType: v.string(), // MIME type (e.g., "image/jpeg")
+    uploadedAt: v.number(),
+  })
+    .index("by_storage_id", ["storageId"]) // Lookup by storage ID
+    .index("by_user", ["userId"]) // List user's files
+    .index("by_note", ["noteId"]) // List files for a note
+    .index("by_uploaded_at", ["uploadedAt"]), // Sort by upload time
 });

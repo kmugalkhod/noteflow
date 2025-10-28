@@ -108,6 +108,28 @@ export const getNoteContent = query({
       throw new Error("Unauthorized: You don't have permission to access this note");
     }
 
+    // Resolve cover image storage ID to URL if it exists
+    let coverImageUrl: string | undefined = undefined;
+    if (note.coverImage) {
+      // Check if it's a storage ID (starts with "kg")
+      if (note.coverImage.startsWith("kg")) {
+        try {
+          // Cast to storage ID type for Convex
+          const resolvedUrl = await ctx.storage.getUrl(note.coverImage as any);
+          coverImageUrl = resolvedUrl ?? undefined;
+        } catch (error) {
+          console.error("Failed to resolve cover image storage ID:", error);
+        }
+      } else {
+        // Legacy data URL or regular URL - use as is
+        coverImageUrl = note.coverImage;
+      }
+    }
+
+    // TODO: Parse blocks and resolve image block storage IDs
+    // This would require parsing the blocks JSON, finding image blocks,
+    // and resolving their storage IDs to URLs
+
     // Return title + content/blocks + coverImage (title is used only on initial load if context is empty)
     return {
       _id: note._id,
@@ -115,7 +137,8 @@ export const getNoteContent = query({
       content: note.content,
       blocks: note.blocks,
       contentType: note.contentType,
-      coverImage: note.coverImage,
+      coverImage: note.coverImage, // Keep storage ID for saving
+      coverImageUrl, // Resolved URL for display
     };
   },
 });
@@ -207,22 +230,27 @@ export const updateNote = mutation({
     folderId: v.optional(v.union(v.id("folders"), v.null())),
     isPinned: v.optional(v.boolean()),
     color: v.optional(v.string()),
-    coverImage: v.optional(v.string()),
+    coverImage: v.optional(v.union(v.string(), v.null())),
   },
-  handler: async (ctx, { noteId, folderId, ...updates }) => {
+  handler: async (ctx, { noteId, folderId, coverImage, ...updates }) => {
     // Get authenticated user ID
     const userId = await getAuthenticatedUserId(ctx);
 
     // Verify ownership before allowing update
     await verifyNoteOwnership(ctx, noteId, userId);
 
-    const updateData = {
+    const updateData: any = {
       ...updates,
       updatedAt: Date.now(),
       ...(folderId !== undefined && {
         folderId: folderId === null ? undefined : folderId
       }),
     };
+
+    // Handle coverImage: null means remove, string means set, undefined means don't change
+    if (coverImage !== undefined) {
+      updateData.coverImage = coverImage === null ? undefined : coverImage;
+    }
 
     await ctx.db.patch(noteId, updateData);
   },
@@ -251,6 +279,21 @@ export const deleteNote = mutation({
         // Build full path (simplified for now - could be recursive for nested folders)
         deletedFromPath = folder.name;
         // TODO: Implement full path building for nested folders
+      }
+    }
+
+    // Auto-revoke any active share links for this note
+    const shares = await ctx.db
+      .query("sharedNotes")
+      .withIndex("by_note", (q) => q.eq("noteId", noteId))
+      .collect();
+
+    for (const share of shares) {
+      if (share.isActive) {
+        await ctx.db.patch(share._id, {
+          isActive: false,
+          updatedAt: Date.now(),
+        });
       }
     }
 
@@ -325,6 +368,24 @@ export const permanentDeleteNote = mutation({
 
     // Verify ownership before allowing permanent deletion
     await verifyNoteOwnership(ctx, noteId, userId);
+
+    // Delete associated files from storage
+    const files = await ctx.db
+      .query("files")
+      .withIndex("by_note", (q) => q.eq("noteId", noteId))
+      .collect();
+
+    for (const file of files) {
+      try {
+        // Delete from Convex storage
+        await ctx.storage.delete(file.storageId);
+        // Delete metadata record
+        await ctx.db.delete(file._id);
+      } catch (error) {
+        console.error(`Failed to delete file ${file.storageId}:`, error);
+        // Continue with other files even if one fails
+      }
+    }
 
     // Delete associated note-tag relationships
     const noteTags = await ctx.db
