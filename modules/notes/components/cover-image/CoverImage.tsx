@@ -28,7 +28,6 @@ export function CoverImage({ coverImage, coverImageUrl, noteId, onCoverChange, e
   // Convex mutations
   const generateUploadUrl = useMutation(api.files.generateUploadUrl);
   const saveFileMetadata = useMutation(api.files.saveFileMetadata);
-  const deleteFile = useMutation(api.files.deleteFile);
 
   // Clear preview URL when server URL becomes available
   useEffect(() => {
@@ -41,9 +40,6 @@ export function CoverImage({ coverImage, coverImageUrl, noteId, onCoverChange, e
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    // Store old cover image ID to delete after successful upload
-    const oldCoverImage = coverImage;
 
     // Create local preview URL immediately
     const localPreviewUrl = URL.createObjectURL(file);
@@ -72,18 +68,7 @@ export function CoverImage({ coverImage, coverImageUrl, noteId, onCoverChange, e
         return;
       }
 
-      // Delete old cover image from storage if it exists
-      if (oldCoverImage && oldCoverImage.startsWith("kg")) {
-        try {
-          await deleteFile({ storageId: oldCoverImage });
-          console.log("Old cover image deleted from storage:", oldCoverImage);
-        } catch (error) {
-          console.error("Failed to delete old cover image:", error);
-          // Continue even if deletion fails
-        }
-      }
-
-      // Pass storage ID to parent
+      // Pass storage ID to parent (server will handle old image cleanup)
       onCoverChange(result.storageId);
       toast.success("Cover image uploaded successfully");
 
@@ -99,18 +84,8 @@ export function CoverImage({ coverImage, coverImageUrl, noteId, onCoverChange, e
     }
   };
 
-  const handleRemoveCover = async () => {
-    // Delete from FileStorage if it's a storage ID
-    if (coverImage && coverImage.startsWith("kg")) {
-      try {
-        await deleteFile({ storageId: coverImage });
-        console.log("Cover image deleted from storage:", coverImage);
-      } catch (error) {
-        console.error("Failed to delete cover image from storage:", error);
-        // Continue with removal even if deletion fails
-      }
-    }
-
+  const handleRemoveCover = () => {
+    // Server will handle deletion from FileStorage via updateNote mutation
     onCoverChange(undefined);
     setPreviewUrl(null); // Clear any preview
     if (fileInputRef.current) {

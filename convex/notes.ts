@@ -239,6 +239,40 @@ export const updateNote = mutation({
     // Verify ownership before allowing update
     await verifyNoteOwnership(ctx, noteId, userId);
 
+    // Handle cover image cleanup when being removed or replaced
+    if (coverImage !== undefined) {
+      const note = await ctx.db.get(noteId);
+      const oldCoverImage = note?.coverImage;
+
+      // If there's an old cover image and it's being changed (removed or replaced)
+      if (oldCoverImage && oldCoverImage.startsWith("kg")) {
+        // Only delete if it's actually changing (not just re-saving the same image)
+        const isChanging = coverImage !== oldCoverImage;
+
+        if (isChanging) {
+          try {
+            // Delete old cover image from storage
+            await ctx.storage.delete(oldCoverImage as any);
+
+            // Delete file metadata record
+            const fileRecord = await ctx.db
+              .query("files")
+              .withIndex("by_storage_id", (q) => q.eq("storageId", oldCoverImage))
+              .first();
+
+            if (fileRecord) {
+              await ctx.db.delete(fileRecord._id);
+            }
+
+            console.log("Old cover image deleted from storage:", oldCoverImage);
+          } catch (error) {
+            console.error("Failed to delete old cover image:", error);
+            // Continue with update even if deletion fails
+          }
+        }
+      }
+    }
+
     const updateData: any = {
       ...updates,
       updatedAt: Date.now(),
