@@ -49,7 +49,7 @@ export function CreateFolderDialog({
     setIsCreating(true);
     try {
       await createFolder({
-        userId: convexUser._id,
+        
         name: name.trim(),
         color: selectedColor,
       });

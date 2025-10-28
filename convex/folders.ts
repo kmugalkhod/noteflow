@@ -1,11 +1,14 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
+import { getAuthenticatedUserId, verifyFolderOwnership } from "./auth";
 
 // Get all folders for a user
 export const getFolders = query({
-  args: { userId: v.id("users") },
-  handler: async (ctx, { userId }) => {
+  args: {},
+  handler: async (ctx) => {
+    // Get authenticated user ID from server-side auth context
+    const userId = await getAuthenticatedUserId(ctx);
     const folders = await ctx.db
       .query("folders")
       .withIndex("by_user", (q) => q.eq("userId", userId))
@@ -19,8 +22,16 @@ export const getFolders = query({
 export const getFolder = query({
   args: { folderId: v.id("folders") },
   handler: async (ctx, { folderId }) => {
+    // Get authenticated user ID
+    const userId = await getAuthenticatedUserId(ctx);
+
     const folder = await ctx.db.get(folderId);
     if (!folder) return null;
+
+    // Verify ownership
+    if (folder.userId !== userId) {
+      throw new Error("Unauthorized: You don't have permission to access this folder");
+    }
 
     // Get note count for this folder
     const notes = await ctx.db
@@ -41,8 +52,16 @@ export const getFolder = query({
 export const getFolderWithNotes = query({
   args: { folderId: v.id("folders") },
   handler: async (ctx, { folderId }) => {
+    // Get authenticated user ID
+    const userId = await getAuthenticatedUserId(ctx);
+
     const folder = await ctx.db.get(folderId);
     if (!folder) return null;
+
+    // Verify ownership
+    if (folder.userId !== userId) {
+      throw new Error("Unauthorized: You don't have permission to access this folder");
+    }
 
     const notes = await ctx.db
       .query("notes")
@@ -63,12 +82,13 @@ export const getFolderWithNotes = query({
 // Create a new folder
 export const createFolder = mutation({
   args: {
-    userId: v.id("users"),
     name: v.string(),
     color: v.optional(v.string()),
     parentId: v.optional(v.id("folders")),
   },
-  handler: async (ctx, { userId, name, color, parentId }) => {
+  handler: async (ctx, { name, color, parentId }) => {
+    // Get authenticated user ID from server-side auth context
+    const userId = await getAuthenticatedUserId(ctx);
     const folderId = await ctx.db.insert("folders", {
       userId,
       name,
@@ -89,6 +109,11 @@ export const updateFolder = mutation({
     color: v.optional(v.string()),
   },
   handler: async (ctx, { folderId, name, color }) => {
+    // Get authenticated user ID
+    const userId = await getAuthenticatedUserId(ctx);
+
+    // Verify ownership before allowing update
+    await verifyFolderOwnership(ctx, folderId, userId);
     await ctx.db.patch(folderId, {
       ...(name !== undefined && { name }),
       ...(color !== undefined && { color }),
@@ -103,6 +128,11 @@ export const deleteFolder = mutation({
     deleteNotes: v.optional(v.boolean()), // If true, delete notes; if false, move to root
   },
   handler: async (ctx, { folderId, deleteNotes = false }) => {
+    // Get authenticated user ID
+    const userId = await getAuthenticatedUserId(ctx);
+
+    // Verify ownership before allowing deletion
+    await verifyFolderOwnership(ctx, folderId, userId);
     // Get all notes in this folder
     const notes = await ctx.db
       .query("notes")
@@ -133,8 +163,10 @@ export const deleteFolder = mutation({
 
 // Get folders with note counts (optimized - single query for all notes)
 export const getFoldersWithCounts = query({
-  args: { userId: v.id("users") },
-  handler: async (ctx, { userId }) => {
+  args: {},
+  handler: async (ctx) => {
+    // Get authenticated user ID from server-side auth context
+    const userId = await getAuthenticatedUserId(ctx);
     // Get all folders
     const folders = await ctx.db
       .query("folders")
@@ -172,8 +204,10 @@ export const getFoldersWithCounts = query({
 
 // Get nested folder tree with counts (lazy loading optimized - only queries needed data)
 export const getNestedFolders = query({
-  args: { userId: v.id("users"), parentId: v.optional(v.id("folders")) },
-  handler: async (ctx, { userId, parentId }) => {
+  args: { parentId: v.optional(v.id("folders")) },
+  handler: async (ctx, { parentId }) => {
+    // Get authenticated user ID from server-side auth context
+    const userId = await getAuthenticatedUserId(ctx);
     // Get folders at this level only
     const folders = await ctx.db
       .query("folders")
@@ -224,6 +258,11 @@ export const getNestedFolders = query({
 export const getFolderPath = query({
   args: { folderId: v.id("folders") },
   handler: async (ctx, { folderId }) => {
+    // Get authenticated user ID
+    const userId = await getAuthenticatedUserId(ctx);
+
+    // Verify ownership of the starting folder
+    await verifyFolderOwnership(ctx, folderId, userId);
     const path: Array<{ _id: string; name: string }> = [];
     let currentFolderId: Id<"folders"> | undefined = folderId;
 
@@ -249,6 +288,16 @@ export const moveFolderToFolder = mutation({
     newParentId: v.optional(v.id("folders")),
   },
   handler: async (ctx, { folderId, newParentId }) => {
+    // Get authenticated user ID
+    const userId = await getAuthenticatedUserId(ctx);
+
+    // Verify ownership of the folder being moved
+    await verifyFolderOwnership(ctx, folderId, userId);
+
+    // Verify ownership of the new parent if specified
+    if (newParentId) {
+      await verifyFolderOwnership(ctx, newParentId, userId);
+    }
     // Prevent moving folder into itself or its descendants
     if (newParentId) {
       let checkParentId: Id<"folders"> | undefined = newParentId;
@@ -283,6 +332,15 @@ export const reorderFolders = mutation({
     ),
   },
   handler: async (ctx, { updates }) => {
+    // Get authenticated user ID
+    const userId = await getAuthenticatedUserId(ctx);
+
+    // Verify ownership of all folders before updating
+    for (const update of updates) {
+      await verifyFolderOwnership(ctx, update.folderId, userId);
+    }
+
+    // Now perform all updates
     for (const update of updates) {
       await ctx.db.patch(update.folderId, {
         position: update.position,
@@ -298,6 +356,11 @@ export const deleteFolderRecursive = mutation({
     deleteNotes: v.optional(v.boolean()),
   },
   handler: async (ctx, { folderId, deleteNotes = false }) => {
+    // Get authenticated user ID
+    const userId = await getAuthenticatedUserId(ctx);
+
+    // Verify ownership before allowing recursive deletion
+    await verifyFolderOwnership(ctx, folderId, userId);
     // Helper function to recursively delete folders
     async function deleteFolderAndChildren(fId: string) {
       // Get all subfolders

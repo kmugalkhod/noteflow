@@ -9,7 +9,6 @@ import { Loader2 } from "lucide-react";
 import { type SortOption, type SortDirection, type ViewMode } from "../note-filters";
 
 interface NoteListProps {
-  userId: Id<"users">;
   folderId?: Id<"folders">;
   sortBy?: SortOption;
   sortDirection?: SortDirection;
@@ -18,7 +17,6 @@ interface NoteListProps {
 }
 
 export function NoteList({
-  userId,
   folderId,
   sortBy = "updatedAt",
   sortDirection = "desc",
@@ -28,12 +26,12 @@ export function NoteList({
   // Fetch notes by tag if selected, otherwise fetch all notes
   const notesByTag = useQuery(
     api.tags.getNotesForTagByName,
-    selectedTag ? { userId, tagName: selectedTag } : "skip"
+    selectedTag ? { tagName: selectedTag } : "skip"
   );
 
   const allNotes = useQuery(
     api.notes.getNotes,
-    !selectedTag ? { userId, folderId } : "skip"
+    !selectedTag ? { folderId } : "skip"
   );
 
   const deleteNote = useMutation(api.notes.deleteNote);

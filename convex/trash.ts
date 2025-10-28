@@ -8,6 +8,7 @@
 import { v } from "convex/values";
 import { internalMutation, mutation, query } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
+import { getAuthenticatedUserId } from "./auth";
 
 // Constants
 const TRASH_RETENTION_DAYS = 30;
@@ -127,11 +128,12 @@ export const cleanupExpiredTrash = internalMutation({
  */
 export const getDeletedItems = query({
   args: {
-    userId: v.id("users"),
     folderFilter: v.optional(v.id("folders")),
     searchQuery: v.optional(v.string()),
   },
-  handler: async (ctx, { userId, folderFilter, searchQuery }) => {
+  handler: async (ctx, { folderFilter, searchQuery }) => {
+    // Get authenticated user ID from server-side auth context
+    const userId = await getAuthenticatedUserId(ctx);
     let notes = await ctx.db
       .query("notes")
       .withIndex("by_user_not_deleted", (q) =>
@@ -191,6 +193,8 @@ export const bulkRestoreNotes = mutation({
     noteIds: v.array(v.id("notes")),
   },
   handler: async (ctx, { noteIds }) => {
+    // Get authenticated user ID
+    const userId = await getAuthenticatedUserId(ctx);
     const results = [];
 
     for (const noteId of noteIds) {
@@ -200,6 +204,16 @@ export const bulkRestoreNotes = mutation({
           noteId,
           success: false,
           reason: "not_found_or_not_deleted",
+        });
+        continue;
+      }
+
+      // Verify ownership
+      if (note.userId !== userId) {
+        results.push({
+          noteId,
+          success: false,
+          reason: "unauthorized",
         });
         continue;
       }
@@ -250,12 +264,20 @@ export const bulkPermanentDeleteNotes = mutation({
     noteIds: v.array(v.id("notes")),
   },
   handler: async (ctx, { noteIds }) => {
+    // Get authenticated user ID
+    const userId = await getAuthenticatedUserId(ctx);
     const results = [];
 
     for (const noteId of noteIds) {
       const note = await ctx.db.get(noteId);
       if (!note) {
         results.push({ noteId, success: false, reason: "not_found" });
+        continue;
+      }
+
+      // Verify ownership
+      if (note.userId !== userId) {
+        results.push({ noteId, success: false, reason: "unauthorized" });
         continue;
       }
 
@@ -293,10 +315,10 @@ export const bulkPermanentDeleteNotes = mutation({
  * Empty entire trash (permanently delete all deleted items)
  */
 export const emptyTrash = mutation({
-  args: {
-    userId: v.id("users"),
-  },
-  handler: async (ctx, { userId }) => {
+  args: {},
+  handler: async (ctx) => {
+    // Get authenticated user ID from server-side auth context
+    const userId = await getAuthenticatedUserId(ctx);
     // Get all deleted notes for this user
     const deletedNotes = await ctx.db
       .query("notes")

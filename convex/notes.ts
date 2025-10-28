@@ -1,13 +1,16 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { getAuthenticatedUserId, verifyNoteOwnership } from "./auth";
 
 // Get all notes for a user (excluding deleted)
 export const getNotes = query({
   args: {
-    userId: v.id("users"),
     folderId: v.optional(v.union(v.id("folders"), v.null())),
   },
-  handler: async (ctx, { userId, folderId }) => {
+  handler: async (ctx, { folderId }) => {
+    // Get authenticated user ID from server-side auth context
+    const userId = await getAuthenticatedUserId(ctx);
+
     const notesQuery = ctx.db
       .query("notes")
       .withIndex("by_user_not_deleted", (q) =>
@@ -33,10 +36,11 @@ export const getNotes = query({
 // Get notes with minimal data (no content) - for list view performance
 export const getNotesMinimal = query({
   args: {
-    userId: v.id("users"),
     folderId: v.optional(v.union(v.id("folders"), v.null())),
   },
-  handler: async (ctx, { userId, folderId }) => {
+  handler: async (ctx, { folderId }) => {
+    // Get authenticated user ID from server-side auth context
+    const userId = await getAuthenticatedUserId(ctx);
     const notesQuery = ctx.db
       .query("notes")
       .withIndex("by_user_not_deleted", (q) =>
@@ -79,6 +83,12 @@ export const getNotesMinimal = query({
 export const getNote = query({
   args: { noteId: v.id("notes") },
   handler: async (ctx, { noteId }) => {
+    // Get authenticated user ID
+    const userId = await getAuthenticatedUserId(ctx);
+
+    // Verify ownership before returning note
+    await verifyNoteOwnership(ctx, noteId, userId);
+
     return await ctx.db.get(noteId);
   },
 });
@@ -87,8 +97,16 @@ export const getNote = query({
 export const getNoteContent = query({
   args: { noteId: v.id("notes") },
   handler: async (ctx, { noteId }) => {
+    // Get authenticated user ID
+    const userId = await getAuthenticatedUserId(ctx);
+
     const note = await ctx.db.get(noteId);
     if (!note) return null;
+
+    // Verify ownership before returning sensitive content
+    if (note.userId !== userId) {
+      throw new Error("Unauthorized: You don't have permission to access this note");
+    }
 
     // Return title + content/blocks + coverImage (title is used only on initial load if context is empty)
     return {
@@ -105,10 +123,11 @@ export const getNoteContent = query({
 // Search notes
 export const searchNotes = query({
   args: {
-    userId: v.id("users"),
     searchTerm: v.string(),
   },
-  handler: async (ctx, { userId, searchTerm }) => {
+  handler: async (ctx, { searchTerm }) => {
+    // Get authenticated user ID
+    const userId = await getAuthenticatedUserId(ctx);
     const titleResults = await ctx.db
       .query("notes")
       .withSearchIndex("search_title", (q) =>
@@ -135,8 +154,10 @@ export const searchNotes = query({
 
 // Get deleted notes (trash)
 export const getDeletedNotes = query({
-  args: { userId: v.id("users") },
-  handler: async (ctx, { userId }) => {
+  args: {},
+  handler: async (ctx) => {
+    // Get authenticated user ID
+    const userId = await getAuthenticatedUserId(ctx);
     const notes = await ctx.db
       .query("notes")
       .withIndex("by_user_not_deleted", (q) =>
@@ -151,12 +172,13 @@ export const getDeletedNotes = query({
 // Create a new note
 export const createNote = mutation({
   args: {
-    userId: v.id("users"),
     folderId: v.optional(v.id("folders")),
     title: v.string(),
     content: v.optional(v.string()),
   },
-  handler: async (ctx, { userId, folderId, title, content }) => {
+  handler: async (ctx, { folderId, title, content }) => {
+    // Get authenticated user ID
+    const userId = await getAuthenticatedUserId(ctx);
     const now = Date.now();
 
     const noteId = await ctx.db.insert("notes", {
@@ -188,6 +210,12 @@ export const updateNote = mutation({
     coverImage: v.optional(v.string()),
   },
   handler: async (ctx, { noteId, folderId, ...updates }) => {
+    // Get authenticated user ID
+    const userId = await getAuthenticatedUserId(ctx);
+
+    // Verify ownership before allowing update
+    await verifyNoteOwnership(ctx, noteId, userId);
+
     const updateData = {
       ...updates,
       updatedAt: Date.now(),
@@ -204,8 +232,16 @@ export const updateNote = mutation({
 export const deleteNote = mutation({
   args: { noteId: v.id("notes") },
   handler: async (ctx, { noteId }) => {
+    // Get authenticated user ID
+    const userId = await getAuthenticatedUserId(ctx);
+
     const note = await ctx.db.get(noteId);
     if (!note) throw new Error("Note not found");
+
+    // Verify ownership before allowing deletion
+    if (note.userId !== userId) {
+      throw new Error("Unauthorized: You don't have permission to delete this note");
+    }
 
     // Capture original folder location for smart restore
     let deletedFromPath: string | undefined = undefined;
@@ -236,9 +272,17 @@ export const restoreNote = mutation({
     restoreToFolderId: v.optional(v.id("folders")), // Optional override
   },
   handler: async (ctx, { noteId, restoreToFolderId }) => {
+    // Get authenticated user ID
+    const userId = await getAuthenticatedUserId(ctx);
+
     const note = await ctx.db.get(noteId);
     if (!note || !note.isDeleted) {
       throw new Error("Note not found or not deleted");
+    }
+
+    // Verify ownership before allowing restore
+    if (note.userId !== userId) {
+      throw new Error("Unauthorized: You don't have permission to restore this note");
     }
 
     // Determine target folder (smart restore logic)
@@ -276,6 +320,12 @@ export const restoreNote = mutation({
 export const permanentDeleteNote = mutation({
   args: { noteId: v.id("notes") },
   handler: async (ctx, { noteId }) => {
+    // Get authenticated user ID
+    const userId = await getAuthenticatedUserId(ctx);
+
+    // Verify ownership before allowing permanent deletion
+    await verifyNoteOwnership(ctx, noteId, userId);
+
     // Delete associated note-tag relationships
     const noteTags = await ctx.db
       .query("noteTags")
@@ -295,8 +345,16 @@ export const permanentDeleteNote = mutation({
 export const togglePin = mutation({
   args: { noteId: v.id("notes") },
   handler: async (ctx, { noteId }) => {
+    // Get authenticated user ID
+    const userId = await getAuthenticatedUserId(ctx);
+
     const note = await ctx.db.get(noteId);
     if (!note) throw new Error("Note not found");
+
+    // Verify ownership before allowing toggle
+    if (note.userId !== userId) {
+      throw new Error("Unauthorized: You don't have permission to modify this note");
+    }
 
     await ctx.db.patch(noteId, {
       isPinned: !note.isPinned,
@@ -309,8 +367,16 @@ export const togglePin = mutation({
 export const toggleFavorite = mutation({
   args: { noteId: v.id("notes") },
   handler: async (ctx, { noteId }) => {
+    // Get authenticated user ID
+    const userId = await getAuthenticatedUserId(ctx);
+
     const note = await ctx.db.get(noteId);
     if (!note) throw new Error("Note not found");
+
+    // Verify ownership before allowing toggle
+    if (note.userId !== userId) {
+      throw new Error("Unauthorized: You don't have permission to modify this note");
+    }
 
     await ctx.db.patch(noteId, {
       isFavorite: !note.isFavorite,
@@ -321,8 +387,10 @@ export const toggleFavorite = mutation({
 
 // Get favorite notes for a user
 export const getFavoriteNotes = query({
-  args: { userId: v.id("users") },
-  handler: async (ctx, { userId }) => {
+  args: {},
+  handler: async (ctx) => {
+    // Get authenticated user ID
+    const userId = await getAuthenticatedUserId(ctx);
     const notes = await ctx.db
       .query("notes")
       .withIndex("by_user_favorite", (q) =>
@@ -339,8 +407,10 @@ export const getFavoriteNotes = query({
 
 // Get note counts for sidebar (optimized - single query)
 export const getNoteCounts = query({
-  args: { userId: v.id("users") },
-  handler: async (ctx, { userId }) => {
+  args: {},
+  handler: async (ctx) => {
+    // Get authenticated user ID
+    const userId = await getAuthenticatedUserId(ctx);
     const notes = await ctx.db
       .query("notes")
       .withIndex("by_user", (q) => q.eq("userId", userId))
@@ -367,6 +437,12 @@ export const moveNoteToFolder = mutation({
     folderId: v.optional(v.union(v.id("folders"), v.null())),
   },
   handler: async (ctx, { noteId, folderId }) => {
+    // Get authenticated user ID
+    const userId = await getAuthenticatedUserId(ctx);
+
+    // Verify ownership before allowing move
+    await verifyNoteOwnership(ctx, noteId, userId);
+
     await ctx.db.patch(noteId, {
       folderId: folderId === null ? undefined : folderId,
       updatedAt: Date.now(),
@@ -385,6 +461,15 @@ export const reorderNotes = mutation({
     ),
   },
   handler: async (ctx, { updates }) => {
+    // Get authenticated user ID
+    const userId = await getAuthenticatedUserId(ctx);
+
+    // Verify ownership of all notes before updating
+    for (const update of updates) {
+      await verifyNoteOwnership(ctx, update.noteId, userId);
+    }
+
+    // Now perform all updates
     for (const update of updates) {
       await ctx.db.patch(update.noteId, {
         position: update.position,
@@ -396,8 +481,10 @@ export const reorderNotes = mutation({
 
 // Get recent notes (last 10 updated)
 export const getRecentNotes = query({
-  args: { userId: v.id("users"), limit: v.optional(v.number()) },
-  handler: async (ctx, { userId, limit = 10 }) => {
+  args: { limit: v.optional(v.number()) },
+  handler: async (ctx, { limit = 10 }) => {
+    // Get authenticated user ID
+    const userId = await getAuthenticatedUserId(ctx);
     const notes = await ctx.db
       .query("notes")
       .withIndex("by_user_not_deleted", (q) =>
@@ -413,8 +500,10 @@ export const getRecentNotes = query({
 
 // Get workspace notes (pinned + recent) - optimized for workspace view
 export const getWorkspaceNotes = query({
-  args: { userId: v.id("users"), recentLimit: v.optional(v.number()) },
-  handler: async (ctx, { userId, recentLimit = 10 }) => {
+  args: { recentLimit: v.optional(v.number()) },
+  handler: async (ctx, { recentLimit = 10 }) => {
+    // Get authenticated user ID
+    const userId = await getAuthenticatedUserId(ctx);
     const notes = await ctx.db
       .query("notes")
       .withIndex("by_user_not_deleted", (q) =>

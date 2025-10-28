@@ -175,6 +175,78 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Typography improvements */
+  h1, h2, h3, h4, h5, h6 {
+    font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "ss01" 1;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  p {
+    line-height: 1.6;
+  }
+
+  /* Improved readability for long-form text */
+  article, .prose {
+    line-height: 1.7;
+    letter-spacing: -0.01em;
+  }
+
+  /* Enhanced interaction states */
+  button:disabled,
+  [role="button"][aria-disabled="true"] {
+    @apply opacity-50 cursor-not-allowed;
+  }
+
+  /* Link styles */
+  a:not([class]) {
+    @apply text-primary underline-offset-2 hover:underline;
+  }
+
+  /* Selection styles */
+  ::selection {
+    @apply bg-primary/20 text-foreground;
+  }
+
+  /* Placeholder styles */
+  ::placeholder {
+    @apply text-muted-foreground/40;
+  }
+
+  /* Enhanced focus-visible states for accessibility (T011, T012) */
+  /* Remove focus styles for mouse users (only show for keyboard) */
+  *:focus:not(:focus-visible) {
+    @apply outline-none ring-0;
+  }
+
+  /* Button and interactive element focus states */
+  button:focus-visible,
+  [role="button"]:focus-visible {
+    @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-background;
+  }
+
+  /* Link focus states */
+  a:focus-visible {
+    @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-background rounded-sm;
+  }
+
+  /* Input focus states - subtle border change only, no blue ring */
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    @apply outline-none ring-0 border-primary;
+  }
+
+  input:focus,
+  textarea:focus,
+  select:focus {
+    @apply outline-none ring-0;
   }
 
   /* Smooth transitions for interactive elements */
@@ -192,6 +264,17 @@
   /* Disable transitions during initial page load */
   .preload * {
     transition: none !important;
+  }
+
+  /* Respect prefers-reduced-motion for accessibility */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
 
@@ -215,6 +298,24 @@
   }
   100% {
     background-position: 1000px 0;
+  }
+}
+
+@keyframes pulse-subtle {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+@keyframes bounce-subtle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
   }
 }
 
@@ -315,6 +416,28 @@
 
 .animate-scale-out {
   animation: scaleOut 150ms cubic-bezier(0.4, 0, 1, 1);
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s ease-in-out infinite;
+}
+
+.animate-bounce-subtle {
+  animation: bounce-subtle 1s ease-in-out infinite;
+}
+
+/* Hover lift effect for cards */
+.card-hover {
+  @apply transition-all duration-200 ease-out;
+}
+
+.card-hover:hover {
+  @apply -translate-y-1 shadow-lg;
+}
+
+/* Smooth color transitions */
+.transition-colors-smooth {
+  transition: background-color 300ms ease, color 300ms ease, border-color 300ms ease;
 }
 
 /* Responsive Spacing Adjustments */

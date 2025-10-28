@@ -73,8 +73,7 @@ export function FolderView({ folderId }: { folderId: string }) {
 
       {/* Notes in this folder */}
       <div className="flex-1 overflow-auto">
-        <NoteList 
-          userId={convexUser._id}
+        <NoteList
           folderId={folderId as Id<"folders">}
         />
         {/* Debug info */}

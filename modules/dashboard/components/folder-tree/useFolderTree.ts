@@ -17,7 +17,7 @@ export function useFolderTree() {
   // Get user preferences (includes expandedFolders array)
   const user = useQuery(
     api.users.getUser,
-    convexUser ? { userId: convexUser._id } : "skip"
+    convexUser ? {} : "skip"
   );
 
   // Update user preferences mutation
@@ -37,7 +37,7 @@ export function useFolderTree() {
 
       try {
         await updateUser({
-          userId: convexUser._id,
+          
           expandedFolders: Array.from(expandedSet) as Id<"folders">[],
         });
       } catch (error) {

@@ -21,7 +21,7 @@ import {
   type Block
 } from "../../types/blocks";
 import { exportNoteToMarkdown } from "../../utils/exportToMarkdown";
-import { toast } from "sonner";
+import { toast } from "@/modules/shared/lib/toast";
 
 interface NoteEditorProps {
   noteId: Id<"notes">;
@@ -180,6 +180,11 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
         })
         .catch((error) => {
           console.error("Failed to save:", error);
+          toast.error("Failed to save note", "Your changes could not be saved. Please try again.", () => {
+            // Retry save by triggering a state update
+            setTitle(title + " ");
+            setTimeout(() => setTitle(title), 0);
+          });
           setIsSaving(false);
         });
     }
@@ -287,6 +292,13 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
             const target = e.target as HTMLTextAreaElement;
             target.style.height = 'auto';
             target.style.height = target.scrollHeight + 'px';
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              // Move focus to the editor
+              richEditorRef.current?.focus();
+            }
           }}
           className="w-full text-5xl font-semibold border-none focus:outline-none px-0 mb-8 placeholder:text-muted-foreground/20 bg-transparent leading-[1.15] tracking-[-0.02em] resize-none overflow-hidden text-foreground transition-colors"
         />

@@ -42,7 +42,7 @@ export function FolderList() {
 
   const folders = useQuery(
     api.folders.getFoldersWithCounts,
-    convexUser ? { userId: convexUser._id } : "skip"
+    convexUser ? {} : "skip"
   );
 
   const toggleFolder = (folderId: string) => {

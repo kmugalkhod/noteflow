@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import { toast } from "@/modules/shared/lib/toast";
 
 export function TrashView() {
   const convexUser = useConvexUser();
@@ -28,7 +28,7 @@ export function TrashView() {
 
   const deletedNotes = useQuery(
     api.trash.getDeletedItems,
-    convexUser ? { userId: convexUser._id } : "skip"
+    convexUser ? {} : "skip"
   );
 
   const restoreNote = useMutation(api.notes.restoreNote);

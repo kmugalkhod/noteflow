@@ -9,6 +9,7 @@ import { InlineFolderInput } from "./InlineFolderInput";
 import { useFolderTree } from "./useFolderTree";
 import { useDragDrop } from "./useDragDrop";
 import { Loader2 } from "lucide-react";
+import { FolderListSkeleton } from "@/modules/shared/components";
 
 interface FolderTreeProps {
   onStartCreating?: () => void;
@@ -41,7 +42,7 @@ export const FolderTree = forwardRef<FolderTreeRef, FolderTreeProps>(function Fo
   // Fetch root-level folders (folders with no parent)
   const rootFolders = useQuery(
     api.folders.getNestedFolders,
-    convexUser ? { userId: convexUser._id, parentId: undefined } : "skip"
+    convexUser ? { parentId: undefined } : "skip"
   );
 
   const handleCreateFolder = async (name: string) => {
@@ -49,7 +50,6 @@ export const FolderTree = forwardRef<FolderTreeRef, FolderTreeProps>(function Fo
 
     try {
       await createFolder({
-        userId: convexUser._id,
         name,
         color: "#6B7280", // Default gray color
       });
@@ -88,11 +88,7 @@ export const FolderTree = forwardRef<FolderTreeRef, FolderTreeProps>(function Fo
 
   // Loading state - check AFTER all hooks are called
   if (rootFolders === undefined) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-      </div>
-    );
+    return <FolderListSkeleton count={5} />;
   }
 
   // Empty state
