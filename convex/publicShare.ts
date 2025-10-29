@@ -30,13 +30,25 @@ export const getSharedNote = query({
       return null;
     }
 
+    // Resolve cover image storage ID to URL if present
+    let coverImageUrl: string | undefined = undefined;
+    if (note.coverImage) {
+      try {
+        const url = await ctx.storage.getUrl(note.coverImage);
+        coverImageUrl = url ?? undefined;
+      } catch (error) {
+        console.error("Failed to resolve cover image URL:", error);
+        // Continue without cover image if resolution fails
+      }
+    }
+
     // Return ONLY public-safe fields (no userId, no user personal data)
     return {
       title: note.title,
       content: note.content,
       blocks: note.blocks,
       contentType: note.contentType,
-      coverImage: note.coverImage,
+      coverImage: coverImageUrl,
     };
   },
 });
