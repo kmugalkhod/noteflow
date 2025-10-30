@@ -4,7 +4,7 @@ import { useRef } from "react";
 import { FolderTree, type FolderTreeRef } from "../folder-tree";
 import { CreateFolderButton } from "@/modules/folders/components";
 import { useNotesStore } from "../../store/useNotesStore";
-import { Folder, Trash2, Star } from "lucide-react";
+import { Folder, Trash2, Star, Pencil } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useConvexUser } from "@/modules/shared/hooks/use-convex-user";
@@ -50,6 +50,7 @@ export function FolderSidebar({ isCollapsed = false }: FolderSidebarProps) {
   const favoriteNotesCount = noteCounts?.favorites || 0;
   const isTrashSelected = pathname === "/trash";
   const isFavoritesSelected = pathname === "/favorites";
+  const isDrawingSelected = pathname === "/drawing";
   const isUncategorizedSelected = selectedFolderId === "all" && !isTrashSelected && !isFavoritesSelected;
 
   // Get display name from user
@@ -141,8 +142,25 @@ export function FolderSidebar({ isCollapsed = false }: FolderSidebarProps) {
         </div>
       </nav>
 
-      {/* Footer - User & Theme */}
-      <div className="border-t border-sidebar-border p-3">
+      {/* Footer - Drawing, User & Theme */}
+      <div className="border-t border-sidebar-border p-3 space-y-2">
+        {/* Drawing Button */}
+        <button
+          onClick={() => router.push("/drawing")}
+          className={`
+            w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm
+            transition-colors
+            ${
+              isDrawingSelected
+                ? "bg-folder-selected-bg text-foreground font-medium"
+                : "text-sidebar-foreground hover:bg-folder-hover-bg"
+            }
+          `}
+        >
+          <Pencil className={`w-4 h-4 ${isDrawingSelected ? "text-folder-icon-color" : "text-muted-foreground"}`} />
+          <span className="flex-1 text-left">Drawing</span>
+        </button>
+
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 flex-1 min-w-0">
             <UserButton
