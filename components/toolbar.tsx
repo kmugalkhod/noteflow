@@ -1,115 +1,67 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Pen, Eraser, Minus, Square, Circle, RotateCcw, RotateCw, Trash2 } from "lucide-react"
+import {
+  MousePointer2,
+  Hand,
+  Square,
+  Diamond,
+  Circle,
+  ArrowRight,
+  Minus,
+  Pen,
+  Type,
+  Image as ImageIcon,
+  Eraser
+} from "lucide-react"
 
 interface ToolbarProps {
-  tool: "pen" | "eraser" | "line" | "rectangle" | "circle"
-  setTool: (tool: "pen" | "eraser" | "line" | "rectangle" | "circle") => void
-  onUndo: () => void
-  onRedo: () => void
-  onClear: () => void
-  canUndo: boolean
-  canRedo: boolean
+  tool: "select" | "hand" | "pen" | "eraser" | "line" | "rectangle" | "diamond" | "circle" | "arrow" | "text" | "image"
+  setTool: (tool: "select" | "hand" | "pen" | "eraser" | "line" | "rectangle" | "diamond" | "circle" | "arrow" | "text" | "image") => void
 }
 
-export function Toolbar({ tool, setTool, onUndo, onRedo, onClear, canUndo, canRedo }: ToolbarProps) {
+const tools = [
+  { id: "select" as const, icon: MousePointer2, label: "Select", shortcut: "V" },
+  { id: "hand" as const, icon: Hand, label: "Hand", shortcut: "H" },
+  { id: "rectangle" as const, icon: Square, label: "Rectangle", shortcut: "R" },
+  { id: "diamond" as const, icon: Diamond, label: "Diamond", shortcut: "D" },
+  { id: "circle" as const, icon: Circle, label: "Circle", shortcut: "C" },
+  { id: "arrow" as const, icon: ArrowRight, label: "Arrow", shortcut: "A" },
+  { id: "line" as const, icon: Minus, label: "Line", shortcut: "L" },
+  { id: "pen" as const, icon: Pen, label: "Pen", shortcut: "P" },
+  { id: "text" as const, icon: Type, label: "Text", shortcut: "T" },
+  { id: "image" as const, icon: ImageIcon, label: "Image", shortcut: "I" },
+  { id: "eraser" as const, icon: Eraser, label: "Eraser", shortcut: "E" },
+]
+
+export function Toolbar({ tool, setTool }: ToolbarProps) {
   return (
-    <div className="flex items-center gap-3">
-      {/* Drawing Tools */}
-      <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-xl p-1.5 shadow-sm">
-        <Button
-          size="sm"
-          variant={tool === "pen" ? "default" : "ghost"}
-          onClick={() => setTool("pen")}
-          title="Pen (P)"
-          className={`h-10 w-10 p-0 rounded-lg transition-all ${
-            tool === "pen" ? "bg-blue-500 hover:bg-blue-600 text-white shadow-md" : "hover:bg-gray-200 dark:hover:bg-gray-700"
-          }`}
-        >
-          <Pen className="h-4 w-4" />
-        </Button>
-        <Button
-          size="sm"
-          variant={tool === "eraser" ? "default" : "ghost"}
-          onClick={() => setTool("eraser")}
-          title="Eraser (E)"
-          className={`h-10 w-10 p-0 rounded-lg transition-all ${
-            tool === "eraser" ? "bg-blue-500 hover:bg-blue-600 text-white shadow-md" : "hover:bg-gray-200 dark:hover:bg-gray-700"
-          }`}
-        >
-          <Eraser className="h-4 w-4" />
-        </Button>
-        <Button
-          size="sm"
-          variant={tool === "line" ? "default" : "ghost"}
-          onClick={() => setTool("line")}
-          title="Line (L)"
-          className={`h-10 w-10 p-0 rounded-lg transition-all ${
-            tool === "line" ? "bg-blue-500 hover:bg-blue-600 text-white shadow-md" : "hover:bg-gray-200 dark:hover:bg-gray-700"
-          }`}
-        >
-          <Minus className="h-4 w-4" />
-        </Button>
-        <Button
-          size="sm"
-          variant={tool === "rectangle" ? "default" : "ghost"}
-          onClick={() => setTool("rectangle")}
-          title="Rectangle (R)"
-          className={`h-10 w-10 p-0 rounded-lg transition-all ${
-            tool === "rectangle" ? "bg-blue-500 hover:bg-blue-600 text-white shadow-md" : "hover:bg-gray-200 dark:hover:bg-gray-700"
-          }`}
-        >
-          <Square className="h-4 w-4" />
-        </Button>
-        <Button
-          size="sm"
-          variant={tool === "circle" ? "default" : "ghost"}
-          onClick={() => setTool("circle")}
-          title="Circle (C)"
-          className={`h-10 w-10 p-0 rounded-lg transition-all ${
-            tool === "circle" ? "bg-blue-500 hover:bg-blue-600 text-white shadow-md" : "hover:bg-gray-200 dark:hover:bg-gray-700"
-          }`}
-        >
-          <Circle className="h-4 w-4" />
-        </Button>
-      </div>
+    <div className="flex items-center gap-1 bg-white dark:bg-gray-900 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 p-1">
+      {tools.map((t, index) => {
+        const Icon = t.icon
+        const isActive = tool === t.id
 
-      {/* Divider */}
-      <div className="w-px h-8 bg-gray-300 dark:bg-gray-700" />
-
-      {/* History Controls */}
-      <div className="flex items-center gap-1">
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={onUndo}
-          disabled={!canUndo}
-          title="Undo (Ctrl+Z)"
-          className="h-10 w-10 p-0 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-30 transition-all"
-        >
-          <RotateCcw className="h-4 w-4" />
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={onRedo}
-          disabled={!canRedo}
-          title="Redo (Ctrl+Y)"
-          className="h-10 w-10 p-0 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-30 transition-all"
-        >
-          <RotateCw className="h-4 w-4" />
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={onClear}
-          title="Clear Canvas"
-          className="h-10 w-10 p-0 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-all"
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </div>
+        return (
+          <div key={t.id} className="flex items-center">
+            {(index === 2 || index === 6 || index === 10) && (
+              <div className="w-px h-6 bg-gray-300 dark:bg-gray-700 mx-1" />
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setTool(t.id)}
+              title={`${t.label} (${t.shortcut})`}
+              className={`h-9 w-9 p-0 rounded-md transition-all ${
+                isActive
+                  ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
+                  : "hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
+              }`}
+            >
+              <Icon className="h-4 w-4" />
+            </Button>
+          </div>
+        )
+      })}
     </div>
   )
 }

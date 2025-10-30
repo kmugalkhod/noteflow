@@ -9,7 +9,10 @@ import { toast } from "@/modules/shared/lib/toast";
 import { Toolbar } from "../toolbar";
 import { ColorPicker } from "../color-picker";
 import { BrushControls } from "../brush-controls";
-import { ExportMenu } from "../export-menu";
+import { HamburgerMenu } from "../hamburger-menu";
+import { ActionButtons } from "../action-buttons";
+import { ZoomControls } from "../zoom-controls";
+import { PropertySidebar } from "../property-sidebar";
 
 interface DrawingCanvasProps {
   noteId?: Id<"notes">; // Optional for standalone mode
@@ -22,7 +25,15 @@ function DrawingCanvasComponent({ noteId, drawingId, readonly = false }: Drawing
   const [isDrawing, setIsDrawing] = useState(false);
   const [color, setColor] = useState("#000000");
   const [brushSize, setBrushSize] = useState(3);
-  const [tool, setTool] = useState<"pen" | "eraser" | "line" | "rectangle" | "circle">("pen");
+  const [tool, setTool] = useState<"select" | "hand" | "pen" | "eraser" | "line" | "rectangle" | "diamond" | "circle" | "arrow" | "text" | "image">("pen");
+  const [canvasBgColor, setCanvasBgColor] = useState("#ffffff");
+
+  // Property sidebar states
+  const [fillColor, setFillColor] = useState("transparent");
+  const [opacity, setOpacity] = useState(100);
+  const [fontFamily, setFontFamily] = useState<"handwritten" | "normal" | "code" | "serif">("normal");
+  const [fontSize, setFontSize] = useState<"small" | "medium" | "large" | "xlarge">("medium");
+  const [textAlign, setTextAlign] = useState<"left" | "center" | "right">("left");
   const [history, setHistory] = useState<ImageData[]>([]);
   const [historyStep, setHistoryStep] = useState(-1);
   const [startPos, setStartPos] = useState<{ x: number; y: number } | null>(null);
@@ -58,7 +69,7 @@ function DrawingCanvasComponent({ noteId, drawingId, readonly = false }: Drawing
     canvas.width = canvas.offsetWidth;
     canvas.height = canvas.offsetHeight || 600;
 
-    ctx.fillStyle = "#ffffff";
+    ctx.fillStyle = canvasBgColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Load existing drawing
@@ -90,7 +101,7 @@ function DrawingCanvasComponent({ noteId, drawingId, readonly = false }: Drawing
       const currentImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       canvas.width = canvas.offsetWidth;
       canvas.height = canvas.offsetHeight || 600;
-      ctx.fillStyle = "#ffffff";
+      ctx.fillStyle = canvasBgColor;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.putImageData(currentImageData, 0, 0);
     };
@@ -196,7 +207,7 @@ function DrawingCanvasComponent({ noteId, drawingId, readonly = false }: Drawing
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    ctx.fillStyle = "#ffffff";
+    ctx.fillStyle = canvasBgColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     saveState();
   };
@@ -345,41 +356,84 @@ function DrawingCanvasComponent({ noteId, drawingId, readonly = false }: Drawing
     }
   };
 
+  const isSidebarOpen = tool !== "select" && tool !== "hand";
+
   return (
-    <div className="relative flex flex-col h-full w-full bg-[#fafafa] dark:bg-[#1a1a1a]">
-      {/* Excalidraw-style Toolbar */}
-      <div className="flex items-center justify-between gap-4 p-4 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-b border-gray-200 dark:border-gray-800 shadow-sm">
-        <Toolbar
-          tool={tool}
-          setTool={setTool}
-          onUndo={undo}
-          onRedo={redo}
-          onClear={clear}
-          canUndo={historyStep > 0}
-          canRedo={historyStep < history.length - 1}
-        />
-        <div className="flex items-center gap-4">
-          <ColorPicker color={color} setColor={setColor} />
-          <BrushControls brushSize={brushSize} setBrushSize={setBrushSize} />
-          <ExportMenu canvasRef={canvasRef} />
+    <div className="relative h-full w-full bg-[#fafafa] dark:bg-[#1a1a1a] overflow-hidden">
+      {/* Property Sidebar - Left */}
+      <PropertySidebar
+        tool={tool}
+        isOpen={isSidebarOpen}
+        strokeColor={color}
+        setStrokeColor={setColor}
+        fillColor={fillColor}
+        setFillColor={setFillColor}
+        opacity={opacity}
+        setOpacity={setOpacity}
+        brushSize={brushSize}
+        setBrushSize={setBrushSize}
+        fontFamily={fontFamily}
+        setFontFamily={setFontFamily}
+        fontSize={fontSize}
+        setFontSize={setFontSize}
+        textAlign={textAlign}
+        setTextAlign={setTextAlign}
+      />
+
+      {/* Top Bar - Excalidraw Style */}
+      <div className="absolute top-0 left-0 right-0 h-16 flex items-center justify-between px-4 bg-transparent z-30 pointer-events-none">
+        {/* Left: Hamburger Menu */}
+        <div className="pointer-events-auto">
+          <HamburgerMenu
+            onReset={clear}
+            canvasBackgroundColor={canvasBgColor}
+            onCanvasBackgroundChange={setCanvasBgColor}
+          />
+        </div>
+
+        {/* Center: Main Toolbar */}
+        <div className="pointer-events-auto">
+          <Toolbar tool={tool} setTool={setTool} />
+        </div>
+
+        {/* Right: Action Buttons */}
+        <div className="pointer-events-auto">
+          <ActionButtons />
         </div>
       </div>
 
       {/* Canvas */}
-      <div className="flex-1 overflow-hidden p-4">
-        <canvas
-          ref={canvasRef}
-          onMouseDown={startDrawing}
-          onMouseMove={handleMouseMove}
-          onMouseUp={endDrawing}
-          onMouseLeave={endDrawing}
-          className="w-full h-full cursor-crosshair bg-white dark:bg-gray-900 rounded-2xl shadow-lg"
-        />
+      <div className="absolute inset-0 flex items-center justify-center p-4">
+        <div
+          className="relative w-full h-full"
+          style={{
+            maxWidth: "calc(100vw - 32px)",
+            maxHeight: "calc(100vh - 96px)",
+          }}
+        >
+          <canvas
+            ref={canvasRef}
+            onMouseDown={startDrawing}
+            onMouseMove={handleMouseMove}
+            onMouseUp={endDrawing}
+            onMouseLeave={endDrawing}
+            className="w-full h-full cursor-crosshair rounded-lg shadow-lg border border-gray-200 dark:border-gray-700"
+            style={{ backgroundColor: canvasBgColor }}
+          />
+        </div>
       </div>
+
+      {/* Zoom Controls - Bottom Left */}
+      <ZoomControls
+        onUndo={undo}
+        onRedo={redo}
+        canUndo={historyStep > 0}
+        canRedo={historyStep < history.length - 1}
+      />
 
       {/* Save indicator */}
       {isSaving && (
-        <div className="absolute top-20 right-6 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm px-4 py-2 rounded-full border border-gray-200 dark:border-gray-700 text-sm shadow-lg z-10 animate-slide-up">
+        <div className="absolute top-24 right-6 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-sm shadow-lg z-40">
           Saving...
         </div>
       )}
