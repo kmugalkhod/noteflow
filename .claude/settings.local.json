@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nfix: resolve drawing canvas layout issues with folder sidebar overlap\n\nCritical fixes for UI layout problems:\n- Change DrawingCanvas from full-screen to inline (600px height, rounded border)\n- Convert property sidebar from fixed to absolute positioning (relative to canvas)\n- Convert zoom controls from fixed to absolute positioning\n- Adjust canvas container padding and max dimensions\n- Add border-border semantic token to canvas container\n\nThis fixes the property sidebar overlapping with the folder sidebar on the left.\nThe canvas now renders as a proper inline section within the note editor.\n\nResolves UI consistency issues (Phase 7):\n- T066-T072 (partial): Layout fixes for proper containment\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

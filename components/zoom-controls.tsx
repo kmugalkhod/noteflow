@@ -27,7 +27,7 @@ export function ZoomControls({ onUndo, onRedo, canUndo, canRedo }: ZoomControlsP
   }
 
   return (
-    <div className="fixed bottom-6 left-6 flex items-center gap-2 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-1.5 z-20">
+    <div className="absolute bottom-4 left-4 flex items-center gap-2 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-1.5 z-20">
       {/* Undo/Redo */}
       <Button
         variant="ghost"

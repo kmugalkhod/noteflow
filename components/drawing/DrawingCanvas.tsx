@@ -359,8 +359,8 @@ function DrawingCanvasComponent({ noteId, drawingId, readonly = false }: Drawing
   const isSidebarOpen = tool !== "select" && tool !== "hand";
 
   return (
-    <div className="relative h-full w-full bg-[#fafafa] dark:bg-[#1a1a1a] overflow-hidden">
-      {/* Property Sidebar - Left */}
+    <div className="relative w-full bg-[#fafafa] dark:bg-[#1a1a1a] overflow-hidden rounded-lg border border-border" style={{ height: '600px' }}>
+      {/* Property Sidebar - Left (absolute positioned within this container) */}
       <PropertySidebar
         tool={tool}
         isOpen={isSidebarOpen}
@@ -403,12 +403,12 @@ function DrawingCanvasComponent({ noteId, drawingId, readonly = false }: Drawing
       </div>
 
       {/* Canvas */}
-      <div className="absolute inset-0 flex items-center justify-center p-4">
+      <div className="absolute inset-0 flex items-center justify-center p-4 pt-20">
         <div
           className="relative w-full h-full"
           style={{
-            maxWidth: "calc(100vw - 32px)",
-            maxHeight: "calc(100vh - 96px)",
+            maxWidth: "100%",
+            maxHeight: "100%",
           }}
         >
           <canvas
