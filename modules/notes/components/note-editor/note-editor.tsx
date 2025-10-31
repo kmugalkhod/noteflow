@@ -23,6 +23,7 @@ import {
 import { exportNoteToMarkdown } from "../../utils/exportToMarkdown";
 import { toast } from "@/modules/shared/lib/toast";
 import { ShareButton } from "@/components/share/ShareButton";
+import { DrawingCanvas } from "@/components/drawing";
 
 interface NoteEditorProps {
   noteId: Id<"notes">;
@@ -329,6 +330,11 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
             className="w-full min-h-[calc(100vh-16rem)] text-base leading-relaxed border-none outline-none bg-transparent placeholder:text-muted-foreground/40 resize-none font-[inherit]"
           />
         )}
+
+        {/* Drawing Canvas Section */}
+        <div className="mt-12 border-t border-border pt-8">
+          <DrawingCanvas noteId={noteId} />
+        </div>
       </div>
 
       {/* Auto-save indicator (minimal, bottom-right corner) */}

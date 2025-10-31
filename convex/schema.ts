@@ -33,6 +33,9 @@ export default defineSchema({
     // Cover image
     coverImage: v.optional(v.string()), // URL to cover image
 
+    // Drawing
+    hasDrawing: v.optional(v.boolean()), // Quick check if note has associated drawing
+
     // Metadata
     isPinned: v.optional(v.boolean()),
     isFavorite: v.optional(v.boolean()), // For favorites section
@@ -155,4 +158,21 @@ export default defineSchema({
     .index("by_user", ["userId"]) // List user's files
     .index("by_note", ["noteId"]) // List files for a note
     .index("by_uploaded_at", ["uploadedAt"]), // Sort by upload time
+
+  // Drawings table (for tldraw whiteboard feature)
+  drawings: defineTable({
+    noteId: v.optional(v.id("notes")), // Optional: can be standalone drawing
+    userId: v.id("users"),
+    title: v.optional(v.string()), // Title for standalone drawings
+    data: v.string(), // Compressed tldraw data
+    version: v.number(), // Schema version for migrations
+    sizeBytes: v.number(), // Size of compressed data
+    elementCount: v.optional(v.number()), // Number of elements in drawing
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    isDeleted: v.optional(v.boolean()), // Soft delete flag
+  })
+    .index("by_note", ["noteId"]) // Query drawings by note
+    .index("by_user", ["userId"]) // Query user's drawings
+    .index("by_note_user", ["noteId", "userId"]), // Composite for auth checks
 });
