@@ -93,6 +93,8 @@ export function NotesList({
     try {
       await deleteNote({ noteId: selectedNoteId });
       setSelectedNoteId(null);
+      // Navigate to workspace to clear the editor view
+      router.push("/workspace");
       toast.success(`"${noteTitle}" moved to trash`);
     } catch (error) {
       console.error("Failed to delete note:", error);
@@ -140,25 +142,27 @@ export function NotesList({
             </p>
           </div>
         ) : (
-          sortedNotes.map((note) => (
-            <NoteListItem
-              key={note._id}
-              id={note._id}
-              title={note.title}
-              content={note.contentPreview}
-              updatedAt={note.updatedAt}
-              isSelected={selectedNoteId === note._id}
-              isFavorite={note.isFavorite}
-              onClick={() => handleSelectNote(note._id)}
-              onFavorite={async () => {
-                await toggleFavorite({ noteId: note._id });
-              }}
-              onDragStart={(noteId) => {
-                // Store the dragged note ID for drop handling
-                sessionStorage.setItem("draggedNoteId", noteId);
-              }}
-            />
-          ))
+          <div key={selectedFolderId?.toString() || 'all'} className="animate-fade-in">
+            {sortedNotes.map((note) => (
+              <NoteListItem
+                key={note._id}
+                id={note._id}
+                title={note.title}
+                content={note.contentPreview}
+                updatedAt={note.updatedAt}
+                isSelected={selectedNoteId === note._id}
+                isFavorite={note.isFavorite}
+                onClick={() => handleSelectNote(note._id)}
+                onFavorite={async () => {
+                  await toggleFavorite({ noteId: note._id });
+                }}
+                onDragStart={(noteId) => {
+                  // Store the dragged note ID for drop handling
+                  sessionStorage.setItem("draggedNoteId", noteId);
+                }}
+              />
+            ))}
+          </div>
         )}
       </div>
     </div>

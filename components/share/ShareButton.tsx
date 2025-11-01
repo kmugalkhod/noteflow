@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, memo } from "react";
 import { Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,14 +21,14 @@ interface ShareButtonProps {
   disabled?: boolean;
 }
 
-export function ShareButton({
+const ShareButtonComponent = ({
   noteId,
   noteTitle,
   variant = "ghost",
   size = "icon-sm",
   className,
   disabled,
-}: ShareButtonProps) {
+}: ShareButtonProps) => {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   return (
@@ -61,4 +61,16 @@ export function ShareButton({
       />
     </>
   );
-}
+};
+
+// Memoize to prevent re-renders when noteTitle changes frequently
+export const ShareButton = memo(ShareButtonComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.noteId === nextProps.noteId &&
+    prevProps.noteTitle === nextProps.noteTitle &&
+    prevProps.variant === nextProps.variant &&
+    prevProps.size === nextProps.size &&
+    prevProps.className === nextProps.className &&
+    prevProps.disabled === nextProps.disabled
+  );
+});

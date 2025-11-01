@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { Home, FileText, Users, PenTool } from "lucide-react";
+import { Home, FileText, Users, PenTool, Paintbrush } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ import { ThemeToggle } from "@/modules/shared/components";
 const navigation = [
   { name: "Workspace", href: "/workspace", icon: Home },
   { name: "All stories", href: "/stories", icon: FileText },
+  { name: "Drawing", href: "/drawing", icon: Paintbrush },
   { name: "Shared", href: "/shared", icon: Users },
   { name: "Blog", href: "/blog", icon: PenTool },
 ];
@@ -54,23 +55,37 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
     folderTreeRef.current?.startCreatingFolder();
   };
 
+  const handleNewDrawing = () => {
+    router.push('/drawing');
+  };
+
   return (
     <aside className="w-64 h-screen bg-sidebar border-r border-sidebar-border flex flex-col">
       {/* Header */}
       <div className="p-4 border-b border-sidebar-border space-y-4">
         <h1 className="text-xl font-bold text-sidebar-foreground">noteflow</h1>
 
-        <SearchBar 
+        <SearchBar
           onOpenCommandPalette={onOpenCommandPalette}
           placeholder="Search notes..."
         />
 
-        <Button
-          onClick={handleNewStory}
-          className="w-full bg-black hover:bg-gray-800 text-white rounded-lg"
-        >
-          New story
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={handleNewStory}
+            className="flex-1 bg-black hover:bg-gray-800 text-white rounded-lg"
+          >
+            New story
+          </Button>
+          <Button
+            onClick={handleNewDrawing}
+            variant="outline"
+            className="flex-1 rounded-lg"
+          >
+            <Paintbrush className="w-4 h-4 mr-1" />
+            Drawing
+          </Button>
+        </div>
       </div>
 
       {/* Navigation */}

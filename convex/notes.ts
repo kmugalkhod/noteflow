@@ -103,6 +103,9 @@ export const getNoteContent = query({
     const note = await ctx.db.get(noteId);
     if (!note) return null;
 
+    // Return null if note is deleted (prevents showing deleted notes in editor)
+    if (note.isDeleted) return null;
+
     // Verify ownership before returning sensitive content
     if (note.userId !== userId) {
       throw new Error("Unauthorized: You don't have permission to access this note");

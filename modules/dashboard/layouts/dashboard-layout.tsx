@@ -7,27 +7,26 @@ import { NotesList } from "../components/notes-list";
 import { CommandPalette } from "@/modules/search/components";
 import { EmptyEditorState } from "../components/EmptyEditorState";
 import { ResizeHandle } from "@/modules/shared/components";
-
-const DEFAULT_NOTES_WIDTH = 300;
-const STORAGE_KEYS = {
-  SIDEBAR_COLLAPSED: "sidebar-collapsed",
-  NOTES_COLLAPSED: "notes-panel-collapsed",
-  NOTES_WIDTH: "notes-panel-width",
-};
+import {
+  NOTES_PANEL_WIDTH_DEFAULT,
+  NOTES_PANEL_WIDTH_MIN,
+  NOTES_PANEL_WIDTH_MAX,
+  STORAGE_KEYS,
+} from "@/lib/constants";
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isNotesPanelCollapsed, setIsNotesPanelCollapsed] = useState(false);
-  const [notesPanelWidth, setNotesPanelWidth] = useState(DEFAULT_NOTES_WIDTH);
+  const [notesPanelWidth, setNotesPanelWidth] = useState(NOTES_PANEL_WIDTH_DEFAULT);
   const [isResizing, setIsResizing] = useState(false);
   const pathname = usePathname();
 
   // Load state from localStorage on mount
   useEffect(() => {
     const sidebarCollapsed = localStorage.getItem(STORAGE_KEYS.SIDEBAR_COLLAPSED);
-    const notesCollapsed = localStorage.getItem(STORAGE_KEYS.NOTES_COLLAPSED);
-    const notesWidth = localStorage.getItem(STORAGE_KEYS.NOTES_WIDTH);
+    const notesCollapsed = localStorage.getItem(STORAGE_KEYS.NOTES_PANEL_COLLAPSED);
+    const notesWidth = localStorage.getItem(STORAGE_KEYS.NOTES_PANEL_WIDTH);
 
     if (sidebarCollapsed !== null) {
       setIsSidebarCollapsed(sidebarCollapsed === "true");
@@ -43,20 +42,12 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Save sidebar state to localStorage
+  // Consolidated: Save all state to localStorage (prevents layout thrashing)
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.SIDEBAR_COLLAPSED, String(isSidebarCollapsed));
-  }, [isSidebarCollapsed]);
-
-  // Save notes panel state to localStorage
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.NOTES_COLLAPSED, String(isNotesPanelCollapsed));
-  }, [isNotesPanelCollapsed]);
-
-  // Save notes panel width to localStorage
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.NOTES_WIDTH, String(notesPanelWidth));
-  }, [notesPanelWidth]);
+    localStorage.setItem(STORAGE_KEYS.NOTES_PANEL_COLLAPSED, String(isNotesPanelCollapsed));
+    localStorage.setItem(STORAGE_KEYS.NOTES_PANEL_WIDTH, String(notesPanelWidth));
+  }, [isSidebarCollapsed, isNotesPanelCollapsed, notesPanelWidth]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -70,7 +61,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // Show empty state only when on workspace, stories, shared, or blog pages (not viewing a specific note, trash, or favorites)
+  // Show empty state only when on workspace, stories, shared, or blog pages (not viewing a specific note, trash, favorites, or drawing)
   const isViewingNote = pathname?.startsWith("/note/");
   const isTrashPage = pathname === "/trash";
   const isFavoritesPage = pathname === "/favorites";
@@ -89,8 +80,11 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       const delta = e.clientX - startX;
       const newWidth = startWidth + delta;
 
-      // Enforce min/max constraints
-      const constrainedWidth = Math.min(Math.max(newWidth, 200), 500);
+      // Enforce min/max constraints using constants
+      const constrainedWidth = Math.min(
+        Math.max(newWidth, NOTES_PANEL_WIDTH_MIN),
+        NOTES_PANEL_WIDTH_MAX
+      );
       setNotesPanelWidth(constrainedWidth);
     };
 
