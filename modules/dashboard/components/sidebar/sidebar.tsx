@@ -55,23 +55,37 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
     folderTreeRef.current?.startCreatingFolder();
   };
 
+  const handleNewDrawing = () => {
+    router.push('/drawing');
+  };
+
   return (
     <aside className="w-64 h-screen bg-sidebar border-r border-sidebar-border flex flex-col">
       {/* Header */}
       <div className="p-4 border-b border-sidebar-border space-y-4">
         <h1 className="text-xl font-bold text-sidebar-foreground">noteflow</h1>
 
-        <SearchBar 
+        <SearchBar
           onOpenCommandPalette={onOpenCommandPalette}
           placeholder="Search notes..."
         />
 
-        <Button
-          onClick={handleNewStory}
-          className="w-full bg-black hover:bg-gray-800 text-white rounded-lg"
-        >
-          New story
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={handleNewStory}
+            className="flex-1 bg-black hover:bg-gray-800 text-white rounded-lg"
+          >
+            New story
+          </Button>
+          <Button
+            onClick={handleNewDrawing}
+            variant="outline"
+            className="flex-1 rounded-lg"
+          >
+            <Paintbrush className="w-4 h-4 mr-1" />
+            Drawing
+          </Button>
+        </div>
       </div>
 
       {/* Navigation */}
