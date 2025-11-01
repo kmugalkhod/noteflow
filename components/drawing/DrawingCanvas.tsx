@@ -42,6 +42,7 @@ function DrawingCanvasComponent({ noteId, drawingId, readonly = false }: Drawing
   const [isSaving, setIsSaving] = useState(false);
   const [currentDrawingId, setCurrentDrawingId] = useState(drawingId);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isSidebarManuallyToggled, setIsSidebarManuallyToggled] = useState(false);
 
   // Convex integration
   const isStandalone = !noteId;
@@ -390,12 +391,13 @@ function DrawingCanvasComponent({ noteId, drawingId, readonly = false }: Drawing
         ctx.arc(startPos.x, startPos.y, radius, 0, 2 * Math.PI);
         ctx.stroke();
       }
-    } else if (!readonly && isDrawing && tool === "pen") {
+    } else if (!readonly && isDrawing && (tool === "pen" || tool === "eraser")) {
       draw(e);
     }
   };
 
-  const isSidebarOpen = tool !== "select" && tool !== "hand" && !isMobile;
+  const shouldShowSidebar = tool !== "select" && tool !== "hand";
+  const isSidebarOpen = (shouldShowSidebar || isSidebarManuallyToggled) && !isMobile;
 
   return (
     <div className="relative w-full h-full bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 overflow-hidden">
@@ -451,7 +453,22 @@ function DrawingCanvasComponent({ noteId, drawingId, readonly = false }: Drawing
         </div>
 
         {/* Center: Main Toolbar */}
-        <div className="pointer-events-auto">
+        <div className="pointer-events-auto flex items-center gap-3">
+          {/* Sidebar Toggle Button */}
+          <button
+            onClick={() => setIsSidebarManuallyToggled(!isSidebarManuallyToggled)}
+            className={`h-10 w-10 p-0 rounded-lg transition-all flex items-center justify-center ${
+              isSidebarOpen
+                ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 shadow-sm ring-1 ring-blue-200 dark:ring-blue-800"
+                : "bg-white/95 dark:bg-slate-900/95 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 shadow-lg border border-slate-200 dark:border-slate-700"
+            }`}
+            title="Toggle Properties Sidebar (A)"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+
           <Toolbar tool={tool} setTool={setTool} />
         </div>
 
