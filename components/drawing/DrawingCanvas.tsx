@@ -359,7 +359,7 @@ function DrawingCanvasComponent({ noteId, drawingId, readonly = false }: Drawing
   const isSidebarOpen = tool !== "select" && tool !== "hand";
 
   return (
-    <div className="relative w-full bg-[#fafafa] dark:bg-[#1a1a1a] overflow-hidden rounded-lg border border-border" style={{ height: '600px' }}>
+    <div className="relative w-full h-full bg-[#fafafa] dark:bg-[#1a1a1a] overflow-hidden">
       {/* Property Sidebar - Left (absolute positioned within this container) */}
       <PropertySidebar
         tool={tool}
@@ -403,21 +403,15 @@ function DrawingCanvasComponent({ noteId, drawingId, readonly = false }: Drawing
       </div>
 
       {/* Canvas */}
-      <div className="absolute inset-0 flex items-center justify-center p-4 pt-20">
-        <div
-          className="relative w-full h-full"
-          style={{
-            maxWidth: "100%",
-            maxHeight: "100%",
-          }}
-        >
+      <div className="absolute inset-0 flex items-center justify-center p-4 pt-20 pb-4">
+        <div className="relative w-full h-full">
           <canvas
             ref={canvasRef}
             onMouseDown={startDrawing}
             onMouseMove={handleMouseMove}
             onMouseUp={endDrawing}
             onMouseLeave={endDrawing}
-            className="w-full h-full cursor-crosshair rounded-lg shadow-lg border border-gray-200 dark:border-gray-700"
+            className="w-full h-full cursor-crosshair shadow-lg"
             style={{ backgroundColor: canvasBgColor }}
           />
         </div>

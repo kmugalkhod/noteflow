@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { Home, FileText, Users, PenTool } from "lucide-react";
+import { Home, FileText, Users, PenTool, Paintbrush } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ import { ThemeToggle } from "@/modules/shared/components";
 const navigation = [
   { name: "Workspace", href: "/workspace", icon: Home },
   { name: "All stories", href: "/stories", icon: FileText },
+  { name: "Drawing", href: "/drawing", icon: Paintbrush },
   { name: "Shared", href: "/shared", icon: Users },
   { name: "Blog", href: "/blog", icon: PenTool },
 ];
