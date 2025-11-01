@@ -44,6 +44,7 @@ function DrawingCanvasComponent({ noteId, drawingId, readonly = false }: Drawing
   const [isInitialized, setIsInitialized] = useState(false);
   const [isSidebarManuallyToggled, setIsSidebarManuallyToggled] = useState(false);
   const [textInput, setTextInput] = useState<{ x: number; y: number; value: string } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Convex integration
   const isStandalone = !noteId;
@@ -317,6 +318,100 @@ function DrawingCanvasComponent({ noteId, drawingId, readonly = false }: Drawing
     return { size, family, font: `${size}px ${family}` };
   };
 
+  // Draw diamond shape
+  const drawDiamond = (ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number) => {
+    const centerX = (x1 + x2) / 2;
+    const centerY = (y1 + y2) / 2;
+    const width = Math.abs(x2 - x1);
+    const height = Math.abs(y2 - y1);
+
+    ctx.beginPath();
+    ctx.moveTo(centerX, y1); // Top
+    ctx.lineTo(x2, centerY); // Right
+    ctx.lineTo(centerX, y2); // Bottom
+    ctx.lineTo(x1, centerY); // Left
+    ctx.closePath();
+
+    if (fillColor !== "transparent") {
+      ctx.fillStyle = fillColor;
+      ctx.fill();
+    }
+    ctx.stroke();
+  };
+
+  // Draw arrow with arrowhead
+  const drawArrow = (ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number) => {
+    const headLength = 15; // Length of arrowhead
+    const angle = Math.atan2(y2 - y1, x2 - x1);
+
+    // Draw line
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+
+    // Draw arrowhead
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(
+      x2 - headLength * Math.cos(angle - Math.PI / 6),
+      y2 - headLength * Math.sin(angle - Math.PI / 6)
+    );
+    ctx.lineTo(
+      x2 - headLength * Math.cos(angle + Math.PI / 6),
+      y2 - headLength * Math.sin(angle + Math.PI / 6)
+    );
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+  };
+
+  // Handle image upload
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !file.type.startsWith('image/')) {
+      toast.error('Please select a valid image file');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        // Draw image at center with max size of 400px
+        const maxSize = 400;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxSize || height > maxSize) {
+          const ratio = Math.min(maxSize / width, maxSize / height);
+          width = width * ratio;
+          height = height * ratio;
+        }
+
+        const x = (canvas.width - width) / 2;
+        const y = (canvas.height - height) / 2;
+
+        ctx.drawImage(img, x, y, width, height);
+        saveState();
+        toast.success('Image added to canvas');
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (readonly) return;
 
@@ -333,10 +428,16 @@ function DrawingCanvasComponent({ noteId, drawingId, readonly = false }: Drawing
       return;
     }
 
+    // Handle image tool
+    if (tool === "image") {
+      fileInputRef.current?.click();
+      return;
+    }
+
     setIsDrawing(true);
     setStartPos({ x, y });
 
-    if (["line", "rectangle", "circle"].includes(tool)) {
+    if (["line", "rectangle", "circle", "diamond", "arrow"].includes(tool)) {
       setPreviewCanvas(canvas.getContext("2d")?.getImageData(0, 0, canvas.width, canvas.height) || null);
     } else {
       const ctx = canvas.getContext("2d");
@@ -385,26 +486,43 @@ function DrawingCanvasComponent({ noteId, drawingId, readonly = false }: Drawing
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    if (["line", "rectangle", "circle"].includes(tool) && startPos && previewCanvas) {
+    if (["line", "rectangle", "circle", "diamond", "arrow"].includes(tool) && startPos && previewCanvas) {
       ctx.putImageData(previewCanvas, 0, 0);
 
       ctx.strokeStyle = color;
       ctx.lineWidth = brushSize;
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
+      ctx.globalAlpha = opacity / 100;
 
       if (tool === "line") {
         drawRoughLine(ctx, startPos.x, startPos.y, x, y);
       } else if (tool === "rectangle") {
         const width = x - startPos.x;
         const height = y - startPos.y;
-        ctx.strokeRect(startPos.x, startPos.y, width, height);
+        ctx.beginPath();
+        ctx.rect(startPos.x, startPos.y, width, height);
+        if (fillColor !== "transparent") {
+          ctx.fillStyle = fillColor;
+          ctx.fill();
+        }
+        ctx.stroke();
       } else if (tool === "circle") {
         const radius = Math.sqrt(Math.pow(x - startPos.x, 2) + Math.pow(y - startPos.y, 2));
         ctx.beginPath();
         ctx.arc(startPos.x, startPos.y, radius, 0, 2 * Math.PI);
+        if (fillColor !== "transparent") {
+          ctx.fillStyle = fillColor;
+          ctx.fill();
+        }
         ctx.stroke();
+      } else if (tool === "diamond") {
+        drawDiamond(ctx, startPos.x, startPos.y, x, y);
+      } else if (tool === "arrow") {
+        drawArrow(ctx, startPos.x, startPos.y, x, y);
       }
+
+      ctx.globalAlpha = 1;
     }
 
     ctx.beginPath();
@@ -415,7 +533,7 @@ function DrawingCanvasComponent({ noteId, drawingId, readonly = false }: Drawing
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!readonly && isDrawing && ["line", "rectangle", "circle"].includes(tool) && startPos && previewCanvas) {
+    if (!readonly && isDrawing && ["line", "rectangle", "circle", "diamond", "arrow"].includes(tool) && startPos && previewCanvas) {
       const canvas = canvasRef.current;
       if (!canvas) return;
 
@@ -432,19 +550,36 @@ function DrawingCanvasComponent({ noteId, drawingId, readonly = false }: Drawing
       ctx.lineWidth = brushSize;
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
+      ctx.globalAlpha = opacity / 100;
 
       if (tool === "line") {
         drawRoughLine(ctx, startPos.x, startPos.y, x, y);
       } else if (tool === "rectangle") {
         const width = x - startPos.x;
         const height = y - startPos.y;
-        ctx.strokeRect(startPos.x, startPos.y, width, height);
+        ctx.beginPath();
+        ctx.rect(startPos.x, startPos.y, width, height);
+        if (fillColor !== "transparent") {
+          ctx.fillStyle = fillColor;
+          ctx.fill();
+        }
+        ctx.stroke();
       } else if (tool === "circle") {
         const radius = Math.sqrt(Math.pow(x - startPos.x, 2) + Math.pow(y - startPos.y, 2));
         ctx.beginPath();
         ctx.arc(startPos.x, startPos.y, radius, 0, 2 * Math.PI);
+        if (fillColor !== "transparent") {
+          ctx.fillStyle = fillColor;
+          ctx.fill();
+        }
         ctx.stroke();
+      } else if (tool === "diamond") {
+        drawDiamond(ctx, startPos.x, startPos.y, x, y);
+      } else if (tool === "arrow") {
+        drawArrow(ctx, startPos.x, startPos.y, x, y);
       }
+
+      ctx.globalAlpha = 1;
     } else if (!readonly && isDrawing && (tool === "pen" || tool === "eraser")) {
       draw(e);
     }
@@ -604,6 +739,15 @@ function DrawingCanvasComponent({ noteId, drawingId, readonly = false }: Drawing
           </div>
         </div>
       )}
+
+      {/* Hidden file input for image upload */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleImageUpload}
+        className="hidden"
+      />
     </div>
   );
 }
