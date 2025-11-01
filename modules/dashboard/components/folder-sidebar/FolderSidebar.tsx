@@ -4,7 +4,7 @@ import { useRef } from "react";
 import { FolderTree, type FolderTreeRef } from "../folder-tree";
 import { CreateFolderButton } from "@/modules/folders/components";
 import { useNotesStore } from "../../store/useNotesStore";
-import { Folder, Trash2, Star } from "lucide-react";
+import { Folder, Trash2, Star, Paintbrush } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useConvexUser } from "@/modules/shared/hooks/use-convex-user";
@@ -50,7 +50,8 @@ export function FolderSidebar({ isCollapsed = false }: FolderSidebarProps) {
   const favoriteNotesCount = noteCounts?.favorites || 0;
   const isTrashSelected = pathname === "/trash";
   const isFavoritesSelected = pathname === "/favorites";
-  const isUncategorizedSelected = selectedFolderId === "all" && !isTrashSelected && !isFavoritesSelected;
+  const isDrawingSelected = pathname === "/drawing";
+  const isUncategorizedSelected = selectedFolderId === "all" && !isTrashSelected && !isFavoritesSelected && !isDrawingSelected;
 
   // Get display name from user
   const displayName = user?.fullName || user?.firstName || user?.username || "User";
@@ -121,6 +122,23 @@ export function FolderSidebar({ isCollapsed = false }: FolderSidebarProps) {
           <Trash2 className={`w-4 h-4 ${isTrashSelected ? "text-folder-icon-color" : "text-muted-foreground"}`} />
           <span className="flex-1 text-left">Trash</span>
           <span className="text-xs text-muted-foreground">{deletedNotesCount}</span>
+        </button>
+
+        {/* Drawing */}
+        <button
+          onClick={() => router.push("/drawing")}
+          className={`
+            w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-sm mb-1
+            transition-colors
+            ${
+              isDrawingSelected
+                ? "bg-folder-selected-bg text-foreground font-medium"
+                : "text-sidebar-foreground hover:bg-folder-hover-bg"
+            }
+          `}
+        >
+          <Paintbrush className={`w-4 h-4 ${isDrawingSelected ? "text-blue-500" : "text-muted-foreground"}`} />
+          <span className="flex-1 text-left">Drawing</span>
         </button>
 
         {/* Folders Section Header */}
