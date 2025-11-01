@@ -159,25 +159,8 @@ export function FolderSidebar({ isCollapsed = false }: FolderSidebarProps) {
         </div>
       </nav>
 
-      {/* Footer - Drawing, User & Theme */}
-      <div className="border-t border-sidebar-border p-3 space-y-2">
-        {/* Drawing Button */}
-        <button
-          onClick={() => router.push("/drawing")}
-          className={`
-            w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm
-            transition-colors
-            ${
-              isDrawingSelected
-                ? "bg-folder-selected-bg text-foreground font-medium"
-                : "text-sidebar-foreground hover:bg-folder-hover-bg"
-            }
-          `}
-        >
-          <Pencil className={`w-4 h-4 ${isDrawingSelected ? "text-folder-icon-color" : "text-muted-foreground"}`} />
-          <span className="flex-1 text-left">Drawing</span>
-        </button>
-
+      {/* Footer - User & Theme */}
+      <div className="border-t border-sidebar-border p-3">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 flex-1 min-w-0">
             <UserButton
