@@ -5,6 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useDebounce } from "@/modules/shared/hooks/use-debounce";
+import { useMediaQuery } from "@/modules/shared/hooks/use-media-query";
 import { toast } from "@/modules/shared/lib/toast";
 import { Toolbar } from "../toolbar";
 import { ColorPicker } from "../color-picker";
@@ -57,6 +58,44 @@ function DrawingCanvasComponent({ noteId, drawingId, readonly = false }: Drawing
   // Debounced canvas data for auto-save
   const canvasDataRef = useRef<string | null>(null);
   const debouncedCanvasData = useDebounce(canvasDataRef.current, 1500);
+
+  // Mobile detection
+  const isMobile = useMediaQuery("(max-width: 768px)");
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Tool shortcuts
+      if (!e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+        switch (e.key.toLowerCase()) {
+          case 'v': setTool('select'); e.preventDefault(); break;
+          case 'h': setTool('hand'); e.preventDefault(); break;
+          case 'r': setTool('rectangle'); e.preventDefault(); break;
+          case 'd': setTool('diamond'); e.preventDefault(); break;
+          case 'c': setTool('circle'); e.preventDefault(); break;
+          case 'a': setTool('arrow'); e.preventDefault(); break;
+          case 'l': setTool('line'); e.preventDefault(); break;
+          case 'p': setTool('pen'); e.preventDefault(); break;
+          case 't': setTool('text'); e.preventDefault(); break;
+          case 'i': setTool('image'); e.preventDefault(); break;
+          case 'e': setTool('eraser'); e.preventDefault(); break;
+        }
+      }
+
+      // Undo/Redo shortcuts
+      if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) {
+          redo(); // Cmd/Ctrl+Shift+Z = Redo
+        } else {
+          undo(); // Cmd/Ctrl+Z = Undo
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [historyStep, history.length]);
 
   // Initialize canvas
   useEffect(() => {
@@ -356,12 +395,31 @@ function DrawingCanvasComponent({ noteId, drawingId, readonly = false }: Drawing
     }
   };
 
-  const isSidebarOpen = tool !== "select" && tool !== "hand";
+  const isSidebarOpen = tool !== "select" && tool !== "hand" && !isMobile;
 
   return (
     <div className="relative w-full h-full bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 overflow-hidden">
+      {/* Mobile Notice */}
+      {isMobile && (
+        <div className="absolute inset-0 flex items-center justify-center bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm z-50 p-6">
+          <div className="text-center max-w-md">
+            <div className="mb-4 flex justify-center">
+              <svg className="w-16 h-16 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-2">
+              Desktop Required
+            </h3>
+            <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
+              The drawing canvas requires a larger screen for the best experience. Please open this page on a desktop or tablet device (≥768px width).
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Property Sidebar - Left (absolute positioned within this container) */}
-      <PropertySidebar
+      {!isMobile && <PropertySidebar
         tool={tool}
         isOpen={isSidebarOpen}
         strokeColor={color}
@@ -378,9 +436,10 @@ function DrawingCanvasComponent({ noteId, drawingId, readonly = false }: Drawing
         setFontSize={setFontSize}
         textAlign={textAlign}
         setTextAlign={setTextAlign}
-      />
+      />}
 
       {/* Top Bar - Professional Style */}
+      {!isMobile && (
       <div className="absolute top-0 left-0 right-0 h-16 flex items-center justify-between px-6 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-700 z-30 pointer-events-none shadow-sm">
         {/* Left: Hamburger Menu */}
         <div className="pointer-events-auto">
@@ -401,6 +460,7 @@ function DrawingCanvasComponent({ noteId, drawingId, readonly = false }: Drawing
           <ActionButtons />
         </div>
       </div>
+      )}
 
       {/* Canvas */}
       <div className="absolute inset-0 flex items-center justify-center p-8 pt-24 pb-8">
@@ -418,12 +478,14 @@ function DrawingCanvasComponent({ noteId, drawingId, readonly = false }: Drawing
       </div>
 
       {/* Zoom Controls - Bottom Left */}
-      <ZoomControls
-        onUndo={undo}
-        onRedo={redo}
-        canUndo={historyStep > 0}
-        canRedo={historyStep < history.length - 1}
-      />
+      {!isMobile && (
+        <ZoomControls
+          onUndo={undo}
+          onRedo={redo}
+          canUndo={historyStep > 0}
+          canRedo={historyStep < history.length - 1}
+        />
+      )}
 
       {/* Save indicator */}
       {isSaving && (
