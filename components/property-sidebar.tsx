@@ -60,11 +60,11 @@ export function PropertySidebar({
 
   return (
     <div
-      className={`absolute left-4 top-4 bottom-4 w-56 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl z-20 overflow-y-auto transition-all duration-200 ${
+      className={`absolute left-6 top-20 bottom-6 w-64 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl z-20 overflow-y-auto transition-all duration-300 ring-1 ring-black/5 ${
         isOpen ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"
       }`}
     >
-      <div className="p-4 space-y-6">
+      <div className="p-5 space-y-6">
         {/* Stroke Color - Show for all tools */}
         <div className="space-y-2">
           <label className="text-xs font-medium text-muted-foreground">Stroke</label>

@@ -359,7 +359,7 @@ function DrawingCanvasComponent({ noteId, drawingId, readonly = false }: Drawing
   const isSidebarOpen = tool !== "select" && tool !== "hand";
 
   return (
-    <div className="relative w-full h-full bg-[#fafafa] dark:bg-[#1a1a1a] overflow-hidden">
+    <div className="relative w-full h-full bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 overflow-hidden">
       {/* Property Sidebar - Left (absolute positioned within this container) */}
       <PropertySidebar
         tool={tool}
@@ -380,8 +380,8 @@ function DrawingCanvasComponent({ noteId, drawingId, readonly = false }: Drawing
         setTextAlign={setTextAlign}
       />
 
-      {/* Top Bar - Excalidraw Style */}
-      <div className="absolute top-0 left-0 right-0 h-16 flex items-center justify-between px-4 bg-transparent z-30 pointer-events-none">
+      {/* Top Bar - Professional Style */}
+      <div className="absolute top-0 left-0 right-0 h-16 flex items-center justify-between px-6 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-700 z-30 pointer-events-none shadow-sm">
         {/* Left: Hamburger Menu */}
         <div className="pointer-events-auto">
           <HamburgerMenu
@@ -403,15 +403,15 @@ function DrawingCanvasComponent({ noteId, drawingId, readonly = false }: Drawing
       </div>
 
       {/* Canvas */}
-      <div className="absolute inset-0 flex items-center justify-center p-4 pt-20 pb-4">
-        <div className="relative w-full h-full">
+      <div className="absolute inset-0 flex items-center justify-center p-8 pt-24 pb-8">
+        <div className="relative w-full h-full max-w-7xl">
           <canvas
             ref={canvasRef}
             onMouseDown={startDrawing}
             onMouseMove={handleMouseMove}
             onMouseUp={endDrawing}
             onMouseLeave={endDrawing}
-            className="w-full h-full cursor-crosshair shadow-lg"
+            className="w-full h-full cursor-crosshair rounded-lg shadow-2xl border border-slate-200 dark:border-slate-700 ring-1 ring-black/5"
             style={{ backgroundColor: canvasBgColor }}
           />
         </div>
@@ -427,7 +427,8 @@ function DrawingCanvasComponent({ noteId, drawingId, readonly = false }: Drawing
 
       {/* Save indicator */}
       {isSaving && (
-        <div className="absolute top-24 right-6 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-sm shadow-lg z-40">
+        <div className="absolute top-20 right-8 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl px-4 py-2.5 rounded-full border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-700 dark:text-slate-300 shadow-xl z-40 flex items-center gap-2">
+          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></div>
           Saving...
         </div>
       )}

@@ -27,7 +27,7 @@ export function ZoomControls({ onUndo, onRedo, canUndo, canRedo }: ZoomControlsP
   }
 
   return (
-    <div className="absolute bottom-4 left-4 flex items-center gap-2 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-1.5 z-20">
+    <div className="absolute bottom-6 left-6 flex items-center gap-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 p-2 z-20 ring-1 ring-black/5">
       {/* Undo/Redo */}
       <Button
         variant="ghost"
@@ -35,7 +35,7 @@ export function ZoomControls({ onUndo, onRedo, canUndo, canRedo }: ZoomControlsP
         onClick={onUndo}
         disabled={!canUndo}
         title="Undo (Ctrl+Z)"
-        className="h-8 w-8 p-0 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-30"
+        className="h-9 w-9 p-0 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 transition-colors"
       >
         <RotateCcw className="h-4 w-4" />
       </Button>
@@ -45,13 +45,13 @@ export function ZoomControls({ onUndo, onRedo, canUndo, canRedo }: ZoomControlsP
         onClick={onRedo}
         disabled={!canRedo}
         title="Redo (Ctrl+Y)"
-        className="h-8 w-8 p-0 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-30"
+        className="h-9 w-9 p-0 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 transition-colors"
       >
         <RotateCw className="h-4 w-4" />
       </Button>
 
       {/* Divider */}
-      <div className="w-px h-6 bg-gray-300 dark:bg-gray-700" />
+      <div className="w-px h-6 bg-slate-300 dark:bg-slate-600" />
 
       {/* Zoom Controls */}
       <Button
@@ -65,7 +65,7 @@ export function ZoomControls({ onUndo, onRedo, canUndo, canRedo }: ZoomControlsP
       </Button>
       <button
         onClick={handleResetZoom}
-        className="px-2 py-1 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors min-w-[3rem] text-center"
+        className="px-3 py-1.5 text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors min-w-[3.5rem] text-center"
       >
         {zoom}%
       </button>

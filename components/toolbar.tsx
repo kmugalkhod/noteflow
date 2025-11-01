@@ -36,7 +36,7 @@ const tools = [
 
 export function Toolbar({ tool, setTool }: ToolbarProps) {
   return (
-    <div className="flex items-center gap-1 bg-white dark:bg-gray-900 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 p-1">
+    <div className="flex items-center gap-1 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 p-1.5 ring-1 ring-black/5">
       {tools.map((t, index) => {
         const Icon = t.icon
         const isActive = tool === t.id
@@ -44,20 +44,20 @@ export function Toolbar({ tool, setTool }: ToolbarProps) {
         return (
           <div key={t.id} className="flex items-center">
             {(index === 2 || index === 6 || index === 10) && (
-              <div className="w-px h-6 bg-gray-300 dark:bg-gray-700 mx-1" />
+              <div className="w-px h-6 bg-slate-300 dark:bg-slate-600 mx-1.5" />
             )}
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setTool(t.id)}
               title={`${t.label} (${t.shortcut})`}
-              className={`h-9 w-9 p-0 rounded-md transition-all ${
+              className={`h-10 w-10 p-0 rounded-lg transition-all ${
                 isActive
-                  ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
-                  : "hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
+                  ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 shadow-sm ring-1 ring-blue-200 dark:ring-blue-800"
+                  : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
               }`}
             >
-              <Icon className="h-4 w-4" />
+              <Icon className="h-4.5 w-4.5" />
             </Button>
           </div>
         )
