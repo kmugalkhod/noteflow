@@ -43,6 +43,7 @@ function DrawingCanvasComponent({ noteId, drawingId, readonly = false }: Drawing
   const [currentDrawingId, setCurrentDrawingId] = useState(drawingId);
   const [isInitialized, setIsInitialized] = useState(false);
   const [isSidebarManuallyToggled, setIsSidebarManuallyToggled] = useState(false);
+  const [textInput, setTextInput] = useState<{ x: number; y: number; value: string } | null>(null);
 
   // Convex integration
   const isStandalone = !noteId;
@@ -252,6 +253,31 @@ function DrawingCanvasComponent({ noteId, drawingId, readonly = false }: Drawing
     saveState();
   };
 
+  const renderText = (text: string, x: number, y: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const fontConfig = getFontConfig();
+    ctx.font = fontConfig.font;
+    ctx.fillStyle = color;
+    ctx.textAlign = textAlign;
+    ctx.textBaseline = "top";
+
+    // Draw text
+    ctx.fillText(text, x, y);
+    saveState();
+  };
+
+  const handleTextSubmit = () => {
+    if (textInput && textInput.value.trim()) {
+      renderText(textInput.value, textInput.x, textInput.y);
+    }
+    setTextInput(null);
+  };
+
   // Hand-drawn line with slight randomness
   const drawRoughLine = (ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number) => {
     const segments = Math.floor(Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2)) / 5);
@@ -269,6 +295,28 @@ function DrawingCanvasComponent({ noteId, drawingId, readonly = false }: Drawing
     ctx.stroke();
   };
 
+  // Get font configuration for text rendering
+  const getFontConfig = () => {
+    const fontSizeMap = {
+      small: 16,
+      medium: 20,
+      large: 28,
+      xlarge: 36,
+    };
+
+    const fontFamilyMap = {
+      handwritten: "'Virgil', 'Segoe Print', 'Comic Sans MS', cursive",
+      normal: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      code: "'Cascadia Code', 'Fira Code', 'Courier New', monospace",
+      serif: "Georgia, 'Times New Roman', serif",
+    };
+
+    const size = fontSizeMap[fontSize];
+    const family = fontFamilyMap[fontFamily];
+
+    return { size, family, font: `${size}px ${family}` };
+  };
+
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (readonly) return;
 
@@ -278,6 +326,12 @@ function DrawingCanvasComponent({ noteId, drawingId, readonly = false }: Drawing
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
+
+    // Handle text tool
+    if (tool === "text") {
+      setTextInput({ x, y, value: "" });
+      return;
+    }
 
     setIsDrawing(true);
     setStartPos({ x, y });
@@ -509,6 +563,45 @@ function DrawingCanvasComponent({ noteId, drawingId, readonly = false }: Drawing
         <div className="absolute top-20 right-8 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl px-4 py-2.5 rounded-full border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-700 dark:text-slate-300 shadow-xl z-40 flex items-center gap-2">
           <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></div>
           Saving...
+        </div>
+      )}
+
+      {/* Text Input Overlay */}
+      {textInput && (
+        <div
+          className="absolute z-50"
+          style={{
+            left: `${textInput.x + (canvasRef.current?.getBoundingClientRect().left || 0)}px`,
+            top: `${textInput.y + (canvasRef.current?.getBoundingClientRect().top || 0)}px`,
+          }}
+        >
+          <div className="relative">
+            <input
+              type="text"
+              autoFocus
+              value={textInput.value}
+              onChange={(e) => setTextInput({ ...textInput, value: e.target.value })}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleTextSubmit();
+                } else if (e.key === "Escape") {
+                  e.preventDefault();
+                  setTextInput(null);
+                }
+              }}
+              onBlur={handleTextSubmit}
+              placeholder="Type text..."
+              className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-2 border-blue-500 rounded-lg px-3 py-2 text-slate-900 dark:text-slate-100 shadow-xl outline-none min-w-[200px]"
+              style={{
+                font: getFontConfig().font,
+                textAlign: textAlign,
+              }}
+            />
+            <div className="absolute -bottom-8 left-0 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap bg-white/90 dark:bg-slate-900/90 px-2 py-1 rounded shadow">
+              Press Enter to add • Esc to cancel
+            </div>
+          </div>
         </div>
       )}
     </div>
