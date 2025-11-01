@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useCallback, useRef } from 'react';
+import { forwardRef, useCallback, useRef, memo } from 'react';
 import type { Block } from '../../types/blocks';
 import { TextBlock } from '../blocks/TextBlock';
 import { HeadingBlock } from '../blocks/HeadingBlock';
@@ -42,7 +42,7 @@ export interface EditorBlockProps {
   listNumber?: number;
 }
 
-export const EditorBlock = forwardRef<HTMLDivElement, EditorBlockProps>(({
+const EditorBlockComponent = forwardRef<HTMLDivElement, EditorBlockProps>(({
   block,
   isFocused,
   placeholder,
@@ -330,4 +330,27 @@ export const EditorBlock = forwardRef<HTMLDivElement, EditorBlockProps>(({
   );
 });
 
-EditorBlock.displayName = 'EditorBlock';
+EditorBlockComponent.displayName = 'EditorBlockComponent';
+
+// Memoize EditorBlock to prevent unnecessary re-renders
+// Only re-render when block content, focus state, or props change
+export const EditorBlock = memo(EditorBlockComponent, (prevProps, nextProps) => {
+  // Deep comparison for block object (content, type, properties, id)
+  const blockEqual =
+    prevProps.block.id === nextProps.block.id &&
+    prevProps.block.type === nextProps.block.type &&
+    prevProps.block.content === nextProps.block.content &&
+    JSON.stringify(prevProps.block.properties) === JSON.stringify(nextProps.block.properties);
+
+  // Compare other critical props
+  const propsEqual =
+    prevProps.isFocused === nextProps.isFocused &&
+    prevProps.placeholder === nextProps.placeholder &&
+    prevProps.canMoveUp === nextProps.canMoveUp &&
+    prevProps.canMoveDown === nextProps.canMoveDown &&
+    prevProps.canDelete === nextProps.canDelete &&
+    prevProps.listNumber === nextProps.listNumber;
+
+  // Return true to skip re-render (props are equal)
+  return blockEqual && propsEqual;
+});
