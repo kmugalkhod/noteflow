@@ -70,11 +70,12 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // Show empty state only when on workspace, stories, shared, or blog pages (not viewing a specific note, trash, or favorites)
+  // Show empty state only when on workspace, stories, shared, or blog pages (not viewing a specific note, trash, favorites, or drawing)
   const isViewingNote = pathname?.startsWith("/note/");
   const isTrashPage = pathname === "/trash";
   const isFavoritesPage = pathname === "/favorites";
-  const showEmptyState = !isViewingNote && !isTrashPage && !isFavoritesPage;
+  const isDrawingPage = pathname === "/drawing";
+  const showEmptyState = !isViewingNote && !isTrashPage && !isFavoritesPage && !isDrawingPage;
 
   // Resize handlers
   const handleResizeStart = (e: React.MouseEvent) => {
@@ -108,8 +109,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         {/* Column 1: Folders Sidebar */}
         <FolderSidebar isCollapsed={isSidebarCollapsed} />
 
-        {/* Column 2: Notes List - Hide on trash and favorites pages */}
-        {!isTrashPage && !isFavoritesPage && (
+        {/* Column 2: Notes List - Hide on trash, favorites, and drawing pages */}
+        {!isTrashPage && !isFavoritesPage && !isDrawingPage && (
           <>
             <NotesList
               onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
@@ -128,8 +129,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
         {/* Column 3: Note Editor/Content */}
         <main className="flex-1 overflow-auto bg-editor-bg relative">
-          {/* Show notes panel button when collapsed - but not on trash or favorites pages */}
-          {isNotesPanelCollapsed && !isTrashPage && !isFavoritesPage && (
+          {/* Show notes panel button when collapsed - but not on trash, favorites, or drawing pages */}
+          {isNotesPanelCollapsed && !isTrashPage && !isFavoritesPage && !isDrawingPage && (
             <button
               onClick={() => setIsNotesPanelCollapsed(false)}
               className="fixed top-4 left-4 z-10 p-2 rounded-md bg-muted hover:bg-muted/80 transition-colors shadow-md"
