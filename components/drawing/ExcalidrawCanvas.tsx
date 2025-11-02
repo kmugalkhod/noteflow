@@ -97,10 +97,19 @@ export function ExcalidrawCanvas({
 
   // Convex integration
   const isStandalone = !noteId;
-  const drawing = useQuery(
-    isStandalone ? api.drawings.getStandaloneDrawing : api.drawings.getDrawingByNote,
-    isStandalone ? {} : { noteId: noteId! }
+
+  // Separate queries based on mode
+  const standaloneDrawing = useQuery(
+    api.drawings.getStandaloneDrawing,
+    isStandalone ? {} : "skip"
   );
+
+  const noteDrawing = useQuery(
+    api.drawings.getDrawingByNote,
+    !isStandalone && noteId ? { noteId } : "skip"
+  );
+
+  const drawing = isStandalone ? standaloneDrawing : noteDrawing;
 
   const createDrawing = useMutation(
     isStandalone ? api.drawings.createStandaloneDrawing : api.drawings.createDrawing
