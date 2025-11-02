@@ -158,7 +158,7 @@ export function ExcalidrawCanvas({
               excalidrawAPI.addFiles([{
                 id: fileId as FileId, // Type assertion for branded types
                 dataURL: fileData.dataURL as DataURL,
-                mimeType: fileData.mimeType || "image/png",
+                mimeType: (fileData.mimeType || "image/png") as "image/png",
                 created: fileData.created || Date.now(),
               }]);
             }
