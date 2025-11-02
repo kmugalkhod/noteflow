@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import dynamic from "next/dynamic";
 import "@excalidraw/excalidraw/index.css";
-import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types/types";
+import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
 import { DEBOUNCE_DELAY_MS } from "@/lib/constants";
 
 // Dynamically import Excalidraw to avoid SSR issues
