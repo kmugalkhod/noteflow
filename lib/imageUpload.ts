@@ -29,7 +29,7 @@ export async function uploadImageToConvex(
     fileName: string;
     fileSize: number;
     fileType: string;
-  }) => Promise<void>,
+  }) => Promise<unknown>,
   options: UploadImageOptions
 ): Promise<UploadImageResult> {
   const { file, noteId, onProgress } = options;
