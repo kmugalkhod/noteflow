@@ -129,11 +129,20 @@ export function ExcalidrawCanvas({
 
         // Load files if present with validation
         if (savedData.files && typeof savedData.files === "object") {
-          Object.entries(savedData.files).forEach(([fileId, fileData]: [string, any]) => {
+          Object.entries(savedData.files).forEach(([fileId, fileData]: [string, unknown]) => {
+            // Type guard to ensure fileData has expected structure
+            const isValidFileData = (data: unknown): data is { dataURL: string; mimeType?: string; created?: number } => {
+              return (
+                typeof data === "object" &&
+                data !== null &&
+                "dataURL" in data &&
+                typeof data.dataURL === "string"
+              );
+            };
+
             // Security: Validate file data structure and dataURL format
             if (
-              fileData?.dataURL &&
-              typeof fileData.dataURL === "string" &&
+              isValidFileData(fileData) &&
               fileData.dataURL.startsWith("data:image/")
             ) {
               excalidrawAPI.addFiles([{
@@ -159,7 +168,7 @@ export function ExcalidrawCanvas({
       hasLoadedRef.current = true;
       dispatch({ type: "INITIALIZE" });
     }
-  }, [drawing, state.excalidrawAPI]);
+  }, [drawing, state]);
 
   // Auto-save to Convex
   useEffect(() => {
@@ -196,14 +205,14 @@ export function ExcalidrawCanvas({
     };
 
     saveDrawing();
-  }, [debouncedDrawingData, readonly, state.isInitialized, state.currentDrawingId, noteId, isStandalone, createDrawing, updateDrawing]);
+  }, [debouncedDrawingData, readonly, state, noteId, isStandalone, createDrawing, updateDrawing]);
 
   // Handle changes in the canvas
-  const handleChange = useCallback((elements: readonly any[], appState: any, files: any) => {
+  const handleChange = useCallback((elements: readonly unknown[], appState: Record<string, unknown>, files: Record<string, unknown>) => {
     if (!state.isInitialized || readonly) return;
 
     // Security: Filter appState to only include whitelisted properties
-    const sanitizedAppState: Record<string, any> = {};
+    const sanitizedAppState: Record<string, unknown> = {};
     ALLOWED_APP_STATE_KEYS.forEach((key) => {
       if (appState[key] !== undefined) {
         sanitizedAppState[key] = appState[key];
