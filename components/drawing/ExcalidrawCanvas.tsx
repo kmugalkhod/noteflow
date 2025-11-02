@@ -94,6 +94,7 @@ export function ExcalidrawCanvas({
   });
 
   const hasLoadedRef = useRef(false);
+  const isInitializedRef = useRef(false);
   const [drawingData, setDrawingData] = useState<string | null>(null);
 
   // Convex integration
@@ -166,16 +167,19 @@ export function ExcalidrawCanvas({
         }
 
         hasLoadedRef.current = true;
+        isInitializedRef.current = true;
         dispatch({ type: "SET_DRAWING_ID", payload: drawing._id });
         dispatch({ type: "INITIALIZE" });
         // Removed verbose "Drawing loaded" toast - loading is expected behavior
       } catch (error) {
         console.error("Failed to load drawing:", error);
         toast.error("Failed to load drawing");
+        isInitializedRef.current = true;
         dispatch({ type: "INITIALIZE" });
       }
     } else if (!drawing && !hasLoadedRef.current) {
       hasLoadedRef.current = true;
+      isInitializedRef.current = true;
       dispatch({ type: "INITIALIZE" });
     }
   }, [drawing, state.excalidrawAPI]);
@@ -219,7 +223,7 @@ export function ExcalidrawCanvas({
 
   // Handle changes in the canvas
   const handleChange = useCallback((elements: readonly OrderedExcalidrawElement[], appState: AppState, files: BinaryFiles) => {
-    if (!state.isInitialized || readonly) return;
+    if (!isInitializedRef.current || readonly) return;
 
     // Security: Filter appState to only include whitelisted properties
     const sanitizedAppState: Record<string, unknown> = {};
@@ -236,7 +240,7 @@ export function ExcalidrawCanvas({
     };
 
     setDrawingData(JSON.stringify(drawingState));
-  }, [state.isInitialized, readonly]);
+  }, [readonly]);
 
   return (
     <div className="relative w-full h-full">
