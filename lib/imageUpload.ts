@@ -1,5 +1,3 @@
-import { FunctionReference } from "convex/server";
-import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 
 export interface UploadImageOptions {
@@ -24,8 +22,14 @@ export interface UploadImageResult {
  * @returns Upload result with storageId or error
  */
 export async function uploadImageToConvex(
-  generateUploadUrl: any,
-  saveFileMetadata: any,
+  generateUploadUrl: () => Promise<string>,
+  saveFileMetadata: (params: {
+    storageId: string;
+    noteId?: Id<"notes">;
+    fileName: string;
+    fileSize: number;
+    fileType: string;
+  }) => Promise<void>,
   options: UploadImageOptions
 ): Promise<UploadImageResult> {
   const { file, noteId, onProgress } = options;
