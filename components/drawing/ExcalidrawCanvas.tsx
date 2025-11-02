@@ -219,6 +219,8 @@ export function ExcalidrawCanvas({
     };
 
     saveDrawing();
+    // We intentionally only depend on specific state properties to avoid unnecessary saves
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedDrawingData, readonly, state.isInitialized, state.currentDrawingId, noteId, isStandalone, createDrawing, updateDrawing]);
 
   // Handle changes in the canvas
