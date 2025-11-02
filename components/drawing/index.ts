@@ -1,1 +1,1 @@
-export { DrawingCanvas } from './DrawingCanvas';
+export { ExcalidrawCanvas } from './ExcalidrawCanvas';

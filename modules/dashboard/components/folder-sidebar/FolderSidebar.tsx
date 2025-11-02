@@ -4,7 +4,7 @@ import { useRef } from "react";
 import { FolderTree, type FolderTreeRef } from "../folder-tree";
 import { CreateFolderButton } from "@/modules/folders/components";
 import { useNotesStore } from "../../store/useNotesStore";
-import { Folder, Trash2, Star, Pencil } from "lucide-react";
+import { Folder, Trash2, Star, Paintbrush } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useConvexUser } from "@/modules/shared/hooks/use-convex-user";
@@ -51,7 +51,7 @@ export function FolderSidebar({ isCollapsed = false }: FolderSidebarProps) {
   const isTrashSelected = pathname === "/trash";
   const isFavoritesSelected = pathname === "/favorites";
   const isDrawingSelected = pathname === "/drawing";
-  const isUncategorizedSelected = selectedFolderId === "all" && !isTrashSelected && !isFavoritesSelected;
+  const isUncategorizedSelected = selectedFolderId === "all" && !isTrashSelected && !isFavoritesSelected && !isDrawingSelected;
 
   // Get display name from user
   const displayName = user?.fullName || user?.firstName || user?.username || "User";
@@ -124,6 +124,23 @@ export function FolderSidebar({ isCollapsed = false }: FolderSidebarProps) {
           <span className="text-xs text-muted-foreground">{deletedNotesCount}</span>
         </button>
 
+        {/* Drawing */}
+        <button
+          onClick={() => router.push("/drawing")}
+          className={`
+            w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-sm mb-1
+            transition-colors
+            ${
+              isDrawingSelected
+                ? "bg-folder-selected-bg text-foreground font-medium"
+                : "text-sidebar-foreground hover:bg-folder-hover-bg"
+            }
+          `}
+        >
+          <Paintbrush className={`w-4 h-4 ${isDrawingSelected ? "text-blue-500" : "text-muted-foreground"}`} />
+          <span className="flex-1 text-left">Drawing</span>
+        </button>
+
         {/* Folders Section Header */}
         <div className="px-3 pt-4 pb-2">
           <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
@@ -142,25 +159,8 @@ export function FolderSidebar({ isCollapsed = false }: FolderSidebarProps) {
         </div>
       </nav>
 
-      {/* Footer - Drawing, User & Theme */}
-      <div className="border-t border-sidebar-border p-3 space-y-2">
-        {/* Drawing Button */}
-        <button
-          onClick={() => router.push("/drawing")}
-          className={`
-            w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm
-            transition-colors
-            ${
-              isDrawingSelected
-                ? "bg-folder-selected-bg text-foreground font-medium"
-                : "text-sidebar-foreground hover:bg-folder-hover-bg"
-            }
-          `}
-        >
-          <Pencil className={`w-4 h-4 ${isDrawingSelected ? "text-folder-icon-color" : "text-muted-foreground"}`} />
-          <span className="flex-1 text-left">Drawing</span>
-        </button>
-
+      {/* Footer - User & Theme */}
+      <div className="border-t border-sidebar-border p-3">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 flex-1 min-w-0">
             <UserButton
