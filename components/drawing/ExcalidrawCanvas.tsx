@@ -10,8 +10,8 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import dynamic from "next/dynamic";
 import "@excalidraw/excalidraw/index.css";
-import type { ExcalidrawImperativeAPI, DataURL } from "@excalidraw/excalidraw/types";
-import type { FileId } from "@excalidraw/excalidraw/element/types";
+import type { ExcalidrawImperativeAPI, DataURL, AppState, BinaryFiles } from "@excalidraw/excalidraw/types";
+import type { FileId, OrderedExcalidrawElement } from "@excalidraw/excalidraw/element/types";
 import { DEBOUNCE_DELAY_MS } from "@/lib/constants";
 
 // Dynamically import Excalidraw to avoid SSR issues
@@ -218,14 +218,14 @@ export function ExcalidrawCanvas({
   }, [debouncedDrawingData, readonly, state, noteId, isStandalone, createDrawing, updateDrawing]);
 
   // Handle changes in the canvas
-  const handleChange = useCallback((elements: readonly unknown[], appState: Record<string, unknown>, files: Record<string, unknown>) => {
+  const handleChange = useCallback((elements: readonly OrderedExcalidrawElement[], appState: AppState, files: BinaryFiles) => {
     if (!state.isInitialized || readonly) return;
 
     // Security: Filter appState to only include whitelisted properties
     const sanitizedAppState: Record<string, unknown> = {};
     ALLOWED_APP_STATE_KEYS.forEach((key) => {
-      if (appState[key] !== undefined) {
-        sanitizedAppState[key] = appState[key];
+      if (appState[key as keyof AppState] !== undefined) {
+        sanitizedAppState[key] = appState[key as keyof AppState];
       }
     });
 
