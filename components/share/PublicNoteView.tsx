@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useMutation } from "convex/react";
+import Image from "next/image";
 import { api } from "@/convex/_generated/api";
 import { PublicNoteData } from "@/modules/types/share";
 import { deserializeBlocks, type Block } from "@/modules/notes/types/blocks";
@@ -120,11 +121,12 @@ function BlockRenderer({ block }: { block: Block }) {
       );
     case "image":
       return (
-        <figure className="my-6">
-          <img
+        <figure className="my-6 relative w-full h-96">
+          <Image
             src={block.properties?.url || ""}
             alt={block.properties?.alt || ""}
-            className="w-full rounded-lg shadow-sm"
+            fill
+            className="object-contain rounded-lg shadow-sm"
           />
           {block.properties?.caption && (
             <figcaption className="text-center text-sm text-muted-foreground mt-2">
@@ -161,11 +163,12 @@ export function PublicNoteView({ note, shareId }: PublicNoteViewProps) {
       <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Cover Image */}
         {coverImage && (
-          <div className="mb-10 -mx-4 sm:mx-0">
-            <img
+          <div className="mb-10 -mx-4 sm:mx-0 relative w-full h-72 sm:h-96">
+            <Image
               src={coverImage}
               alt=""
-              className="w-full h-72 sm:h-96 object-cover sm:rounded-xl shadow-lg"
+              fill
+              className="object-cover sm:rounded-xl shadow-lg"
             />
           </div>
         )}

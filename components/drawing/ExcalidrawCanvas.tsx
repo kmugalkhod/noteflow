@@ -10,7 +10,8 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import dynamic from "next/dynamic";
 import "@excalidraw/excalidraw/index.css";
-import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types/types";
+import type { ExcalidrawImperativeAPI, DataURL, AppState, BinaryFiles } from "@excalidraw/excalidraw/types";
+import type { FileId, OrderedExcalidrawElement } from "@excalidraw/excalidraw/element/types";
 import { DEBOUNCE_DELAY_MS } from "@/lib/constants";
 
 // Dynamically import Excalidraw to avoid SSR issues
@@ -93,14 +94,24 @@ export function ExcalidrawCanvas({
   });
 
   const hasLoadedRef = useRef(false);
+  const isInitializedRef = useRef(false);
   const [drawingData, setDrawingData] = useState<string | null>(null);
 
   // Convex integration
   const isStandalone = !noteId;
-  const drawing = useQuery(
-    isStandalone ? api.drawings.getStandaloneDrawing : api.drawings.getDrawingByNote,
-    isStandalone ? {} : { noteId: noteId! }
+
+  // Separate queries based on mode
+  const standaloneDrawing = useQuery(
+    api.drawings.getStandaloneDrawing,
+    isStandalone ? {} : "skip"
   );
+
+  const noteDrawing = useQuery(
+    api.drawings.getDrawingByNote,
+    !isStandalone && noteId ? { noteId } : "skip"
+  );
+
+  const drawing = isStandalone ? standaloneDrawing : noteDrawing;
 
   const createDrawing = useMutation(
     isStandalone ? api.drawings.createStandaloneDrawing : api.drawings.createDrawing
@@ -111,7 +122,7 @@ export function ExcalidrawCanvas({
 
   // Load existing drawing data
   useEffect(() => {
-    const { excalidrawAPI } = state;
+    const excalidrawAPI = state.excalidrawAPI;
 
     if (drawing?.data && !hasLoadedRef.current && excalidrawAPI) {
       try {
@@ -129,17 +140,26 @@ export function ExcalidrawCanvas({
 
         // Load files if present with validation
         if (savedData.files && typeof savedData.files === "object") {
-          Object.entries(savedData.files).forEach(([fileId, fileData]: [string, any]) => {
+          Object.entries(savedData.files).forEach(([fileId, fileData]: [string, unknown]) => {
+            // Type guard to ensure fileData has expected structure
+            const isValidFileData = (data: unknown): data is { dataURL: string; mimeType?: string; created?: number } => {
+              return (
+                typeof data === "object" &&
+                data !== null &&
+                "dataURL" in data &&
+                typeof data.dataURL === "string"
+              );
+            };
+
             // Security: Validate file data structure and dataURL format
             if (
-              fileData?.dataURL &&
-              typeof fileData.dataURL === "string" &&
+              isValidFileData(fileData) &&
               fileData.dataURL.startsWith("data:image/")
             ) {
               excalidrawAPI.addFiles([{
-                id: fileId,
-                dataURL: fileData.dataURL,
-                mimeType: fileData.mimeType || "image/png",
+                id: fileId as FileId, // Type assertion for branded types
+                dataURL: fileData.dataURL as DataURL,
+                mimeType: (fileData.mimeType || "image/png") as "image/png",
                 created: fileData.created || Date.now(),
               }]);
             }
@@ -147,16 +167,19 @@ export function ExcalidrawCanvas({
         }
 
         hasLoadedRef.current = true;
+        isInitializedRef.current = true;
         dispatch({ type: "SET_DRAWING_ID", payload: drawing._id });
         dispatch({ type: "INITIALIZE" });
         // Removed verbose "Drawing loaded" toast - loading is expected behavior
       } catch (error) {
         console.error("Failed to load drawing:", error);
         toast.error("Failed to load drawing");
+        isInitializedRef.current = true;
         dispatch({ type: "INITIALIZE" });
       }
     } else if (!drawing && !hasLoadedRef.current) {
       hasLoadedRef.current = true;
+      isInitializedRef.current = true;
       dispatch({ type: "INITIALIZE" });
     }
   }, [drawing, state.excalidrawAPI]);
@@ -196,17 +219,19 @@ export function ExcalidrawCanvas({
     };
 
     saveDrawing();
+    // We intentionally only depend on specific state properties to avoid unnecessary saves
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedDrawingData, readonly, state.isInitialized, state.currentDrawingId, noteId, isStandalone, createDrawing, updateDrawing]);
 
   // Handle changes in the canvas
-  const handleChange = useCallback((elements: readonly any[], appState: any, files: any) => {
-    if (!state.isInitialized || readonly) return;
+  const handleChange = useCallback((elements: readonly OrderedExcalidrawElement[], appState: AppState, files: BinaryFiles) => {
+    if (!isInitializedRef.current || readonly) return;
 
     // Security: Filter appState to only include whitelisted properties
-    const sanitizedAppState: Record<string, any> = {};
+    const sanitizedAppState: Record<string, unknown> = {};
     ALLOWED_APP_STATE_KEYS.forEach((key) => {
-      if (appState[key] !== undefined) {
-        sanitizedAppState[key] = appState[key];
+      if (appState[key as keyof AppState] !== undefined) {
+        sanitizedAppState[key] = appState[key as keyof AppState];
       }
     });
 
@@ -217,7 +242,7 @@ export function ExcalidrawCanvas({
     };
 
     setDrawingData(JSON.stringify(drawingState));
-  }, [state.isInitialized, readonly]);
+  }, [readonly]);
 
   return (
     <div className="relative w-full h-full">

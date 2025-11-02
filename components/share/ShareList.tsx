@@ -33,7 +33,7 @@ export function ShareList() {
           <FileText className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
           <h2 className="text-2xl font-semibold mb-2">No Shared Notes</h2>
           <p className="text-muted-foreground mb-6">
-            You haven't shared any notes yet. Create a share link from any note
+            You haven&apos;t shared any notes yet. Create a share link from any note
             to see it here.
           </p>
         </div>
