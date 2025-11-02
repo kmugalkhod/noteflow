@@ -53,6 +53,7 @@ interface EditorState {
   isInitialized: boolean;
   isLoading: boolean;
   showSavedIndicator: boolean;
+  retryTrigger: number; // Counter to trigger retry without modifying user data
   // Last saved values for change detection
   lastSavedTitle: string;
   lastSavedContent: string;
@@ -73,7 +74,8 @@ type EditorAction =
   | { type: "START_SAVING" }
   | { type: "SAVE_SUCCESS"; payload: { title: string; content: string; blocks: string | undefined; coverImage: string | undefined } }
   | { type: "SAVE_ERROR" }
-  | { type: "HIDE_SAVED_INDICATOR" };
+  | { type: "HIDE_SAVED_INDICATOR" }
+  | { type: "RETRY_SAVE" }; // New action for retry without touching user data
 
 function editorReducer(state: EditorState, action: EditorAction): EditorState {
   switch (action.type) {
@@ -124,6 +126,9 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
       return { ...state, isSaving: false };
     case "HIDE_SAVED_INDICATOR":
       return { ...state, showSavedIndicator: false };
+    case "RETRY_SAVE":
+      // Increment counter to trigger save effect without modifying user data
+      return { ...state, retryTrigger: state.retryTrigger + 1 };
     default:
       return state;
   }
@@ -151,6 +156,7 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
     isInitialized: false,
     isLoading: true,
     showSavedIndicator: false,
+    retryTrigger: 0,
     lastSavedTitle: "",
     lastSavedContent: "",
     lastSavedBlocks: undefined,
@@ -285,14 +291,13 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
           console.error("Failed to save:", error);
           const errorMessage = error instanceof Error ? error.message : "Your changes could not be saved. Please try again.";
           toast.error("Failed to save note", errorMessage, () => {
-            // Retry save by triggering a state update
-            dispatch({ type: "SET_TITLE", payload: title + " " });
-            setTimeout(() => dispatch({ type: "SET_TITLE", payload: title }), 0);
+            // Retry save by incrementing retry trigger - doesn't modify user data
+            dispatch({ type: "RETRY_SAVE" });
           });
           dispatch({ type: "SAVE_ERROR" });
         });
     }
-  }, [debouncedTitle, debouncedContent, debouncedBlocks, debouncedCoverImage, state, noteId, updateNote]);
+  }, [debouncedTitle, debouncedContent, debouncedBlocks, debouncedCoverImage, state, noteId, updateNote, state.retryTrigger]);
 
   // Handle rich editor changes
   const handleRichEditorChange = (newBlocks: Block[], serialized: string) => {
