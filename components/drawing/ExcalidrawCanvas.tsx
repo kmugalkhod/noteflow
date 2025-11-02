@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useReducer } from "react";
+import { useCallback, useEffect, useRef, useReducer, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -93,7 +93,7 @@ export function ExcalidrawCanvas({
   });
 
   const hasLoadedRef = useRef(false);
-  const drawingDataRef = useRef<string | null>(null);
+  const [drawingData, setDrawingData] = useState<string | null>(null);
 
   // Convex integration
   const isStandalone = !noteId;
@@ -107,7 +107,7 @@ export function ExcalidrawCanvas({
   );
   const updateDrawing = useMutation(api.drawings.updateDrawing);
 
-  const debouncedDrawingData = useDebounce(drawingDataRef.current, DEBOUNCE_DELAY_MS);
+  const debouncedDrawingData = useDebounce(drawingData, DEBOUNCE_DELAY_MS);
 
   // Load existing drawing data
   useEffect(() => {
@@ -216,7 +216,7 @@ export function ExcalidrawCanvas({
       files: files || {},
     };
 
-    drawingDataRef.current = JSON.stringify(drawingState);
+    setDrawingData(JSON.stringify(drawingState));
   }, [state.isInitialized, readonly]);
 
   return (
