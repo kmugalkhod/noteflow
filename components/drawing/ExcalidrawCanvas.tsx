@@ -155,7 +155,7 @@ export function ExcalidrawCanvas({
               fileData.dataURL.startsWith("data:image/")
             ) {
               excalidrawAPI.addFiles([{
-                id: fileId,
+                id: fileId as any, // Excalidraw FileId brand type
                 dataURL: fileData.dataURL,
                 mimeType: fileData.mimeType || "image/png",
                 created: fileData.created || Date.now(),
