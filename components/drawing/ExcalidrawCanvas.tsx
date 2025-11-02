@@ -11,6 +11,7 @@ import { ArrowLeft } from "lucide-react";
 import dynamic from "next/dynamic";
 import "@excalidraw/excalidraw/index.css";
 import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
+import type { FileId } from "@excalidraw/excalidraw/element/types";
 import { DEBOUNCE_DELAY_MS } from "@/lib/constants";
 
 // Dynamically import Excalidraw to avoid SSR issues
@@ -155,7 +156,7 @@ export function ExcalidrawCanvas({
               fileData.dataURL.startsWith("data:image/")
             ) {
               excalidrawAPI.addFiles([{
-                id: fileId as any, // Excalidraw FileId brand type
+                id: fileId as FileId, // Type assertion for branded FileId type
                 dataURL: fileData.dataURL,
                 mimeType: fileData.mimeType || "image/png",
                 created: fileData.created || Date.now(),
