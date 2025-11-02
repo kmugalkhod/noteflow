@@ -121,7 +121,7 @@ export function ExcalidrawCanvas({
 
   // Load existing drawing data
   useEffect(() => {
-    const { excalidrawAPI } = state;
+    const excalidrawAPI = state.excalidrawAPI;
 
     if (drawing?.data && !hasLoadedRef.current && excalidrawAPI) {
       try {
@@ -178,7 +178,7 @@ export function ExcalidrawCanvas({
       hasLoadedRef.current = true;
       dispatch({ type: "INITIALIZE" });
     }
-  }, [drawing, state]);
+  }, [drawing, state.excalidrawAPI]);
 
   // Auto-save to Convex
   useEffect(() => {
@@ -215,7 +215,7 @@ export function ExcalidrawCanvas({
     };
 
     saveDrawing();
-  }, [debouncedDrawingData, readonly, state, noteId, isStandalone, createDrawing, updateDrawing]);
+  }, [debouncedDrawingData, readonly, state.isInitialized, state.currentDrawingId, noteId, isStandalone, createDrawing, updateDrawing]);
 
   // Handle changes in the canvas
   const handleChange = useCallback((elements: readonly OrderedExcalidrawElement[], appState: AppState, files: BinaryFiles) => {
