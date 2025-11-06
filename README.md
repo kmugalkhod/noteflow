@@ -582,6 +582,54 @@ npm run dev
 
 ---
 
+## 🔐 Security & Privacy
+
+NoteFlow takes your privacy seriously. Your notes are private and secure.
+
+### Our Security Model
+
+- **Trust-Based Security**: Like Notion, Evernote, and Google Docs
+- **User Isolation**: Your notes are separated from other users at the database level
+- **Audit Logging**: Every admin access to user data is logged and traceable
+- **Encryption in Transit**: All data transmitted over HTTPS/TLS
+- **Row-Level Security**: Database queries automatically filter by your user ID
+
+### What We Don't Do
+
+- ❌ We do NOT read your notes
+- ❌ We do NOT sell or share your data
+- ❌ We do NOT use your notes for AI training
+- ❌ We do NOT access data without permission
+
+### Admin Access Policy
+
+Admin access to user data only occurs in these situations:
+- ✅ With your permission (support requests)
+- ✅ For debugging (with audit log)
+- ✅ Legal requirements (court orders)
+- ✅ Security incidents (preventing breaches)
+
+Every instance of admin access is logged with:
+- Who accessed (admin name/email)
+- When (exact timestamp)
+- Why (reason for access)
+- What (action performed)
+
+### Your Rights
+
+- 📥 **Export your data** anytime (JSON/Markdown formats)
+- 🗑️ **Delete your account** and all data (permanent after 30 days)
+- 📋 **Request audit logs** to see who accessed your data
+- 🔒 **Full GDPR compliance** with data protection rights
+
+### Documentation
+
+- **For Users**: [Privacy Policy](/privacy) | [Terms](/terms) | [Security](/security)
+- **For Developers**: [SECURITY.md](SECURITY.md) - Technical security details
+- **For Admins**: [docs/ADMIN_ACCESS_POLICY.md](docs/ADMIN_ACCESS_POLICY.md) - Internal policy
+
+---
+
 ## 🤝 Contributing
 
 This is a personal project, but suggestions and feedback are welcome!

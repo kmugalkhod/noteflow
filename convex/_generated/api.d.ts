@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as adminAudit from "../adminAudit.js";
 import type * as auth from "../auth.js";
 import type * as cron from "../cron.js";
 import type * as drawings from "../drawings.js";
@@ -36,6 +37,7 @@ import type {
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  adminAudit: typeof adminAudit;
   auth: typeof auth;
   cron: typeof cron;
   drawings: typeof drawings;

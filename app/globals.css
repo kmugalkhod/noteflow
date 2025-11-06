@@ -6,7 +6,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -49,124 +49,124 @@
 }
 
 :root {
-  --radius: 0.625rem;
+  --radius: 0.5rem;
 
-  /* Apple Notes Light Mode */
-  --background: #f5f5f5; /* Light gray background */
-  --foreground: #000000; /* Black text */
+  /* Stitch Light Mode - Clean and Minimal */
+  --background: #fafafa; /* Soft off-white background */
+  --foreground: #18181b; /* Near-black text for better readability */
 
   --card: #ffffff; /* White cards */
-  --card-foreground: #000000;
+  --card-foreground: #18181b;
 
   --popover: #ffffff;
-  --popover-foreground: #000000;
+  --popover-foreground: #18181b;
 
-  /* Apple Blue for primary actions */
-  --primary: #007aff; /* Apple blue */
-  --primary-foreground: #ffffff; /* White text on blue */
+  /* Primary accent color */
+  --primary: #3b82f6; /* Modern blue */
+  --primary-foreground: #ffffff;
 
-  --secondary: #e5e5ea; /* Light gray */
-  --secondary-foreground: #000000;
+  --secondary: #f4f4f5; /* Very light gray */
+  --secondary-foreground: #18181b;
 
-  --muted: #f2f2f7; /* Muted light gray */
-  --muted-foreground: #6e6e73; /* Gray text - enhanced contrast */
+  --muted: #f4f4f5; /* Muted background */
+  --muted-foreground: #71717a; /* Medium gray text */
 
-  --accent: #e8e8ed; /* Light accent */
-  --accent-foreground: #000000;
+  --accent: #f4f4f5; /* Accent background */
+  --accent-foreground: #18181b;
 
-  --destructive: #ff3b30; /* Apple red for destructive actions */
+  --destructive: #ef4444; /* Modern red */
 
-  --border: #d1d1d6; /* Light border */
-  --input: #ffffff; /* White input background */
-  --ring: #007aff; /* Apple blue focus ring */
+  --border: #e5e7eb; /* Light subtle border */
+  --input: #ffffff;
+  --ring: #3b82f6;
 
-  --chart-1: #007aff; /* Blue */
-  --chart-2: #34c759; /* Green */
-  --chart-3: #ff9500; /* Orange */
-  --chart-4: #af52de; /* Purple */
-  --chart-5: #ff2d55; /* Pink */
+  --chart-1: #3b82f6; /* Blue */
+  --chart-2: #10b981; /* Green */
+  --chart-3: #f59e0b; /* Orange */
+  --chart-4: #8b5cf6; /* Purple */
+  --chart-5: #ec4899; /* Pink */
 
-  /* Sidebar styling - Apple Notes left panel */
-  --sidebar: #f2f2f7; /* Light gray sidebar */
-  --sidebar-foreground: #000000;
-  --sidebar-primary: #007aff; /* Apple blue for active items */
+  /* Sidebar styling - Stitch left panel */
+  --sidebar: #fafafa; /* Clean off-white */
+  --sidebar-foreground: #18181b;
+  --sidebar-primary: #3b82f6;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #e8e8ed; /* Light hover state */
-  --sidebar-accent-foreground: #000000;
-  --sidebar-border: #d1d1d6;
-  --sidebar-ring: #007aff;
+  --sidebar-accent: #f4f4f5; /* Subtle hover */
+  --sidebar-accent-foreground: #18181b;
+  --sidebar-border: #e5e7eb;
+  --sidebar-ring: #3b82f6;
 
   /* Folder-specific colors (Light Mode) */
-  --folder-selected-bg: #e0e0e5; /* Subtle gray highlight - professional */
-  --folder-icon-color: #007aff; /* Apple blue icon for selected */
-  --folder-hover-bg: #e8e8ed; /* Light hover */
+  --folder-selected-bg: #eff6ff; /* Soft blue tint for selected */
+  --folder-icon-color: #3b82f6; /* Blue icon for selected */
+  --folder-hover-bg: #f4f4f5; /* Light gray hover */
 
-  /* Apple Notes Layout Colors (Light Mode) */
-  --notes-list-bg: #ffffff;  /* Middle panel background */
-  --editor-bg: #ffffff;  /* Right panel/editor background */
+  /* Three-Column Layout Colors (Light Mode) */
+  --notes-list-bg: #ffffff;  /* Clean white middle panel */
+  --editor-bg: #ffffff;  /* Clean white editor */
 }
 
 .dark {
-  /* Apple Notes Dark Mode */
+  /* Stitch Dark Mode - Rich and Professional */
 
-  /* Backgrounds - Apple's dark surfaces */
-  --background: #1e1e1e;  /* Sidebar/Main background */
-  --foreground: #ffffff;  /* White text */
+  /* Backgrounds - Stitch dark surfaces */
+  --background: #1a1a1a;  /* Very dark sidebar background */
+  --foreground: #e4e4e7;  /* Soft white text (less harsh than pure white) */
 
-  --card: #2c2c2e;  /* Elevated surfaces */
-  --card-foreground: #ffffff;
+  --card: #27272a;  /* Elevated surfaces */
+  --card-foreground: #e4e4e7;
 
-  --popover: #2c2c2e;  /* Dropdown/menu background */
-  --popover-foreground: #ffffff;
+  --popover: #27272a;  /* Dropdown/menu background */
+  --popover-foreground: #e4e4e7;
 
-  /* Primary Interactive Color - Apple blue */
-  --primary: #007aff;  /* Apple blue */
-  --primary-foreground: #ffffff;
+  /* Primary Interactive Color */
+  --primary: #60a5fa;  /* Lighter blue for dark mode */
+  --primary-foreground: #09090b;
 
   /* Secondary & Muted */
-  --secondary: #3a3a3c;  /* Secondary background */
-  --secondary-foreground: #ffffff;
+  --secondary: #27272a;  /* Secondary background */
+  --secondary-foreground: #e4e4e7;
 
-  --muted: #2c2c2e;  /* Subtle backgrounds */
-  --muted-foreground: #98989d;  /* Gray text - enhanced contrast for dark mode */
+  --muted: #27272a;  /* Subtle backgrounds */
+  --muted-foreground: #a1a1aa;  /* Lighter gray text for better contrast */
 
   /* Accent - Hover and active states */
-  --accent: #2c2c2e;  /* Hover backgrounds */
-  --accent-foreground: #ffffff;
+  --accent: #27272a;  /* Hover backgrounds */
+  --accent-foreground: #e4e4e7;
 
   /* Destructive Actions */
-  --destructive: #ff3b30;  /* Apple red */
+  --destructive: #f87171;  /* Softer red for dark mode */
 
   /* Borders */
-  --border: #38383a;  /* Subtle borders */
-  --input: #2c2c2e;  /* Input backgrounds */
-  --ring: #007aff;  /* Apple blue focus ring */
+  --border: #3f3f46;  /* Subtle borders */
+  --input: #27272a;  /* Input backgrounds */
+  --ring: #60a5fa;  /* Blue focus ring */
 
-  /* Charts - Apple's color palette */
-  --chart-1: #007aff;  /* Blue */
-  --chart-2: #34c759;  /* Green */
-  --chart-3: #ff9500;  /* Orange */
-  --chart-4: #af52de;  /* Purple */
-  --chart-5: #ff2d55;  /* Pink */
+  /* Charts - Vibrant colors for dark mode */
+  --chart-1: #60a5fa;  /* Blue */
+  --chart-2: #34d399;  /* Green */
+  --chart-3: #fbbf24;  /* Orange */
+  --chart-4: #a78bfa;  /* Purple */
+  --chart-5: #f472b6;  /* Pink */
 
-  /* Sidebar - Apple Notes left panel (dark) */
-  --sidebar: #454545;  /* Dark sidebar - neutral gray (hex fallback for oklch(0.269 0 0)) */
-  --sidebar-foreground: #ffffff;  /* White folder names */
-  --sidebar-primary: #007aff;  /* Apple blue for active items */
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #2c2c2e;  /* Hover state */
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #38383a;
-  --sidebar-ring: #007aff;
+  /* Sidebar - Stitch left panel (dark) */
+  --sidebar: #1a1a1a;  /* Very dark sidebar */
+  --sidebar-foreground: #e4e4e7;  /* Soft white folder names */
+  --sidebar-primary: #60a5fa;  /* Blue for active items */
+  --sidebar-primary-foreground: #09090b;
+  --sidebar-accent: #27272a;  /* Hover state */
+  --sidebar-accent-foreground: #e4e4e7;
+  --sidebar-border: #3f3f46;
+  --sidebar-ring: #60a5fa;
 
   /* Folder-specific colors (Dark Mode) */
-  --folder-selected-bg: #3a3a3c;  /* Subtle dark gray highlight - professional */
-  --folder-icon-color: #007aff;  /* Apple blue icon for selected */
-  --folder-hover-bg: #2c2c2e;  /* Dark hover */
+  --folder-selected-bg: #3a4556;  /* Blue-tinted dark highlight (Stitch style) */
+  --folder-icon-color: #60a5fa;  /* Blue icon for selected */
+  --folder-hover-bg: #27272a;  /* Subtle hover */
 
-  /* Apple Notes Three-Column Layout Colors (Dark Mode) */
-  --notes-list-bg: #242426;  /* Middle panel background - DARKEST panel */
-  --editor-bg: #1c1c1e;  /* Right panel/editor background - very dark */
+  /* Three-Column Layout Colors (Dark Mode) - Stitch-inspired */
+  --notes-list-bg: #242424;  /* Medium-dark notes panel */
+  --editor-bg: #2d2d2d;  /* Slightly lighter editor for contrast */
 }
 
 @layer base {
@@ -175,17 +175,19 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Typography improvements */
+  /* Typography improvements - Inter specific */
   h1, h2, h3, h4, h5, h6 {
-    font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "ss01" 1;
+    font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
     letter-spacing: -0.02em;
     line-height: 1.2;
+    font-weight: 700;
   }
 
   p {

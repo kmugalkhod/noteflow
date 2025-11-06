@@ -51,9 +51,22 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd/Ctrl + K - Command palette
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         setCommandPaletteOpen(true);
+      }
+
+      // Cmd/Ctrl + B - Toggle folder sidebar
+      if (e.key === "b" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setIsSidebarCollapsed(prev => !prev);
+      }
+
+      // Cmd/Ctrl + \ - Toggle notes panel
+      if (e.key === "\\" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setIsNotesPanelCollapsed(prev => !prev);
       }
     };
 
@@ -101,7 +114,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen bg-background overflow-hidden">
         {/* Column 1: Folders Sidebar */}
-        <FolderSidebar isCollapsed={isSidebarCollapsed} />
+        <FolderSidebar
+          isCollapsed={isSidebarCollapsed}
+          onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        />
 
         {/* Column 2: Notes List - Hide on trash, favorites, and drawing pages */}
         {!isTrashPage && !isFavoritesPage && !isDrawingPage && (
@@ -123,30 +139,57 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
         {/* Column 3: Note Editor/Content */}
         <main className="flex-1 overflow-auto bg-editor-bg relative">
-          {/* Show notes panel button when collapsed - but not on trash, favorites, or drawing pages */}
-          {isNotesPanelCollapsed && !isTrashPage && !isFavoritesPage && !isDrawingPage && (
-            <button
-              onClick={() => setIsNotesPanelCollapsed(false)}
-              className="fixed top-4 left-4 z-10 p-2 rounded-md bg-muted hover:bg-muted/80 transition-colors shadow-md"
-              title="Show notes panel"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-foreground"
+          {/* Toggle buttons when sidebars are collapsed */}
+          <div className="fixed top-4 left-4 z-10 flex gap-2">
+            {/* Show folder sidebar button when collapsed */}
+            {isSidebarCollapsed && (
+              <button
+                onClick={() => setIsSidebarCollapsed(false)}
+                className="p-2 rounded-md bg-muted hover:bg-muted/80 transition-colors shadow-md"
+                title="Show folder sidebar (Cmd+B)"
               >
-                <rect width="18" height="18" x="3" y="3" rx="2" />
-                <path d="M9 3v18" />
-              </svg>
-            </button>
-          )}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-foreground"
+                >
+                  <path d="M3 3h7l1 3h9a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" />
+                </svg>
+              </button>
+            )}
+
+            {/* Show notes panel button when collapsed - but not on trash, favorites, or drawing pages */}
+            {isNotesPanelCollapsed && !isTrashPage && !isFavoritesPage && !isDrawingPage && (
+              <button
+                onClick={() => setIsNotesPanelCollapsed(false)}
+                className="p-2 rounded-md bg-muted hover:bg-muted/80 transition-colors shadow-md"
+                title="Show notes panel (Cmd+\)"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-foreground"
+                >
+                  <rect width="18" height="18" x="3" y="3" rx="2" />
+                  <path d="M9 3v18" />
+                </svg>
+              </button>
+            )}
+          </div>
           {showEmptyState ? <EmptyEditorState /> : children}
         </main>
 

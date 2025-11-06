@@ -175,4 +175,20 @@ export default defineSchema({
     .index("by_note", ["noteId"]) // Query drawings by note
     .index("by_user", ["userId"]) // Query user's drawings
     .index("by_note_user", ["noteId", "userId"]), // Composite for auth checks
+
+  // Admin Audit Log table (for tracking admin access to user data)
+  adminAuditLog: defineTable({
+    adminEmail: v.string(), // Email of admin who accessed data
+    adminClerkId: v.string(), // Clerk ID of admin
+    targetUserId: v.string(), // User whose data was accessed
+    action: v.string(), // "viewed_notes", "exported_data", "debugged_issue", etc.
+    reason: v.string(), // "Support ticket #123", "Bug investigation", etc.
+    metadata: v.optional(v.any()), // Additional context
+    timestamp: v.number(),
+    ipAddress: v.optional(v.string()), // IP address of admin access
+  })
+    .index("by_target_user", ["targetUserId"]) // User can see who accessed their data
+    .index("by_admin", ["adminClerkId"]) // See all actions by specific admin
+    .index("by_timestamp", ["timestamp"]) // Sort by time
+    .index("by_action", ["action"]), // Filter by action type
 });

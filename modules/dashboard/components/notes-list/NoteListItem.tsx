@@ -48,12 +48,12 @@ export const NoteListItem = memo(function NoteListItem({
         }
       }}
       className={`
-        relative px-5 py-3.5 cursor-pointer border-b border-border/50
+        relative px-3 py-3 cursor-pointer rounded-lg border
         transition-all duration-200 ease-out group
         ${
           isSelected
-            ? "bg-secondary shadow-sm"
-            : "hover:bg-secondary/50 hover:shadow-sm hover:scale-[1.01]"
+            ? "bg-primary/5 border-primary/20 shadow-sm"
+            : "bg-card border-border/50 hover:border-border hover:shadow-sm"
         }
       `}
     >
@@ -64,22 +64,26 @@ export const NoteListItem = memo(function NoteListItem({
             e.stopPropagation();
             onFavorite();
           }}
-          className="absolute top-3 right-3 p-1 rounded hover:bg-accent transition-colors"
+          className="absolute top-2.5 right-2.5 p-1 rounded hover:bg-accent transition-colors"
           title={isFavorite ? "Remove from Favorites" : "Add to Favorites"}
         >
-          <Star className={`w-4 h-4 ${isFavorite ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/60 group-hover:text-muted-foreground"}`} />
+          <Star className={`w-3.5 h-3.5 ${isFavorite ? "fill-yellow-500 text-yellow-500" : "text-muted-foreground/50 group-hover:text-muted-foreground"}`} />
         </button>
       )}
 
-      <h3 className={`text-sm font-semibold mb-1.5 truncate leading-snug pr-8 ${isSelected ? "text-foreground" : "text-foreground"}`}>
+      <h3 className={`text-[13px] font-semibold mb-1 truncate leading-tight pr-7 ${isSelected ? "text-foreground" : "text-foreground"}`}>
         {title || "Untitled"}
       </h3>
-      <p className="text-xs text-muted-foreground mb-1.5 line-clamp-2 leading-relaxed">
+      <p className="text-[12px] text-muted-foreground mb-2 line-clamp-2 leading-relaxed">
         {preview || "No content"}
       </p>
-      <time className="text-xs text-muted-foreground font-medium">
-        {timeAgo}
-      </time>
+      <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+        <time className="font-normal">
+          Last modified {timeAgo}
+        </time>
+        {/* Word count placeholder - can be added later */}
+        {/* <span>450 words</span> */}
+      </div>
     </div>
   );
 });

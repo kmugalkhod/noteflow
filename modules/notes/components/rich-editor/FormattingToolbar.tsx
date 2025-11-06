@@ -56,49 +56,49 @@ export function FormattingToolbar({
   activeFormats,
 }: FormattingToolbarProps) {
   return (
-    <div className="flex items-center gap-1 p-2 bg-background border border-border rounded-lg shadow-lg animate-scale-in">
+    <div className="flex items-center gap-0.5 px-1.5 py-1.5 bg-background border border-border/50 rounded-lg shadow-sm animate-scale-in">
       {/* Text Formatting */}
       <Button
         variant={activeFormats.bold ? "default" : "ghost"}
         size="sm"
         onClick={() => onFormat('bold')}
-        className="h-8 w-8 p-0 transition-transform hover:scale-110"
+        className="h-7 w-7 p-0 transition-colors"
         title="Bold (Cmd+B)"
       >
-        <Bold className="h-4 w-4" />
+        <Bold className="h-3.5 w-3.5" />
       </Button>
 
       <Button
         variant={activeFormats.italic ? "default" : "ghost"}
         size="sm"
         onClick={() => onFormat('italic')}
-        className="h-8 w-8 p-0 transition-transform hover:scale-110"
+        className="h-7 w-7 p-0 transition-colors"
         title="Italic (Cmd+I)"
       >
-        <Italic className="h-4 w-4" />
+        <Italic className="h-3.5 w-3.5" />
       </Button>
 
       <Button
         variant={activeFormats.underline ? "default" : "ghost"}
         size="sm"
         onClick={() => onFormat('underline')}
-        className="h-8 w-8 p-0 transition-transform hover:scale-110"
+        className="h-7 w-7 p-0 transition-colors"
         title="Underline (Cmd+U)"
       >
-        <Underline className="h-4 w-4" />
+        <Underline className="h-3.5 w-3.5" />
       </Button>
 
       <Button
         variant={activeFormats.strikethrough ? "default" : "ghost"}
         size="sm"
         onClick={() => onFormat('strikethrough')}
-        className="h-8 w-8 p-0 transition-transform hover:scale-110"
+        className="h-7 w-7 p-0 transition-colors"
         title="Strikethrough"
       >
-        <Strikethrough className="h-4 w-4" />
+        <Strikethrough className="h-3.5 w-3.5" />
       </Button>
 
-      <div className="w-px h-6 bg-border mx-1" />
+      <div className="w-px h-5 bg-border/50 mx-1" />
 
       {/* Text Color */}
       <DropdownMenu>
@@ -106,16 +106,16 @@ export function FormattingToolbar({
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 w-8 p-0"
+            className="h-7 w-7 p-0 transition-colors"
             title="Text Color"
           >
-            <Palette className="h-4 w-4" />
+            <Palette className="h-3.5 w-3.5" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-48">
           <div className="p-2">
-            <p className="text-xs font-medium mb-2">Text Color</p>
-            <div className="grid grid-cols-5 gap-1">
+            <p className="text-xs font-medium mb-2 text-muted-foreground">Text Color</p>
+            <div className="grid grid-cols-5 gap-1.5">
               {TEXT_COLORS.map((color) => (
                 <button
                   key={color.value}
@@ -123,10 +123,10 @@ export function FormattingToolbar({
                     console.log('Color button clicked:', color.value);
                     onColorChange(color.value);
                   }}
-                  className="w-8 h-8 rounded border-2 border-border hover:scale-110 transition-transform"
+                  className="w-7 h-7 rounded border border-border/50 hover:border-border transition-colors"
                   style={{
                     backgroundColor: color.hex === '#000000' ? 'transparent' : color.hex,
-                    border: color.hex === '#000000' ? '2px solid currentColor' : undefined
+                    border: color.hex === '#000000' ? '1px solid currentColor' : undefined
                   }}
                   title={color.name}
                 />
@@ -142,21 +142,21 @@ export function FormattingToolbar({
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 w-8 p-0"
+            className="h-7 w-7 p-0 transition-colors"
             title="Highlight"
           >
-            <Highlighter className="h-4 w-4" />
+            <Highlighter className="h-3.5 w-3.5" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-40">
           <div className="p-2">
-            <p className="text-xs font-medium mb-2">Highlight</p>
-            <div className="grid grid-cols-4 gap-1">
+            <p className="text-xs font-medium mb-2 text-muted-foreground">Highlight</p>
+            <div className="grid grid-cols-4 gap-1.5">
               {HIGHLIGHT_COLORS.map((color) => (
                 <button
                   key={color.value}
                   onClick={() => onHighlightChange(color.value)}
-                  className="w-8 h-8 rounded border-2 border-border hover:scale-110 transition-transform"
+                  className="w-7 h-7 rounded border border-border/50 hover:border-border transition-colors"
                   style={{ backgroundColor: color.hex }}
                   title={color.name}
                 />
@@ -166,7 +166,7 @@ export function FormattingToolbar({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <div className="w-px h-6 bg-border mx-1" />
+      <div className="w-px h-5 bg-border/50 mx-1" />
 
       {/* Font Size */}
       <DropdownMenu>
@@ -174,29 +174,29 @@ export function FormattingToolbar({
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 px-2"
+            className="h-7 px-2 transition-colors"
             title="Font Size"
           >
-            <Type className="h-4 w-4 mr-1" />
+            <Type className="h-3.5 w-3.5 mr-1" />
             <span className="text-xs">Size</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
           <button
             onClick={() => onFontSizeChange('small')}
-            className="w-full px-3 py-2 text-left hover:bg-accent text-sm"
+            className="w-full px-3 py-1.5 text-left hover:bg-accent text-sm transition-colors rounded-sm"
           >
             Small
           </button>
           <button
             onClick={() => onFontSizeChange('normal')}
-            className="w-full px-3 py-2 text-left hover:bg-accent"
+            className="w-full px-3 py-1.5 text-left hover:bg-accent transition-colors rounded-sm"
           >
             Normal
           </button>
           <button
             onClick={() => onFontSizeChange('large')}
-            className="w-full px-3 py-2 text-left hover:bg-accent text-lg"
+            className="w-full px-3 py-1.5 text-left hover:bg-accent text-lg transition-colors rounded-sm"
           >
             Large
           </button>

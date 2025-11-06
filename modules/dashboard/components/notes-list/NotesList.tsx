@@ -1,16 +1,17 @@
 "use client";
 
-import { useMemo, useRef, useEffect } from "react";
+import { useMemo, useRef, useEffect, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useConvexUser } from "@/modules/shared/hooks/use-convex-user";
 import { useNotesStore } from "../../store/useNotesStore";
 import { NotesListToolbar } from "./NotesListToolbar";
 import { NoteListItem } from "./NoteListItem";
-import { Loader2, FileText } from "lucide-react";
+import { Loader2, FileText, Trash2, PanelRightClose } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/modules/shared/lib/toast";
 import { NoteListSkeleton } from "@/modules/shared/components";
+import { DeleteNoteDialog } from "@/modules/notes/components/delete-note-dialog";
 
 interface NotesListProps {
   onToggleSidebar?: () => void;
@@ -29,6 +30,9 @@ export function NotesList({
 }: NotesListProps) {
   const convexUser = useConvexUser();
   const router = useRouter();
+
+  // State for delete dialog
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   // Zustand store - select only what we need
   const selectedFolderId = useNotesStore((state) => state.selectedFolderId);
@@ -93,6 +97,7 @@ export function NotesList({
     try {
       await deleteNote({ noteId: selectedNoteId });
       setSelectedNoteId(null);
+      setShowDeleteDialog(false); // Close dialog
       // Navigate to workspace to clear the editor view
       router.push("/workspace");
       toast.success(`"${noteTitle}" moved to trash`);
@@ -118,19 +123,57 @@ export function NotesList({
       className="h-screen bg-notes-list-bg border-r border-sidebar-border flex flex-col flex-shrink-0 transition-all"
       style={{ width: `${width}px` }}
     >
-      {/* Toolbar */}
-      <NotesListToolbar
-        onNewNote={handleNewNote}
-        canDelete={!!selectedNoteId}
-        onDelete={handleDeleteNote}
-        onToggleSidebar={onToggleSidebar}
-        isSidebarCollapsed={isSidebarCollapsed}
-        onToggleNotesPanel={onToggleNotesPanel}
-        selectedNoteTitle={displayTitle}
-      />
+      {/* Header - Stitch Style */}
+      <div className="px-4 py-4 border-b border-sidebar-border">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-xl font-semibold text-foreground">All Notes</h2>
+          <div className="flex items-center gap-1.5">
+            {/* Delete button - only show when note is selected */}
+            {selectedNoteId && (
+              <button
+                onClick={() => setShowDeleteDialog(true)}
+                className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-accent transition-colors"
+                title="Delete note"
+              >
+                <Trash2 className="w-3.5 h-3.5 text-muted-foreground hover:text-destructive transition-colors" />
+              </button>
+            )}
+            <button
+              onClick={handleNewNote}
+              className="w-7 h-7 flex items-center justify-center rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+              title="New note"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+            </button>
+            {/* Collapse button */}
+            {onToggleNotesPanel && (
+              <button
+                onClick={onToggleNotesPanel}
+                className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-accent transition-colors"
+                title="Hide notes panel (Cmd+\)"
+              >
+                <PanelRightClose className="w-3.5 h-3.5 text-muted-foreground" />
+              </button>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span>{sortedNotes.length} {sortedNotes.length === 1 ? 'note' : 'notes'}</span>
+          </div>
+          <button className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+            Sort
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+        </div>
+      </div>
 
       {/* Notes List */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto px-2 py-2">
         {!convexUser || notes === undefined ? (
           <NoteListSkeleton count={6} />
         ) : sortedNotes.length === 0 ? (
@@ -142,7 +185,7 @@ export function NotesList({
             </p>
           </div>
         ) : (
-          <div key={selectedFolderId?.toString() || 'all'} className="animate-fade-in">
+          <div key={selectedFolderId?.toString() || 'all'} className="animate-fade-in space-y-1">
             {sortedNotes.map((note) => (
               <NoteListItem
                 key={note._id}
@@ -165,6 +208,14 @@ export function NotesList({
           </div>
         )}
       </div>
+
+      {/* Delete Note Dialog */}
+      <DeleteNoteDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        onConfirm={handleDeleteNote}
+        noteTitle={displayTitle}
+      />
     </div>
   );
 }

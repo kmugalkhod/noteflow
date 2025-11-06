@@ -92,9 +92,9 @@ export const FolderTreeItem = memo(function FolderTreeItem({
     }
   };
 
-  // Calculate indentation (each level adds 16px)
+  // Calculate indentation (each level adds 14px for tighter nesting)
   const indentStyle = {
-    paddingLeft: `${depth * 16 + 12}px`,
+    paddingLeft: `${depth * 14 + 10}px`,
   };
 
   return (
@@ -108,14 +108,14 @@ export const FolderTreeItem = memo(function FolderTreeItem({
         <div
           onClick={handleFolderClick}
           className={conditionalAnimationClass(
-            `flex items-center gap-2 py-1.5 pr-3 rounded-md cursor-pointer group transition-colors duration-200 ${
+            `flex items-center gap-2 py-2 pr-2.5 rounded-lg cursor-pointer group transition-all duration-200 ${
               isSelected
-                ? "bg-folder-selected-bg text-foreground font-medium"
+                ? "bg-folder-selected-bg text-foreground font-medium shadow-sm"
                 : "hover:bg-folder-hover-bg text-sidebar-foreground"
             } ${isDragging ? "opacity-50 scale-95" : ""} ${
-              isDragOver ? "bg-primary/10 border-2 border-primary/30 border-dashed" : ""
+              isDragOver ? "bg-primary/10 border-2 border-primary/30 border-dashed rounded-lg" : ""
             }`,
-            !isSelected && !isDragging ? "hover:translate-x-0.5" : ""
+            !isSelected && !isDragging ? "" : ""
           )}
           style={indentStyle}
           draggable={!!dragHandlers}
@@ -171,9 +171,9 @@ export const FolderTreeItem = memo(function FolderTreeItem({
             aria-label={isExpanded ? "Collapse folder" : "Expand folder"}
           >
             {isExpanded ? (
-              <ChevronDown className="w-4 h-4" />
+              <ChevronDown className="w-[16px] h-[16px]" />
             ) : (
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-[16px] h-[16px]" />
             )}
           </button>
         ) : (
@@ -181,25 +181,27 @@ export const FolderTreeItem = memo(function FolderTreeItem({
         )}
 
           {/* Folder Content */}
-          <div className="flex items-center gap-2.5 flex-1 min-w-0 text-sm">
+          <div className="flex items-center gap-2 flex-1 min-w-0 text-[13px]">
             <Folder
               className={`
-                w-4 h-4 flex-shrink-0 transition-all duration-200
-                ${isSelected ? "text-folder-icon-color scale-110" : "group-hover:scale-105"}
+                w-[18px] h-[18px] flex-shrink-0 transition-all duration-200
+                ${isSelected ? "text-folder-icon-color" : ""}
               `}
               style={folder.color && !isSelected ? { color: folder.color } : undefined}
             />
             <span className="flex-1 truncate">{folder.name}</span>
-            <span className="text-xs text-muted-foreground flex-shrink-0">
-              {folder.noteCount}
-            </span>
+            {folder.noteCount > 0 && (
+              <span className="text-[11px] text-muted-foreground flex-shrink-0 font-normal">
+                {folder.noteCount}
+              </span>
+            )}
           </div>
         </div>
       </FolderContextMenu>
 
       {/* Recursively render child folders */}
       {isExpanded && childFolders && childFolders.length > 0 && (
-        <div className="space-y-1">
+        <div className="space-y-0.5 mt-0.5">
           {childFolders.map((childFolder) => (
             <FolderTreeItem
               key={childFolder._id}

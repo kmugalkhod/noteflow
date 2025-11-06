@@ -6,6 +6,7 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { Input } from "@/components/ui/input";
 import { Check, Loader2, FileText, Sparkles, Download } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 import { useDebounce } from "@/modules/shared/hooks/use-debounce";
 import { useNotesStore } from "@/modules/dashboard/store/useNotesStore";
 import { FolderSelector } from "../folder-selector";
@@ -339,6 +340,17 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
     }
   };
 
+  // Calculate word count (must be before conditional returns per Rules of Hooks)
+  const wordCount = useMemo(() => {
+    const text = state.isRichMode ? blocksToText(state.blocks) : state.content;
+    return text.trim().split(/\s+/).filter(word => word.length > 0).length;
+  }, [state.blocks, state.content, state.isRichMode]);
+
+  // Format last saved time (must be before conditional returns per Rules of Hooks)
+  const lastSavedText = state.lastSaved
+    ? `Last saved ${formatDistanceToNow(state.lastSaved, { addSuffix: true })}`
+    : null;
+
   // Show skeleton loader while fetching with smooth fade-in
   if (state.isLoading) {
     return (
@@ -376,18 +388,37 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
 
   return (
     <div className="h-full flex flex-col bg-editor-bg animate-fade-in">
-      {/* Action Buttons - Above Cover */}
-      <div className="flex justify-end gap-2 px-8 pt-4 pb-2">
-        <ShareButton noteId={noteId} noteTitle={shareButtonTitle} />
-        <Button
-          onClick={handleExport}
-          variant="outline"
-          size="sm"
-          className="gap-2 shadow-sm"
-        >
-          <Download className="w-4 h-4" />
-          Export as Markdown
-        </Button>
+      {/* Stitch-Style Header */}
+      <div className="border-b border-border/50 px-6 py-3.5">
+        <div className="flex items-center justify-between max-w-5xl mx-auto">
+          {/* Title and Metadata */}
+          <div className="flex-1 min-w-0 mr-4">
+            <h1 className="text-xl font-semibold text-foreground truncate mb-1">
+              {state.title || "Untitled"}
+            </h1>
+            <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+              {lastSavedText && (
+                <span>{lastSavedText}</span>
+              )}
+              <span className="text-muted-foreground/50">|</span>
+              <span>{wordCount} {wordCount === 1 ? 'word' : 'words'}</span>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2">
+            <ShareButton noteId={noteId} noteTitle={shareButtonTitle} />
+            <Button
+              onClick={handleExport}
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 h-8 px-3 text-xs"
+            >
+              <Download className="w-3.5 h-3.5" />
+              Export
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* Cover Image */}
@@ -399,7 +430,7 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
         editable={true}
       />
 
-      {/* Minimal Editor - Apple Notes Style with Rich Editing */}
+      {/* Minimal Editor - Stitch Style with Rich Editing */}
       <div className="flex-1 overflow-auto px-8 py-12 w-full max-w-4xl mx-auto">
         <textarea
           value={state.title}
