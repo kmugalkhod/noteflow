@@ -298,7 +298,7 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
           dispatch({ type: "SAVE_ERROR" });
         });
     }
-  }, [debouncedTitle, debouncedContent, debouncedBlocks, debouncedCoverImage, state, noteId, updateNote, state.retryTrigger]);
+  }, [debouncedTitle, debouncedContent, debouncedBlocks, debouncedCoverImage, state.isInitialized, state.isRichMode, state.title, state.content, state.blocks, state.lastSavedTitle, state.lastSavedContent, state.lastSavedBlocks, state.lastSavedCoverImage, state.retryTrigger, noteId, updateNote]);
 
   // Handle rich editor changes
   const handleRichEditorChange = (newBlocks: Block[], serialized: string) => {
