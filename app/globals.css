@@ -6,33 +6,33 @@
   --radius: 0.5rem;
 
   /* Stitch Light Mode - Clean and Minimal */
-  --background: #fafafa; /* Soft off-white background */
-  --foreground: #18181b; /* Near-black text for better readability */
+  --background: 0 0% 98%; /* Soft off-white background */
+  --foreground: 240 6% 10%; /* Near-black text for better readability */
 
-  --card: #ffffff; /* White cards */
-  --card-foreground: #18181b;
+  --card: 0 0% 100%; /* White cards */
+  --card-foreground: 240 6% 10%;
 
-  --popover: #ffffff;
-  --popover-foreground: #18181b;
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 6% 10%;
 
   /* Primary accent color */
-  --primary: #3b82f6; /* Modern blue */
-  --primary-foreground: #ffffff;
+  --primary: 217 91% 60%; /* Modern blue */
+  --primary-foreground: 0 0% 100%;
 
-  --secondary: #f4f4f5; /* Very light gray */
-  --secondary-foreground: #18181b;
+  --secondary: 240 5% 96%; /* Very light gray */
+  --secondary-foreground: 240 6% 10%;
 
-  --muted: #f4f4f5; /* Muted background */
-  --muted-foreground: #71717a; /* Medium gray text */
+  --muted: 240 5% 96%; /* Muted background */
+  --muted-foreground: 240 4% 46%; /* Medium gray text */
 
-  --accent: #f4f4f5; /* Accent background */
-  --accent-foreground: #18181b;
+  --accent: 240 5% 96%; /* Accent background */
+  --accent-foreground: 240 6% 10%;
 
-  --destructive: #ef4444; /* Modern red */
+  --destructive: 0 84% 60%; /* Modern red */
 
-  --border: #e5e7eb; /* Light subtle border */
-  --input: #ffffff;
-  --ring: #3b82f6;
+  --border: 220 13% 91%; /* Light subtle border */
+  --input: 0 0% 100%;
+  --ring: 217 91% 60%;
 
   --chart-1: #3b82f6; /* Blue */
   --chart-2: #10b981; /* Green */
@@ -41,60 +41,60 @@
   --chart-5: #ec4899; /* Pink */
 
   /* Sidebar styling - Stitch left panel */
-  --sidebar: #fafafa; /* Clean off-white */
-  --sidebar-foreground: #18181b;
-  --sidebar-primary: #3b82f6;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f4f4f5; /* Subtle hover */
-  --sidebar-accent-foreground: #18181b;
-  --sidebar-border: #e5e7eb;
-  --sidebar-ring: #3b82f6;
+  --sidebar: 0 0% 98%; /* Clean off-white */
+  --sidebar-foreground: 240 6% 10%;
+  --sidebar-primary: 217 91% 60%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 240 5% 96%; /* Subtle hover */
+  --sidebar-accent-foreground: 240 6% 10%;
+  --sidebar-border: 220 13% 91%;
+  --sidebar-ring: 217 91% 60%;
 
   /* Folder-specific colors (Light Mode) */
-  --folder-selected-bg: #eff6ff; /* Soft blue tint for selected */
-  --folder-icon-color: #3b82f6; /* Blue icon for selected */
-  --folder-hover-bg: #f4f4f5; /* Light gray hover */
+  --folder-selected-bg: 214 100% 97%; /* Soft blue tint for selected */
+  --folder-icon-color: 217 91% 60%; /* Blue icon for selected */
+  --folder-hover-bg: 240 5% 96%; /* Light gray hover */
 
   /* Three-Column Layout Colors (Light Mode) */
-  --notes-list-bg: #ffffff;  /* Clean white middle panel */
-  --editor-bg: #ffffff;  /* Clean white editor */
+  --notes-list-bg: 0 0% 100%;  /* Clean white middle panel */
+  --editor-bg: 0 0% 100%;  /* Clean white editor */
 }
 
 .dark {
   /* Stitch Dark Mode - Rich and Professional */
 
   /* Backgrounds - Stitch dark surfaces */
-  --background: #1a1a1a;  /* Very dark sidebar background */
-  --foreground: #e4e4e7;  /* Soft white text (less harsh than pure white) */
+  --background: 0 0% 10%;  /* Very dark sidebar background */
+  --foreground: 240 5% 90%;  /* Soft white text (less harsh than pure white) */
 
-  --card: #27272a;  /* Elevated surfaces */
-  --card-foreground: #e4e4e7;
+  --card: 240 4% 16%;  /* Elevated surfaces */
+  --card-foreground: 240 5% 90%;
 
-  --popover: #27272a;  /* Dropdown/menu background */
-  --popover-foreground: #e4e4e7;
+  --popover: 240 4% 16%;  /* Dropdown/menu background */
+  --popover-foreground: 240 5% 90%;
 
   /* Primary Interactive Color */
-  --primary: #60a5fa;  /* Lighter blue for dark mode */
-  --primary-foreground: #09090b;
+  --primary: 213 94% 68%;  /* Lighter blue for dark mode */
+  --primary-foreground: 240 10% 4%;
 
   /* Secondary & Muted */
-  --secondary: #27272a;  /* Secondary background */
-  --secondary-foreground: #e4e4e7;
+  --secondary: 240 4% 16%;  /* Secondary background */
+  --secondary-foreground: 240 5% 90%;
 
-  --muted: #27272a;  /* Subtle backgrounds */
-  --muted-foreground: #a1a1aa;  /* Lighter gray text for better contrast */
+  --muted: 240 4% 16%;  /* Subtle backgrounds */
+  --muted-foreground: 240 5% 65%;  /* Lighter gray text for better contrast */
 
   /* Accent - Hover and active states */
-  --accent: #27272a;  /* Hover backgrounds */
-  --accent-foreground: #e4e4e7;
+  --accent: 240 4% 16%;  /* Hover backgrounds */
+  --accent-foreground: 240 5% 90%;
 
   /* Destructive Actions */
-  --destructive: #f87171;  /* Softer red for dark mode */
+  --destructive: 0 72% 70%;  /* Softer red for dark mode */
 
   /* Borders */
-  --border: #3f3f46;  /* Subtle borders */
-  --input: #27272a;  /* Input backgrounds */
-  --ring: #60a5fa;  /* Blue focus ring */
+  --border: 240 4% 25%;  /* Subtle borders */
+  --input: 240 4% 16%;  /* Input backgrounds */
+  --ring: 213 94% 68%;  /* Blue focus ring */
 
   /* Charts - Vibrant colors for dark mode */
   --chart-1: #60a5fa;  /* Blue */
@@ -104,23 +104,23 @@
   --chart-5: #f472b6;  /* Pink */
 
   /* Sidebar - Stitch left panel (dark) */
-  --sidebar: #1a1a1a;  /* Very dark sidebar */
-  --sidebar-foreground: #e4e4e7;  /* Soft white folder names */
-  --sidebar-primary: #60a5fa;  /* Blue for active items */
-  --sidebar-primary-foreground: #09090b;
-  --sidebar-accent: #27272a;  /* Hover state */
-  --sidebar-accent-foreground: #e4e4e7;
-  --sidebar-border: #3f3f46;
-  --sidebar-ring: #60a5fa;
+  --sidebar: 0 0% 10%;  /* Very dark sidebar */
+  --sidebar-foreground: 240 5% 90%;  /* Soft white folder names */
+  --sidebar-primary: 213 94% 68%;  /* Blue for active items */
+  --sidebar-primary-foreground: 240 10% 4%;
+  --sidebar-accent: 240 4% 16%;  /* Hover state */
+  --sidebar-accent-foreground: 240 5% 90%;
+  --sidebar-border: 240 4% 25%;
+  --sidebar-ring: 213 94% 68%;
 
   /* Folder-specific colors (Dark Mode) */
-  --folder-selected-bg: #3a4556;  /* Blue-tinted dark highlight (Stitch style) */
-  --folder-icon-color: #60a5fa;  /* Blue icon for selected */
-  --folder-hover-bg: #27272a;  /* Subtle hover */
+  --folder-selected-bg: 217 33% 30%;  /* Blue-tinted dark highlight (Stitch style) */
+  --folder-icon-color: 213 94% 68%;  /* Blue icon for selected */
+  --folder-hover-bg: 240 4% 16%;  /* Subtle hover */
 
   /* Three-Column Layout Colors (Dark Mode) - Stitch-inspired */
-  --notes-list-bg: #242424;  /* Medium-dark notes panel */
-  --editor-bg: #2d2d2d;  /* Slightly lighter editor for contrast */
+  --notes-list-bg: 0 0% 14%;  /* Medium-dark notes panel */
+  --editor-bg: 0 0% 18%;  /* Slightly lighter editor for contrast */
 }
 
 @layer base {
