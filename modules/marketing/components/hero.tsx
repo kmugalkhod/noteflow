@@ -1,6 +1,5 @@
 "use client";
 
-import { SignInButton, SignedOut } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { Sparkles, ArrowRight } from "lucide-react";
 
@@ -45,19 +44,18 @@ export function Hero() {
 
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in">
-          <SignedOut>
-            <SignInButton mode="modal">
-              <button className="group inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-primary-foreground bg-primary rounded-xl hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl hover:scale-105">
-                Get Started Free
-                <ArrowRight className="ml-2 w-5 h-5 transition-transform group-hover:translate-x-1" />
-              </button>
-            </SignInButton>
-          </SignedOut>
           <button
-            onClick={() => router.push("/workspace")}
+            onClick={() => router.push("/register")}
+            className="group inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-primary-foreground bg-primary rounded-xl hover:bg-primary/90 transition-all shadow-lg hover:shadow-xl hover:scale-105"
+          >
+            Get Started Free
+            <ArrowRight className="ml-2 w-5 h-5 transition-transform group-hover:translate-x-1" />
+          </button>
+          <button
+            onClick={() => router.push("/login")}
             className="inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-foreground bg-card border border-border rounded-xl hover:bg-accent transition-all shadow-sm hover:shadow-md"
           >
-            View Demo
+            Sign In
           </button>
         </div>
 

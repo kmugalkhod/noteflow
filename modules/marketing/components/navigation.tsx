@@ -56,24 +56,26 @@ export function Navigation() {
           {/* Auth Buttons */}
           <div className="flex items-center gap-3">
             <SignedOut>
-              <SignInButton mode="modal">
-                <button className="hidden sm:inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-foreground hover:text-foreground/80 transition-colors">
-                  Sign In
-                </button>
-              </SignInButton>
-              <SignInButton mode="modal">
-                <button className="inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold text-primary-foreground bg-primary rounded-lg hover:bg-primary/90 transition-all shadow-sm hover:shadow-md">
-                  Get Started
-                </button>
-              </SignInButton>
+              <Link
+                href="/login"
+                className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-foreground hover:text-foreground/80 transition-colors"
+              >
+                Sign In
+              </Link>
+              <Link
+                href="/register"
+                className="inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold text-primary-foreground bg-primary rounded-lg hover:bg-primary/90 transition-all shadow-sm hover:shadow-md"
+              >
+                Get Started
+              </Link>
             </SignedOut>
             <SignedIn>
-              <button
-                onClick={() => router.push("/workspace")}
-                className="hidden sm:inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-foreground hover:text-foreground/80 transition-colors"
+              <Link
+                href="/workspace"
+                className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-foreground hover:text-foreground/80 transition-colors"
               >
                 Dashboard
-              </button>
+              </Link>
               <UserButton
                 appearance={{
                   elements: {
