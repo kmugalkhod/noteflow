@@ -28,7 +28,7 @@ export function ThemeProvider({
   storageKey = "noteflow-ui-theme",
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(
+  const [theme, setThemeState] = useState<Theme>(
     () => {
       if (typeof window !== "undefined") {
         return (localStorage?.getItem(storageKey) as Theme) || defaultTheme;
@@ -61,7 +61,7 @@ export function ThemeProvider({
       if (typeof window !== "undefined") {
         localStorage?.setItem(storageKey, theme);
       }
-      setTheme(theme);
+      setThemeState(theme);
     },
   };
 
