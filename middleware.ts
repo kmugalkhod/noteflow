@@ -24,11 +24,12 @@ export default clerkMiddleware(async (auth, req) => {
     // Content-Security-Policy: Prevent XSS attacks (Production only)
     const cspHeader = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://*.clerk.accounts.dev https://*.convex.cloud https://*.clerk.com",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://*.clerk.accounts.dev https://*.convex.cloud https://*.clerk.com https://clerk.noteflow.co.in",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com data:",
-      "img-src 'self' data: blob: https://*.convex.cloud https://img.clerk.com https://*.clerk.com",
-      "connect-src 'self' https://*.clerk.accounts.dev https://*.convex.cloud https://*.clerk.com wss://*.convex.cloud wss://*.clerk.com",
+      "img-src 'self' data: blob: https://*.convex.cloud https://img.clerk.com https://*.clerk.com https://clerk.noteflow.co.in",
+      "connect-src 'self' https://*.clerk.accounts.dev https://*.convex.cloud https://*.clerk.com https://clerk.noteflow.co.in wss://*.convex.cloud wss://*.clerk.com",
+      "frame-src 'self' https://*.clerk.com https://clerk.noteflow.co.in", // Allow Clerk iframes
       "frame-ancestors 'none'", // Prevent clickjacking
       "base-uri 'self'", // Prevent base tag injection
       "form-action 'self'", // Only allow forms to submit to same origin
