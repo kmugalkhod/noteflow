@@ -168,26 +168,6 @@ const EditorBlockComponent = forwardRef<HTMLDivElement, EditorBlockProps>(({
         onEscapeKey();
         break;
 
-      case 'Tab':
-        // Handle Tab key for list indentation
-        if (block.type === 'bulletList' || block.type === 'numberedList') {
-          e.preventDefault();
-          const currentLevel = (block.properties as any)?.level || 0;
-
-          if (e.shiftKey) {
-            // Shift+Tab: Decrease indent (outdent)
-            if (currentLevel > 0) {
-              handlePropertyChange({ level: currentLevel - 1 });
-            }
-          } else {
-            // Tab: Increase indent
-            if (currentLevel < 3) { // Max 3 levels
-              handlePropertyChange({ level: currentLevel + 1 });
-            }
-          }
-        }
-        break;
-
       case ' ':
         // Detect markdown shortcuts when space is pressed
         if (onMarkdownTransform && block.type === 'paragraph') {
@@ -198,6 +178,26 @@ const EditorBlockComponent = forwardRef<HTMLDivElement, EditorBlockProps>(({
           if (markdown) {
             e.preventDefault();
             onMarkdownTransform(markdown.type, markdown.content, markdown.newCursorPosition);
+          }
+        }
+        break;
+
+      case 'Tab':
+        // Handle Tab key for list and todo indentation (Notion-style)
+        if (block.type === 'bulletList' || block.type === 'numberedList' || block.type === 'todo') {
+          e.preventDefault();
+          const currentLevel = (block.properties as any)?.level || 0;
+
+          if (e.shiftKey) {
+            // Shift+Tab: Decrease indent (outdent)
+            if (currentLevel > 0) {
+              handlePropertyChange({ level: currentLevel - 1 });
+            }
+          } else {
+            // Tab: Increase indent
+            if (currentLevel < 3) { // Max 3 levels like Notion
+              handlePropertyChange({ level: currentLevel + 1 });
+            }
           }
         }
         break;

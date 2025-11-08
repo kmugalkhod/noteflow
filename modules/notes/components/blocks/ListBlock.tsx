@@ -77,7 +77,7 @@ export const ListBlock = ({
   // If content is formatted, show formatted preview with editable overlay
   if (isFormatted) {
     return (
-      <div className="flex items-start gap-2 py-[3px] px-2" style={{ paddingLeft: `${paddingLeft + 8}px` }}>
+      <div className="flex items-start gap-2 py-[3px] px-2 transition-all duration-200 ease-out" style={{ paddingLeft: `${paddingLeft + 8}px` }}>
         <span className={`text-foreground/60 mt-[3px] flex-shrink-0 w-5 text-center ${fontSize === 'small' ? 'text-xs' : fontSize === 'large' ? 'text-base' : 'text-sm'}`}>
           {listMarker}
         </span>
@@ -117,7 +117,7 @@ export const ListBlock = ({
   }
 
   return (
-    <div className="flex items-start gap-2 py-[3px] px-2" style={{ paddingLeft: `${paddingLeft + 8}px` }}>
+    <div className="flex items-start gap-2 py-[3px] px-2 transition-all duration-200 ease-out" style={{ paddingLeft: `${paddingLeft + 8}px` }}>
       <span className={`text-foreground/60 mt-[3px] flex-shrink-0 w-5 text-center ${fontSize === 'small' ? 'text-xs' : fontSize === 'large' ? 'text-base' : 'text-sm'}`}>
         {listMarker}
       </span>

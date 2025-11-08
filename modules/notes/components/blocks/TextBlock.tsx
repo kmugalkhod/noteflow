@@ -46,8 +46,6 @@ export const TextBlock = ({
 
   const fontSizeClass = getFontSizeClass();
 
-  console.log('TextBlock render - isFormatted:', isFormatted, 'content type:', typeof content);
-
   // Auto-resize textarea to fit content
   useEffect(() => {
     const textarea = textareaRef.current;
@@ -75,7 +73,6 @@ export const TextBlock = ({
 
   // If content is formatted, show formatted preview with editable overlay
   if (isFormatted) {
-    console.log('Rendering formatted text:', content);
     return (
       <div className="relative">
         {/* Formatted preview layer (visible) */}
