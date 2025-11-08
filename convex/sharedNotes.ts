@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { paginationOptsValidator } from "convex/server";
 import { getAuthenticatedUserId, verifyNoteOwnership } from "./auth";
-import { generateShareId, buildShareUrl } from "../lib/shareUtils";
+import { generateShareId } from "../lib/shareUtils";
 
 /**
  * Get share link for a specific note (internal helper)
@@ -26,11 +26,8 @@ export const getShareByNoteId = query({
       return null;
     }
 
-    // Return share with full URL
-    return {
-      ...share,
-      shareUrl: buildShareUrl(share.shareId),
-    };
+    // Return share (client will build full URL)
+    return share;
   },
 });
 
@@ -66,11 +63,10 @@ export const createShareLink = mutation({
       .withIndex("by_note", (q) => q.eq("noteId", noteId))
       .first();
 
-    // If share exists and is active, return it
+    // If share exists and is active, return it (client will build full URL)
     if (existingShare && existingShare.isActive) {
       return {
         shareId: existingShare.shareId,
-        shareUrl: buildShareUrl(existingShare.shareId),
         isNew: false,
       };
     }
@@ -84,7 +80,6 @@ export const createShareLink = mutation({
 
       return {
         shareId: existingShare.shareId,
-        shareUrl: buildShareUrl(existingShare.shareId),
         isNew: false,
       };
     }
@@ -105,7 +100,6 @@ export const createShareLink = mutation({
 
     return {
       shareId,
-      shareUrl: buildShareUrl(shareId),
       isNew: true,
     };
   },
@@ -166,13 +160,12 @@ export const getMySharedNotes = query({
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .collect();
 
-    // Fetch note details for each share
+    // Fetch note details for each share (client will build shareUrl)
     const sharesWithNotes = await Promise.all(
       shares.map(async (share) => {
         const note = await ctx.db.get(share.noteId);
         return {
           ...share,
-          shareUrl: buildShareUrl(share.shareId),
           noteTitle: note?.title || "Untitled",
           noteIsDeleted: note?.isDeleted || false,
         };
@@ -205,13 +198,12 @@ export const getMySharedNotesPaginated = query({
       .order("desc") // Newest first
       .paginate(paginationOpts);
 
-    // Fetch note details for each share on this page
+    // Fetch note details for each share on this page (client will build shareUrl)
     const sharesWithNotes = await Promise.all(
       result.page.map(async (share) => {
         const note = await ctx.db.get(share.noteId);
         return {
           ...share,
-          shareUrl: buildShareUrl(share.shareId),
           noteTitle: note?.title || "Untitled",
           noteIsDeleted: note?.isDeleted || false,
         };
