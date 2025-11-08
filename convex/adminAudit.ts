@@ -13,6 +13,8 @@ import { mutation, query } from "./_generated/server";
 /**
  * Log admin access to user data
  * Call this whenever you need to access user data for support/debugging
+ *
+ * NOW USES DATABASE-DRIVEN ADMIN ROLES (no more hardcoded emails!)
  */
 export const logAdminAccess = mutation({
   args: {
@@ -27,12 +29,15 @@ export const logAdminAccess = mutation({
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
 
-    // Add your admin emails here
-    const ADMIN_EMAILS = [
-      "your-email@example.com", // Replace with your actual admin email
-    ];
+    // Check if user has active admin role in database
+    const adminRole = await ctx.db
+      .query("adminRoles")
+      .withIndex("by_email_active", (q) =>
+        q.eq("email", identity.email || "").eq("revokedAt", undefined)
+      )
+      .first();
 
-    if (!ADMIN_EMAILS.includes(identity.email || "")) {
+    if (!adminRole) {
       throw new Error("Unauthorized - admin access only");
     }
 
@@ -78,15 +83,23 @@ export const getUserAuditLog = query({
 
 /**
  * Get all audit logs (admin only)
+ * NOW USES DATABASE-DRIVEN ADMIN ROLES
  */
 export const getAllAuditLogs = query({
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
 
-    const ADMIN_EMAILS = ["your-email@example.com"];
-    if (!ADMIN_EMAILS.includes(identity.email || "")) {
-      throw new Error("Unauthorized");
+    // Check if user has active admin role
+    const adminRole = await ctx.db
+      .query("adminRoles")
+      .withIndex("by_email_active", (q) =>
+        q.eq("email", identity.email || "").eq("revokedAt", undefined)
+      )
+      .first();
+
+    if (!adminRole) {
+      throw new Error("Unauthorized - admin access only");
     }
 
     return await ctx.db

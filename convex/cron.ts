@@ -24,4 +24,18 @@ cron.daily(
   internal.trash.cleanupExpiredTrash
 );
 
+/**
+ * Hourly Rate Limit Cleanup
+ *
+ * Removes expired rate limit records and old violation logs
+ * to prevent database bloat. Runs every hour.
+ */
+cron.hourly(
+  "cleanup-rate-limits",
+  {
+    minuteUTC: 15, // Run at :15 past every hour
+  },
+  internal.rateLimit.cleanupExpiredRecords
+);
+
 export default cron;

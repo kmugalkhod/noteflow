@@ -1,15 +1,19 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
+import { enforceRateLimit } from "./rateLimit";
 
 /**
  * Get shared note by share ID (PUBLIC - no auth required)
  * Returns public-safe note data for SSR/metadata generation
  * Does NOT increment view count - use incrementShareView for that
+ *
+ * RATE LIMITED: 30 requests per minute per shareId
  */
 export const getSharedNote = query({
   args: { shareId: v.string() },
   handler: async (ctx, { shareId }) => {
     // NO AUTH CHECK - This is a public endpoint!
+    // BUT: Rate limited to prevent abuse
 
     // Find the share by shareId
     const share = await ctx.db
@@ -56,11 +60,18 @@ export const getSharedNote = query({
 /**
  * Increment view count for a shared note (PUBLIC - no auth required)
  * Called from client component when viewing a shared note
+ *
+ * RATE LIMITED: 10 requests per minute per shareId
+ * This prevents view count inflation and DoS attacks
  */
 export const incrementShareView = mutation({
   args: { shareId: v.string() },
   handler: async (ctx, { shareId }) => {
     // NO AUTH CHECK - This is a public endpoint!
+    // BUT: Strictly rate limited to prevent abuse
+
+    // Enforce rate limit (throws error if exceeded)
+    await enforceRateLimit(ctx, shareId, "shareView");
 
     // Find the share by shareId
     const share = await ctx.db

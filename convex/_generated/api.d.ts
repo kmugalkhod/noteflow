@@ -9,6 +9,7 @@
  */
 
 import type * as adminAudit from "../adminAudit.js";
+import type * as adminRoles from "../adminRoles.js";
 import type * as auth from "../auth.js";
 import type * as cron from "../cron.js";
 import type * as drawings from "../drawings.js";
@@ -16,6 +17,7 @@ import type * as files from "../files.js";
 import type * as folders from "../folders.js";
 import type * as notes from "../notes.js";
 import type * as publicShare from "../publicShare.js";
+import type * as rateLimit from "../rateLimit.js";
 import type * as sharedNotes from "../sharedNotes.js";
 import type * as tags from "../tags.js";
 import type * as trash from "../trash.js";
@@ -38,6 +40,7 @@ import type {
  */
 declare const fullApi: ApiFromModules<{
   adminAudit: typeof adminAudit;
+  adminRoles: typeof adminRoles;
   auth: typeof auth;
   cron: typeof cron;
   drawings: typeof drawings;
@@ -45,6 +48,7 @@ declare const fullApi: ApiFromModules<{
   folders: typeof folders;
   notes: typeof notes;
   publicShare: typeof publicShare;
+  rateLimit: typeof rateLimit;
   sharedNotes: typeof sharedNotes;
   tags: typeof tags;
   trash: typeof trash;

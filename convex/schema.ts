@@ -20,6 +20,25 @@ export default defineSchema({
     .index("by_clerk_user_id", ["clerkUserId"])
     .index("by_email", ["email"]),
 
+  // Admin Roles table (for database-driven admin management)
+  adminRoles: defineTable({
+    userId: v.id("users"),
+    email: v.string(), // Denormalized for quick lookup
+    role: v.union(v.literal("admin"), v.literal("superadmin")),
+    grantedBy: v.id("users"), // Who granted this role
+    grantedByEmail: v.string(), // Denormalized for audit trail
+    grantedAt: v.number(),
+    revokedAt: v.optional(v.number()), // Soft delete - revoke instead of delete
+    revokedBy: v.optional(v.id("users")),
+    revokedByEmail: v.optional(v.string()),
+    reason: v.optional(v.string()), // Why was this role granted/revoked
+  })
+    .index("by_user", ["userId"])
+    .index("by_email", ["email"])
+    .index("by_user_active", ["userId", "revokedAt"]) // Find active roles
+    .index("by_email_active", ["email", "revokedAt"]) // Quick admin check
+    .index("by_granted_at", ["grantedAt"]), // Audit trail
+
   // Notes table
   notes: defineTable({
     userId: v.id("users"),
@@ -191,4 +210,30 @@ export default defineSchema({
     .index("by_admin", ["adminClerkId"]) // See all actions by specific admin
     .index("by_timestamp", ["timestamp"]) // Sort by time
     .index("by_action", ["action"]), // Filter by action type
+
+  // Rate Limiting table (for DoS protection)
+  rateLimits: defineTable({
+    identifier: v.string(), // shareId, IP address, userId, etc.
+    action: v.string(), // "shareView", "shareRead", etc.
+    count: v.number(), // Number of requests in current window
+    windowStart: v.number(), // When the current window started
+    windowEnd: v.number(), // When the current window expires
+    lastRequestAt: v.number(), // Timestamp of last request
+    violationCount: v.optional(v.number()), // How many times limit was exceeded
+  })
+    .index("by_identifier_action", ["identifier", "action"]) // Quick lookup
+    .index("by_window_end", ["windowEnd"]), // For cleanup of expired records
+
+  // Rate Limit Violations table (for security monitoring)
+  rateLimitViolations: defineTable({
+    identifier: v.string(), // Who violated the limit
+    action: v.string(), // What action they tried
+    timestamp: v.number(), // When it happened
+    attemptedCount: v.number(), // How many requests they tried
+    limit: v.number(), // What the limit was
+    windowMs: v.number(), // Window duration
+  })
+    .index("by_identifier", ["identifier"]) // Track abusive identifiers
+    .index("by_timestamp", ["timestamp"]) // Recent violations
+    .index("by_action", ["action"]), // Violations by action type
 });
