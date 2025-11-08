@@ -7,7 +7,6 @@ import {
   Search,
   Star,
   Paintbrush,
-  Lock,
   Cloud,
   Smartphone,
 } from "lucide-react";
@@ -48,12 +47,6 @@ const features = [
     title: "Visual Drawing",
     description: "Create diagrams and sketches with integrated drawing tools.",
     color: "from-indigo-500 to-purple-500",
-  },
-  {
-    icon: Lock,
-    title: "Secure & Private",
-    description: "Your data is encrypted and secure with enterprise-grade protection.",
-    color: "from-slate-500 to-gray-500",
   },
   {
     icon: Cloud,
