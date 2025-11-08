@@ -14,7 +14,11 @@ export function generateShareId(): string {
  * @returns Complete URL for sharing
  */
 export function buildShareUrl(shareId: string): string {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  // Use window.location.origin for client-side (browser)
+  // Use NEXT_PUBLIC_APP_URL for server-side rendering
+  const baseUrl = typeof window !== 'undefined'
+    ? window.location.origin
+    : process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
   return `${baseUrl}/share/${shareId}`;
 }
 
