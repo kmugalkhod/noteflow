@@ -6,6 +6,7 @@ const isPublicRoute = createRouteMatcher([
   "/login(.*)",
   "/register(.*)",
   "/sso-callback(.*)",
+  "/share(.*)", // Public share links - no authentication required
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
