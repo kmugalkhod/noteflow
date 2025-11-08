@@ -305,7 +305,7 @@ const EditorBlockComponent = forwardRef<HTMLDivElement, EditorBlockProps>(({
       className={`editor-block group relative transition-colors ${isFocused ? 'focused' : ''}`}
       data-block-id={block.id}
       data-block-type={block.type}
-      style={{ marginBottom: '8px' }}
+      style={{ marginBottom: '2px' }}
     >
       {/* Block Actions Menu */}
       {onDuplicate && onDelete && onTransform && onMoveUp && onMoveDown && (
