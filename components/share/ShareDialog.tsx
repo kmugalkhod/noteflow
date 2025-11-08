@@ -24,6 +24,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import { buildShareUrl } from "@/lib/shareUtils";
 
 interface ShareDialogProps {
   noteId: Id<"notes">;
@@ -143,7 +144,9 @@ export function ShareDialog({
     );
   }
 
-  // Shared state
+  // Shared state - Build URL client-side from shareId
+  const shareUrl = buildShareUrl(existingShare.shareId);
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
@@ -161,7 +164,7 @@ export function ShareDialog({
             <div className="flex gap-2">
               <input
                 type="text"
-                value={existingShare.shareUrl}
+                value={shareUrl}
                 readOnly
                 className="flex-1 px-3 py-2 text-sm bg-muted rounded-md border focus:outline-none focus:ring-2 focus:ring-ring"
                 onClick={(e) => e.currentTarget.select()}
@@ -169,7 +172,7 @@ export function ShareDialog({
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => handleCopyLink(existingShare.shareUrl)}
+                onClick={() => handleCopyLink(shareUrl)}
               >
                 {copied ? (
                   <Check className="text-green-600" />
@@ -197,7 +200,7 @@ export function ShareDialog({
             <Button
               variant="outline"
               className="flex-1"
-              onClick={() => handlePreview(existingShare.shareUrl)}
+              onClick={() => handlePreview(shareUrl)}
             >
               <ExternalLink />
               Preview
