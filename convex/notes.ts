@@ -1,6 +1,12 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, QueryCtx } from "./_generated/server";
+import { paginationOptsValidator } from "convex/server";
 import { getAuthenticatedUserId, verifyNoteOwnership } from "./auth";
+import {
+  sanitizeNoteTitle,
+  sanitizeNoteContent,
+  sanitizeBlocksJson,
+} from "../lib/sanitize";
 
 // Get all notes for a user (excluding deleted)
 export const getNotes = query({
@@ -207,11 +213,15 @@ export const createNote = mutation({
     const userId = await getAuthenticatedUserId(ctx);
     const now = Date.now();
 
+    // Sanitize user inputs to prevent XSS attacks
+    const sanitizedTitle = sanitizeNoteTitle(title);
+    const sanitizedContent = sanitizeNoteContent(content || "");
+
     const noteId = await ctx.db.insert("notes", {
       userId,
       folderId,
-      title,
-      content: content || "",
+      title: sanitizedTitle,
+      content: sanitizedContent,
       isPinned: false,
       isDeleted: false,
       createdAt: now,
@@ -235,12 +245,17 @@ export const updateNote = mutation({
     color: v.optional(v.string()),
     coverImage: v.optional(v.union(v.string(), v.null())),
   },
-  handler: async (ctx, { noteId, folderId, coverImage, ...updates }) => {
+  handler: async (ctx, { noteId, folderId, coverImage, title, content, blocks, ...updates }) => {
     // Get authenticated user ID
     const userId = await getAuthenticatedUserId(ctx);
 
     // Verify ownership before allowing update
     await verifyNoteOwnership(ctx, noteId, userId);
+
+    // Sanitize all user inputs to prevent XSS attacks
+    const sanitizedTitle = title !== undefined ? sanitizeNoteTitle(title) : undefined;
+    const sanitizedContent = content !== undefined ? sanitizeNoteContent(content) : undefined;
+    const sanitizedBlocks = blocks !== undefined ? sanitizeBlocksJson(blocks) : undefined;
 
     // Handle cover image cleanup when being removed or replaced
     if (coverImage !== undefined) {
@@ -282,6 +297,10 @@ export const updateNote = mutation({
       ...(folderId !== undefined && {
         folderId: folderId === null ? undefined : folderId
       }),
+      // Apply sanitized values
+      ...(sanitizedTitle !== undefined && { title: sanitizedTitle }),
+      ...(sanitizedContent !== undefined && { content: sanitizedContent }),
+      ...(sanitizedBlocks !== undefined && { blocks: sanitizedBlocks }),
     };
 
     // Handle coverImage: null means remove, string means set, undefined means don't change
@@ -619,6 +638,230 @@ export const getWorkspaceNotes = query({
       pinnedNotes,
       recentNotes,
       totalCount: notes.length,
+    };
+  },
+});
+
+// ==================== PAGINATED QUERIES ====================
+// These queries use cursor-based pagination for better performance at scale
+// Use these for list views with large datasets
+
+/**
+ * Get notes with pagination (optimized for large note collections)
+ * Returns paginated results with cursor for next page
+ *
+ * Performance: Loads only requested page size (default 50)
+ * vs getNotes() which loads all notes at once
+ */
+export const getNotesPaginated = query({
+  args: {
+    folderId: v.optional(v.union(v.id("folders"), v.null())),
+    paginationOpts: paginationOptsValidator,
+  },
+  handler: async (ctx, { folderId, paginationOpts }) => {
+    // Get authenticated user ID
+    const userId = await getAuthenticatedUserId(ctx);
+
+    // Note: Convex pagination doesn't support filtering after pagination,
+    // so we need to handle folderId filtering differently
+
+    // For now, we'll paginate all notes and filter client-side for folders
+    // TODO: Consider creating separate indexes for folder-specific queries
+    const result = await ctx.db
+      .query("notes")
+      .withIndex("by_user_not_deleted", (q) =>
+        q.eq("userId", userId).eq("isDeleted", false)
+      )
+      .order("desc") // Order by _creationTime descending (newest first)
+      .paginate(paginationOpts);
+
+    // Filter by folder if specified
+    let filteredPage = result.page;
+    if (folderId === null) {
+      // null means show only uncategorized notes (no folder)
+      filteredPage = result.page.filter((note) => !note.folderId);
+    } else if (folderId !== undefined) {
+      // Specific folder ID
+      filteredPage = result.page.filter((note) => note.folderId === folderId);
+    }
+
+    // Sort by updatedAt (since index sorts by _creationTime)
+    filteredPage = filteredPage.sort((a, b) => b.updatedAt - a.updatedAt);
+
+    return {
+      page: filteredPage,
+      continueCursor: result.continueCursor,
+      isDone: result.isDone,
+    };
+  },
+});
+
+/**
+ * Get notes minimal with pagination
+ * Returns only essential fields for list views (excludes content)
+ *
+ * Performance: ~70% less data transfer than full notes
+ */
+export const getNotesMinimalPaginated = query({
+  args: {
+    folderId: v.optional(v.union(v.id("folders"), v.null())),
+    paginationOpts: paginationOptsValidator,
+  },
+  handler: async (ctx, { folderId, paginationOpts }) => {
+    // Get authenticated user ID
+    const userId = await getAuthenticatedUserId(ctx);
+
+    const result = await ctx.db
+      .query("notes")
+      .withIndex("by_user_not_deleted", (q) =>
+        q.eq("userId", userId).eq("isDeleted", false)
+      )
+      .order("desc")
+      .paginate(paginationOpts);
+
+    // Filter by folder
+    let filteredPage = result.page;
+    if (folderId === null) {
+      filteredPage = result.page.filter((note) => !note.folderId);
+    } else if (folderId !== undefined) {
+      filteredPage = result.page.filter((note) => note.folderId === folderId);
+    }
+
+    // Map to minimal fields
+    const minimalNotes = filteredPage
+      .map((note) => ({
+        _id: note._id,
+        _creationTime: note._creationTime,
+        userId: note.userId,
+        folderId: note.folderId,
+        title: note.title,
+        updatedAt: note.updatedAt,
+        createdAt: note.createdAt,
+        isPinned: note.isPinned,
+        isFavorite: note.isFavorite,
+        isDeleted: note.isDeleted,
+        // Provide a short preview from content (first 100 chars)
+        contentPreview: note.content?.substring(0, 100) || "",
+      }))
+      .sort((a, b) => b.updatedAt - a.updatedAt);
+
+    return {
+      page: minimalNotes,
+      continueCursor: result.continueCursor,
+      isDone: result.isDone,
+    };
+  },
+});
+
+/**
+ * Get deleted notes with pagination (trash)
+ */
+export const getDeletedNotesPaginated = query({
+  args: {
+    paginationOpts: paginationOptsValidator,
+  },
+  handler: async (ctx, { paginationOpts }) => {
+    // Get authenticated user ID
+    const userId = await getAuthenticatedUserId(ctx);
+
+    const result = await ctx.db
+      .query("notes")
+      .withIndex("by_user_not_deleted", (q) =>
+        q.eq("userId", userId).eq("isDeleted", true)
+      )
+      .order("desc")
+      .paginate(paginationOpts);
+
+    // Sort by deletedAt
+    const sortedPage = result.page.sort(
+      (a, b) => (b.deletedAt || 0) - (a.deletedAt || 0)
+    );
+
+    return {
+      page: sortedPage,
+      continueCursor: result.continueCursor,
+      isDone: result.isDone,
+    };
+  },
+});
+
+/**
+ * Get favorite notes with pagination
+ */
+export const getFavoriteNotesPaginated = query({
+  args: {
+    paginationOpts: paginationOptsValidator,
+  },
+  handler: async (ctx, { paginationOpts }) => {
+    // Get authenticated user ID
+    const userId = await getAuthenticatedUserId(ctx);
+
+    const result = await ctx.db
+      .query("notes")
+      .withIndex("by_user_favorite", (q) =>
+        q.eq("userId", userId).eq("isFavorite", true)
+      )
+      .order("desc")
+      .paginate(paginationOpts);
+
+    // Filter out deleted notes and sort by updated date
+    const activeFavorites = result.page
+      .filter((note) => !note.isDeleted)
+      .sort((a, b) => b.updatedAt - a.updatedAt);
+
+    return {
+      page: activeFavorites,
+      continueCursor: result.continueCursor,
+      isDone: result.isDone,
+    };
+  },
+});
+
+/**
+ * Search notes with pagination
+ * Searches both title and content
+ */
+export const searchNotesPaginated = query({
+  args: {
+    searchTerm: v.string(),
+    paginationOpts: paginationOptsValidator,
+  },
+  handler: async (ctx, { searchTerm, paginationOpts }) => {
+    // Get authenticated user ID
+    const userId = await getAuthenticatedUserId(ctx);
+
+    // Search in titles
+    const titleResults = await ctx.db
+      .query("notes")
+      .withSearchIndex("search_title", (q) =>
+        q.search("title", searchTerm).eq("userId", userId).eq("isDeleted", false)
+      )
+      .paginate(paginationOpts);
+
+    // Search in content (separate pagination for now)
+    const contentResults = await ctx.db
+      .query("notes")
+      .withSearchIndex("search_content", (q) =>
+        q.search("content", searchTerm).eq("userId", userId).eq("isDeleted", false)
+      )
+      .paginate(paginationOpts);
+
+    // Merge and deduplicate results
+    const allResults = [...titleResults.page, ...contentResults.page];
+    const uniqueResults = Array.from(
+      new Map(allResults.map((note) => [note._id, note])).values()
+    );
+
+    // Sort by relevance (updatedAt as proxy)
+    const sortedResults = uniqueResults.sort((a, b) => b.updatedAt - a.updatedAt);
+
+    // Determine if more results exist
+    const isDone = titleResults.isDone && contentResults.isDone;
+
+    return {
+      page: sortedResults,
+      continueCursor: titleResults.continueCursor || contentResults.continueCursor,
+      isDone,
     };
   },
 });

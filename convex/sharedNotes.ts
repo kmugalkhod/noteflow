@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { paginationOptsValidator } from "convex/server";
 import { getAuthenticatedUserId, verifyNoteOwnership } from "./auth";
 import { generateShareId, buildShareUrl } from "../lib/shareUtils";
 
@@ -180,5 +181,50 @@ export const getMySharedNotes = query({
 
     // Sort by creation date (newest first) and return
     return sharesWithNotes.sort((a, b) => b.createdAt - a.createdAt);
+  },
+});
+
+/**
+ * Get shared notes with pagination
+ * Returns paginated shares with note details
+ *
+ * Performance: Loads only requested page size instead of all shares
+ */
+export const getMySharedNotesPaginated = query({
+  args: {
+    paginationOpts: paginationOptsValidator,
+  },
+  handler: async (ctx, { paginationOpts }) => {
+    // Get authenticated user ID
+    const userId = await getAuthenticatedUserId(ctx);
+
+    // Query shares with pagination
+    const result = await ctx.db
+      .query("sharedNotes")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .order("desc") // Newest first
+      .paginate(paginationOpts);
+
+    // Fetch note details for each share on this page
+    const sharesWithNotes = await Promise.all(
+      result.page.map(async (share) => {
+        const note = await ctx.db.get(share.noteId);
+        return {
+          ...share,
+          shareUrl: buildShareUrl(share.shareId),
+          noteTitle: note?.title || "Untitled",
+          noteIsDeleted: note?.isDeleted || false,
+        };
+      })
+    );
+
+    // Sort by creation date (newest first)
+    const sortedShares = sharesWithNotes.sort((a, b) => b.createdAt - a.createdAt);
+
+    return {
+      page: sortedShares,
+      continueCursor: result.continueCursor,
+      isDone: result.isDone,
+    };
   },
 });

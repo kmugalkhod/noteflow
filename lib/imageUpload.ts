@@ -1,4 +1,11 @@
 import type { Id } from "@/convex/_generated/dataModel";
+import {
+  validateImageFile,
+  quickValidate,
+  sanitizeFilename,
+  getUserFriendlyError,
+  type FileValidationResult,
+} from "./fileValidation";
 
 export interface UploadImageOptions {
   file: File;
@@ -15,6 +22,13 @@ export interface UploadImageResult {
 /**
  * Upload an image file to Convex FileStorage
  * Returns the storage ID which should be stored in the database
+ *
+ * NOW WITH COMPREHENSIVE SECURITY VALIDATION:
+ * - Magic byte verification
+ * - SVG blocking (XSS prevention)
+ * - MIME type validation
+ * - File size limits
+ * - Extension whitelisting
  *
  * @param generateUploadUrl - Convex mutation to generate upload URL
  * @param saveFileMetadata - Convex mutation to save file metadata
@@ -35,26 +49,39 @@ export async function uploadImageToConvex(
   const { file, noteId, onProgress } = options;
 
   try {
-    // Validate file type
-    if (!file.type.startsWith("image/")) {
-      return { storageId: "", error: "Please select an image file" };
+    // 1. Quick client-side validation (instant feedback)
+    onProgress?.(5);
+    const quickCheck = quickValidate(file);
+    if (!quickCheck.valid) {
+      return {
+        storageId: "",
+        error: getUserFriendlyError(quickCheck),
+      };
     }
 
-    // Validate file size (max 5MB)
-    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-    if (file.size > MAX_FILE_SIZE) {
-      return { storageId: "", error: "Image size must be less than 5MB" };
-    }
-
-    // Step 1: Generate upload URL
+    // 2. Comprehensive validation (magic bytes, MIME type, etc.)
     onProgress?.(10);
+    const validation = await validateImageFile(file);
+    if (!validation.valid) {
+      return {
+        storageId: "",
+        error: getUserFriendlyError(validation),
+      };
+    }
+
+    // 3. Generate upload URL
+    onProgress?.(20);
     const uploadUrl = await generateUploadUrl();
 
-    // Step 2: Upload file to Convex storage
+    // 4. Sanitize filename for security
+    const safeFileName = sanitizeFilename(file.name);
     onProgress?.(30);
+
+    // 5. Upload file to Convex storage (use detected MIME type)
+    const mimeType = validation.mimeType || validation.detectedType || file.type;
     const response = await fetch(uploadUrl, {
       method: "POST",
-      headers: { "Content-Type": file.type },
+      headers: { "Content-Type": mimeType },
       body: file,
     });
 
@@ -65,13 +92,13 @@ export async function uploadImageToConvex(
     const { storageId } = await response.json();
     onProgress?.(70);
 
-    // Step 3: Save file metadata
+    // 6. Save file metadata (with sanitized filename and validated type)
     await saveFileMetadata({
       storageId,
       noteId,
-      fileName: file.name,
+      fileName: safeFileName,
       fileSize: file.size,
-      fileType: file.type,
+      fileType: mimeType,
     });
 
     onProgress?.(100);
