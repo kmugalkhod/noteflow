@@ -128,6 +128,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               onToggleNotesPanel={() => setIsNotesPanelCollapsed(!isNotesPanelCollapsed)}
               isCollapsed={isNotesPanelCollapsed}
               width={notesPanelWidth}
+              onOpenCommandPalette={() => setCommandPaletteOpen(true)}
             />
 
             {/* Resize Handle */}

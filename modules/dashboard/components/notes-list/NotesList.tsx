@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "@/modules/shared/lib/toast";
 import { NoteListSkeleton } from "@/modules/shared/components";
 import { DeleteNoteDialog } from "@/modules/notes/components/delete-note-dialog";
+import { SearchBar } from "@/modules/search/components";
 
 interface NotesListProps {
   onToggleSidebar?: () => void;
@@ -19,6 +20,7 @@ interface NotesListProps {
   onToggleNotesPanel?: () => void;
   isCollapsed?: boolean;
   width?: number;
+  onOpenCommandPalette?: () => void;
 }
 
 export function NotesList({
@@ -27,6 +29,7 @@ export function NotesList({
   onToggleNotesPanel,
   isCollapsed = false,
   width = 300,
+  onOpenCommandPalette,
 }: NotesListProps) {
   const convexUser = useConvexUser();
   const router = useRouter();
@@ -159,6 +162,17 @@ export function NotesList({
             )}
           </div>
         </div>
+
+        {/* Search Bar */}
+        {onOpenCommandPalette && (
+          <div className="mb-3">
+            <SearchBar
+              onOpenCommandPalette={onOpenCommandPalette}
+              placeholder="Search notes..."
+            />
+          </div>
+        )}
+
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span>{sortedNotes.length} {sortedNotes.length === 1 ? 'note' : 'notes'}</span>
