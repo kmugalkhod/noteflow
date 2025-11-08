@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ShareButton } from "./ShareButton";
 import Link from "next/link";
+import { buildShareUrl } from "@/lib/shareUtils";
 
 /**
  * ShareList component displays all shared notes for the authenticated user
@@ -56,97 +57,102 @@ export function ShareList() {
       </div>
 
       <div className="grid gap-4">
-        {myShares.map((share) => (
-          <Card
-            key={share._id}
-            className={`p-4 transition-all hover:shadow-md ${
-              !share.isActive ? "opacity-60" : ""
-            }`}
-          >
-            <div className="flex items-start justify-between gap-4">
-              {/* Note Info */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-2">
-                  <Link
-                    href={`/notes/${share.noteId}`}
-                    className="font-semibold text-lg hover:underline truncate"
-                  >
-                    {share.noteTitle}
-                  </Link>
-                  {!share.isActive && (
-                    <Badge variant="destructive" className="text-xs">
-                      Revoked
-                    </Badge>
-                  )}
-                  {share.noteIsDeleted && (
-                    <Badge variant="outline" className="text-xs">
-                      Note Deleted
-                    </Badge>
-                  )}
-                </div>
+        {myShares.map((share) => {
+          // Build share URL client-side from shareId
+          const shareUrl = buildShareUrl(share.shareId);
 
-                {/* Share URL */}
-                {share.isActive && (
-                  <div className="flex items-center gap-2 mb-3">
-                    <input
-                      type="text"
-                      value={share.shareUrl}
-                      readOnly
-                      className="flex-1 px-2 py-1 text-xs bg-muted rounded border text-muted-foreground font-mono"
-                      onClick={(e) => e.currentTarget.select()}
-                    />
+          return (
+            <Card
+              key={share._id}
+              className={`p-4 transition-all hover:shadow-md ${
+                !share.isActive ? "opacity-60" : ""
+              }`}
+            >
+              <div className="flex items-start justify-between gap-4">
+                {/* Note Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Link
+                      href={`/notes/${share.noteId}`}
+                      className="font-semibold text-lg hover:underline truncate"
+                    >
+                      {share.noteTitle}
+                    </Link>
+                    {!share.isActive && (
+                      <Badge variant="destructive" className="text-xs">
+                        Revoked
+                      </Badge>
+                    )}
+                    {share.noteIsDeleted && (
+                      <Badge variant="outline" className="text-xs">
+                        Note Deleted
+                      </Badge>
+                    )}
                   </div>
-                )}
 
-                {/* Analytics */}
-                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <Eye className="w-3 h-3" />
-                    <span>{share.viewCount} views</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Calendar className="w-3 h-3" />
-                    <span>
-                      Created {new Date(share.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                  {share.lastAccessedAt && (
-                    <div className="flex items-center gap-1">
-                      <span>
-                        Last viewed{" "}
-                        {new Date(share.lastAccessedAt).toLocaleDateString()}
-                      </span>
+                  {/* Share URL */}
+                  {share.isActive && (
+                    <div className="flex items-center gap-2 mb-3">
+                      <input
+                        type="text"
+                        value={shareUrl}
+                        readOnly
+                        className="flex-1 px-2 py-1 text-xs bg-muted rounded border text-muted-foreground font-mono"
+                        onClick={(e) => e.currentTarget.select()}
+                      />
                     </div>
                   )}
+
+                  {/* Analytics */}
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <Eye className="w-3 h-3" />
+                      <span>{share.viewCount} views</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      <span>
+                        Created {new Date(share.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    {share.lastAccessedAt && (
+                      <div className="flex items-center gap-1">
+                        <span>
+                          Last viewed{" "}
+                          {new Date(share.lastAccessedAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center gap-2">
+                  {share.isActive && (
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={() =>
+                        window.open(shareUrl, "_blank", "noopener,noreferrer")
+                      }
+                      title="Preview shared note"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </Button>
+                  )}
+                  {!share.noteIsDeleted && (
+                    <ShareButton
+                      noteId={share.noteId}
+                      noteTitle={share.noteTitle}
+                      variant="ghost"
+                      size="icon-sm"
+                    />
+                  )}
                 </div>
               </div>
-
-              {/* Actions */}
-              <div className="flex items-center gap-2">
-                {share.isActive && (
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    onClick={() =>
-                      window.open(share.shareUrl, "_blank", "noopener,noreferrer")
-                    }
-                    title="Preview shared note"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                  </Button>
-                )}
-                {!share.noteIsDeleted && (
-                  <ShareButton
-                    noteId={share.noteId}
-                    noteTitle={share.noteTitle}
-                    variant="ghost"
-                    size="icon-sm"
-                  />
-                )}
-              </div>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          );
+        })}
       </div>
     </div>
   );

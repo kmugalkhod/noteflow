@@ -17,10 +17,10 @@ export interface SharedNote {
 
 /**
  * Data returned when creating a share link
+ * Note: shareUrl should be built client-side using buildShareUrl(shareId)
  */
 export interface ShareLinkData {
   shareId: string;
-  shareUrl: string;
   isNew: boolean;
 }
 
@@ -49,11 +49,11 @@ export interface ShareAnalytics {
 
 /**
  * My shared notes list item
+ * Note: shareUrl should be built client-side using buildShareUrl(shareId)
  */
 export interface MySharedNoteItem {
   _id: Id<"sharedNotes">;
   shareId: string;
-  shareUrl: string;
   noteId: Id<"notes">;
   noteTitle: string;
   viewCount: number;
