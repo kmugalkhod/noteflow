@@ -44,17 +44,17 @@ export const HeadingBlock = ({
   };
 
   const getHeadingStyles = (level: number, fontSize: 'small' | 'normal' | 'large') => {
-    // Base styles by level with improved typography
+    // Base styles by level with improved typography (Notion-style compact)
     const baseStyles = {
-      1: { small: "text-3xl", normal: "text-4xl", large: "text-5xl", weight: "font-bold", leading: "leading-tight tracking-tight" },
-      2: { small: "text-2xl", normal: "text-3xl", large: "text-4xl", weight: "font-bold", leading: "leading-tight tracking-tight" },
-      3: { small: "text-xl", normal: "text-2xl", large: "text-3xl", weight: "font-semibold", leading: "leading-snug tracking-tight" }
+      1: { small: "text-3xl", normal: "text-4xl", large: "text-5xl", weight: "font-bold", leading: "leading-[1.2]" },
+      2: { small: "text-2xl", normal: "text-3xl", large: "text-4xl", weight: "font-bold", leading: "leading-[1.3]" },
+      3: { small: "text-xl", normal: "text-2xl", large: "text-3xl", weight: "font-semibold", leading: "leading-[1.4]" }
     };
 
     const style = baseStyles[level as keyof typeof baseStyles] || baseStyles[1];
     const sizeClass = style[fontSize] || style.normal;
 
-    return `${sizeClass} ${style.weight} ${style.leading} mb-1`;
+    return `${sizeClass} ${style.weight} ${style.leading}`;
   };
 
   const headingPlaceholder = placeholder || `Heading ${level}`;
@@ -72,7 +72,7 @@ export const HeadingBlock = ({
       <div className="relative">
         {/* Formatted preview layer (visible) */}
         <div
-          className={`absolute inset-0 pointer-events-none py-[3px] px-2 z-10 ${getHeadingStyles(level, fontSize)}`}
+          className={`absolute inset-0 pointer-events-none py-1 px-2 z-10 ${getHeadingStyles(level, fontSize)}`}
           aria-hidden="true"
         >
           <FormattedText content={content} />
@@ -91,7 +91,7 @@ export const HeadingBlock = ({
           onMouseUp={handleSelect}
           onKeyUp={handleSelect}
           placeholder={headingPlaceholder}
-          className={`relative w-full border-none outline-none bg-transparent placeholder:text-muted-foreground/40 py-[3px] px-2 ${getHeadingStyles(level, fontSize)}`}
+          className={`relative w-full border-none outline-none bg-transparent placeholder:text-muted-foreground/40 py-1 px-2 ${getHeadingStyles(level, fontSize)}`}
           style={{
             color: 'transparent',
             caretColor: 'currentColor',
@@ -116,7 +116,7 @@ export const HeadingBlock = ({
       onMouseUp={handleSelect}
       onKeyUp={handleSelect}
       placeholder={headingPlaceholder}
-      className={`w-full border-none outline-none bg-transparent placeholder:text-muted-foreground/30 py-[3px] px-2 ${getHeadingStyles(level, fontSize)}`}
+      className={`w-full border-none outline-none bg-transparent placeholder:text-muted-foreground/30 py-1 px-2 ${getHeadingStyles(level, fontSize)}`}
       autoFocus={isFocused}
     />
   );

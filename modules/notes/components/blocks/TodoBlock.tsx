@@ -8,7 +8,7 @@ import { FormattedText } from '../rich-editor/FormattedText';
 
 interface TodoBlockProps {
   content: string | FormattedContent;
-  properties?: { checked?: boolean };
+  properties?: { checked?: boolean; level?: number };
   placeholder?: string;
   isFocused: boolean;
   onChange: (content: string, element?: HTMLElement) => void;
@@ -37,6 +37,9 @@ export const TodoBlock = ({
   const isFormatted = typeof content !== 'string';
   const textContent = isFormatted ? segmentsToString(content) : content;
   const checked = properties.checked || false;
+  const level = properties.level || 0;
+  const indentLevel = Math.min(level, 3); // Max 3 levels of indentation
+  const paddingLeft = indentLevel * 24; // 24px per level
   const todoPlaceholder = placeholder || 'To-do';
 
   // Get font size class
@@ -78,7 +81,7 @@ export const TodoBlock = ({
   // If content is formatted, show formatted preview with editable overlay
   if (isFormatted) {
     return (
-      <div className="flex items-start gap-2.5 py-1 px-2">
+      <div className="flex items-start gap-2.5 py-1 px-2 transition-all duration-200 ease-out" style={{ paddingLeft: `${paddingLeft + 8}px` }}>
         <div className="mt-[2px]">
           <Checkbox
             checked={checked}
@@ -126,7 +129,7 @@ export const TodoBlock = ({
   }
 
   return (
-    <div className="flex items-start gap-2.5 py-1 px-2">
+    <div className="flex items-start gap-2.5 py-1 px-2 transition-all duration-200 ease-out" style={{ paddingLeft: `${paddingLeft + 8}px` }}>
       <div className="mt-[2px]">
         <Checkbox
           checked={checked}
