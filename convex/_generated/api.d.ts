@@ -10,6 +10,8 @@
 
 import type * as adminAudit from "../adminAudit.js";
 import type * as adminRoles from "../adminRoles.js";
+import type * as ai from "../ai.js";
+import type * as aiSettings from "../aiSettings.js";
 import type * as auth from "../auth.js";
 import type * as cron from "../cron.js";
 import type * as drawings from "../drawings.js";
@@ -41,6 +43,8 @@ import type {
 declare const fullApi: ApiFromModules<{
   adminAudit: typeof adminAudit;
   adminRoles: typeof adminRoles;
+  ai: typeof ai;
+  aiSettings: typeof aiSettings;
   auth: typeof auth;
   cron: typeof cron;
   drawings: typeof drawings;

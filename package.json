@@ -3,12 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+    "dev": "next dev",
+    "dev:turbo": "next dev --turbopack",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^2.0.45",
+    "@ai-sdk/google": "^2.0.40",
+    "@ai-sdk/openai": "^2.0.71",
+    "@auth/core": "^0.34.3",
     "@clerk/nextjs": "^6.33.5",
     "@convex-dev/auth": "^0.0.90",
     "@excalidraw/excalidraw": "^0.18.0",
@@ -26,6 +31,7 @@
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@types/sanitize-html": "^2.16.0",
+    "ai": "^5.0.98",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "1.0.4",
