@@ -121,7 +121,7 @@ export function EditFolderDialog({
                   onClick={() => setSelectedColor(color.value)}
                   disabled={isUpdating}
                   className={`
-                    flex flex-col items-center justify-center gap-1.5 p-3 rounded-lg border-2 transition-all
+                    flex flex-col items-center justify-center gap-2 p-3 rounded-lg border-2 transition-all
                     ${
                       selectedColor === color.value
                         ? "border-primary ring-2 ring-primary/20"

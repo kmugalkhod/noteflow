@@ -51,7 +51,6 @@ export async function POST(request: NextRequest) {
         model: modelInstance,
         prompt: 'Say "Hello, I am working!" in exactly those words.',
         temperature: 0,
-        maxTokens: 20,
       });
 
       console.log('[TEST] Success! Response:', text);
