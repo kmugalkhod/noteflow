@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { Home, FileText, Users, PenTool, Paintbrush } from "lucide-react";
+import { Home, FileText, Users, PenTool, Paintbrush, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,7 @@ const navigation = [
   { name: "All stories", href: "/stories", icon: FileText },
   { name: "Drawing", href: "/drawing", icon: Paintbrush },
   { name: "Shared", href: "/shared", icon: Users },
-  { name: "Blog", href: "/blog", icon: PenTool },
+  { name: "Settings", href: "/settings", icon: Settings },
 ];
 
 interface SidebarProps {
@@ -61,8 +61,8 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
 
   return (
     <aside className="w-64 h-screen bg-sidebar border-r border-sidebar-border flex flex-col">
-      {/* Header */}
-      <div className="p-4 border-b border-sidebar-border space-y-4">
+      {/* Header - Consistent 16px padding */}
+      <div className="p-4 border-b border-sidebar-border space-y-3">
         <h1 className="text-xl font-bold text-sidebar-foreground">noteflow</h1>
 
         <SearchBar
@@ -73,14 +73,14 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
         <div className="flex gap-2">
           <Button
             onClick={handleNewStory}
-            className="flex-1 bg-black hover:bg-gray-800 text-white rounded-lg"
+            className="flex-1 bg-black hover:bg-gray-800 text-white rounded-lg h-9"
           >
             New story
           </Button>
           <Button
             onClick={handleNewDrawing}
             variant="outline"
-            className="flex-1 rounded-lg"
+            className="flex-1 rounded-lg h-9"
           >
             <Paintbrush className="w-4 h-4 mr-1" />
             Drawing
@@ -88,7 +88,7 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
         </div>
       </div>
 
-      {/* Navigation */}
+      {/* Navigation - 12px horizontal padding, 16px vertical */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {navigation.map((item) => {
           const isActive = pathname === item.href;
@@ -98,7 +98,7 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
               href={item.href}
               className={`
                 flex items-center gap-3 px-3 py-2 rounded-md text-sm
-                transition-colors
+                transition-all duration-200
                 ${
                   isActive
                     ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
@@ -112,7 +112,7 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
           );
         })}
 
-        {/* Favorites Section */}
+        {/* Favorites Section - 24px top spacing */}
         <div className="pt-6">
           <h3 className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
             Favorites
@@ -122,7 +122,7 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
           </p>
         </div>
 
-        {/* Folders Section */}
+        {/* Folders Section - 24px top spacing */}
         <div className="pt-6">
           <div className="flex items-center justify-between px-3 mb-2">
             <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -136,7 +136,7 @@ export function Sidebar({ onOpenCommandPalette }: SidebarProps) {
         </div>
       </nav>
 
-      {/* Footer */}
+      {/* Footer - Consistent 16px padding, 12px gap */}
       <div className="border-t border-sidebar-border p-4 space-y-3">
         <WritingStats />
         <div className="flex items-center justify-between gap-2">

@@ -24,15 +24,15 @@ export function WritingStats() {
       </div>
 
       {/* Progress bar */}
-      <div className="w-full bg-sidebar-accent rounded-full h-1.5">
+      <div className="w-full bg-sidebar-accent rounded-full h-2">
         <div
-          className="bg-primary h-1.5 rounded-full transition-all duration-300"
+          className="bg-primary h-2 rounded-full transition-all duration-300"
           style={{ width: `${Math.min(percentage, 100)}%` }}
         />
       </div>
 
       {/* Green indicator dot (active writing session) */}
-      <div className="flex items-center gap-1.5 mt-2">
+      <div className="flex items-center gap-2 mt-2">
         <div className="w-2 h-2 rounded-full bg-green-500" />
         <span className="text-xs text-muted-foreground">Active</span>
       </div>

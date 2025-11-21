@@ -92,9 +92,9 @@ export const FolderTreeItem = memo(function FolderTreeItem({
     }
   };
 
-  // Calculate indentation (each level adds 14px for tighter nesting)
+  // Calculate indentation (each level adds 16px, base 12px for 8px-based spacing system)
   const indentStyle = {
-    paddingLeft: `${depth * 14 + 10}px`,
+    paddingLeft: `${depth * 16 + 12}px`,
   };
 
   return (
@@ -184,7 +184,7 @@ export const FolderTreeItem = memo(function FolderTreeItem({
           <div className="flex items-center gap-2 flex-1 min-w-0 text-[13px]">
             <Folder
               className={`
-                w-[18px] h-[18px] flex-shrink-0 transition-all duration-200
+                w-[16px] h-[16px] flex-shrink-0 transition-all duration-200
                 ${isSelected ? "text-folder-icon-color" : ""}
               `}
               style={folder.color && !isSelected ? { color: folder.color } : undefined}

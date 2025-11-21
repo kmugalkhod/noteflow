@@ -49,7 +49,7 @@ const AI_PROVIDERS = {
 type Provider = keyof typeof AI_PROVIDERS;
 
 export default function SettingsPage() {
-  const aiSettings = useQuery(api.aiSettings.getAISettings);
+  const aiSettings = useQuery(api.aiSettings.getAISettingsPublic);
   const saveSettings = useMutation(api.aiSettings.saveAISettings);
   const deleteSettings = useMutation(api.aiSettings.deleteAISettings);
 

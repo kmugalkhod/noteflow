@@ -90,13 +90,11 @@ export class VercelAIProvider implements AIProvider {
         prompt,
         ...(systemInstruction && { system: systemInstruction }),
         temperature: 0.7,
-        maxTokens: 2048,
       };
 
       console.log(`[${this.provider}] Making request with params:`, {
         modelName: this.model,
         temperature: 0.7,
-        maxTokens: 2048,
         hasSystem: !!systemInstruction,
       });
 

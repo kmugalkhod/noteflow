@@ -7,11 +7,12 @@ import { useConvexUser } from "@/modules/shared/hooks/use-convex-user";
 import { useNotesStore } from "../../store/useNotesStore";
 import { NotesListToolbar } from "./NotesListToolbar";
 import { NoteListItem } from "./NoteListItem";
-import { Loader2, FileText, Trash2, PanelRightClose } from "lucide-react";
+import { Loader2, FileText, Trash2, PanelRightClose, Search, LayoutGrid, LayoutList, ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/modules/shared/lib/toast";
 import { NoteListSkeleton } from "@/modules/shared/components";
 import { DeleteNoteDialog } from "@/modules/notes/components/delete-note-dialog";
+import { useDebounce } from "@/modules/shared/hooks/use-debounce";
 
 interface NotesListProps {
   onToggleSidebar?: () => void;
@@ -31,8 +32,27 @@ export function NotesList({
   const convexUser = useConvexUser();
   const router = useRouter();
 
-  // State for delete dialog
+  // State management
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortOption, setSortOption] = useState<"newest" | "oldest" | "title">("newest");
+  const [viewMode, setViewMode] = useState<"card" | "compact">("card");
+  const [showSortMenu, setShowSortMenu] = useState(false);
+
+  // Debounce search for performance
+  const debouncedSearch = useDebounce(searchQuery, 300);
+
+  // Load view mode from localStorage
+  useEffect(() => {
+    const savedViewMode = localStorage.getItem("notesViewMode") as "card" | "compact" | null;
+    if (savedViewMode) setViewMode(savedViewMode);
+  }, []);
+
+  // Save view mode to localStorage
+  const handleViewModeChange = (mode: "card" | "compact") => {
+    setViewMode(mode);
+    localStorage.setItem("notesViewMode", mode);
+  };
 
   // Zustand store - select only what we need
   const selectedFolderId = useNotesStore((state) => state.selectedFolderId);
@@ -55,15 +75,39 @@ export function NotesList({
       : "skip"
   );
 
-  // Sort notes by most recent (no position tracking - natural order)
-  const sortedNotes = useMemo(() => {
+  // Filter and sort notes
+  const filteredAndSortedNotes = useMemo(() => {
     if (!notes) return [];
-    // Simple sort by updatedAt - most recent first
-    return [...notes].sort((a, b) => b.updatedAt - a.updatedAt);
-  }, [notes]);
+
+    // Filter by search query
+    let filtered = notes;
+    if (debouncedSearch.trim()) {
+      const query = debouncedSearch.toLowerCase();
+      filtered = notes.filter((note) =>
+        note.title.toLowerCase().includes(query) ||
+        (note.contentPreview && note.contentPreview.toLowerCase().includes(query))
+      );
+    }
+
+    // Sort notes
+    const sorted = [...filtered];
+    switch (sortOption) {
+      case "newest":
+        sorted.sort((a, b) => b.updatedAt - a.updatedAt);
+        break;
+      case "oldest":
+        sorted.sort((a, b) => a.updatedAt - b.updatedAt);
+        break;
+      case "title":
+        sorted.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
+        break;
+    }
+
+    return sorted;
+  }, [notes, debouncedSearch, sortOption]);
 
   // Find selected note
-  const selectedNote = sortedNotes.find((note) => note._id === selectedNoteId);
+  const selectedNote = filteredAndSortedNotes.find((note) => note._id === selectedNoteId);
 
   // Display title directly from database - no cache to prevent flicker
   // Show actual title, or "Untitled" if note exists but has no title
@@ -123,11 +167,24 @@ export function NotesList({
       className="h-screen bg-notes-list-bg border-r border-sidebar-border flex flex-col flex-shrink-0 transition-all"
       style={{ width: `${width}px` }}
     >
-      {/* Header - Stitch Style */}
-      <div className="px-4 py-4 border-b border-sidebar-border">
-        <div className="flex items-center justify-between mb-3">
+      {/* Header - Enhanced with Search */}
+      <div className="px-4 py-4 border-b border-sidebar-border space-y-3">
+        {/* Top Row: Title + Actions */}
+        <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold text-foreground">All Notes</h2>
           <div className="flex items-center gap-1.5">
+            {/* View Mode Toggle */}
+            <button
+              onClick={() => handleViewModeChange(viewMode === "card" ? "compact" : "card")}
+              className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-accent transition-colors"
+              title={`Switch to ${viewMode === "card" ? "compact" : "card"} view`}
+            >
+              {viewMode === "card" ? (
+                <LayoutList className="w-3.5 h-3.5 text-muted-foreground" />
+              ) : (
+                <LayoutGrid className="w-3.5 h-3.5 text-muted-foreground" />
+              )}
+            </button>
             {/* Delete button - only show when note is selected */}
             {selectedNoteId && (
               <button
@@ -159,16 +216,60 @@ export function NotesList({
             )}
           </div>
         </div>
+
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Search notes..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full h-8 pl-10 pr-3 text-sm bg-background border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary transition-all placeholder:text-muted-foreground/60"
+          />
+        </div>
+
+        {/* Stats + Sort */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span>{sortedNotes.length} {sortedNotes.length === 1 ? 'note' : 'notes'}</span>
+          <div className="text-xs text-muted-foreground">
+            {debouncedSearch ? (
+              <span>{filteredAndSortedNotes.length} {filteredAndSortedNotes.length === 1 ? 'result' : 'results'}</span>
+            ) : (
+              <span>{filteredAndSortedNotes.length} {filteredAndSortedNotes.length === 1 ? 'note' : 'notes'}</span>
+            )}
           </div>
-          <button className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
-            Sort
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setShowSortMenu(!showSortMenu)}
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+            >
+              {sortOption === "newest" ? "Newest" : sortOption === "oldest" ? "Oldest" : "Title"}
+              <ChevronDown className="w-3 h-3" />
+            </button>
+            {/* Sort Dropdown Menu */}
+            {showSortMenu && (
+              <div className="absolute right-0 top-full mt-1 w-32 bg-popover border border-border rounded-md shadow-lg z-10 animate-scale-in">
+                <button
+                  onClick={() => { setSortOption("newest"); setShowSortMenu(false); }}
+                  className={`w-full px-3 py-2 text-left text-xs hover:bg-accent transition-colors ${sortOption === "newest" ? "text-foreground font-medium" : "text-muted-foreground"}`}
+                >
+                  Newest
+                </button>
+                <button
+                  onClick={() => { setSortOption("oldest"); setShowSortMenu(false); }}
+                  className={`w-full px-3 py-2 text-left text-xs hover:bg-accent transition-colors ${sortOption === "oldest" ? "text-foreground font-medium" : "text-muted-foreground"}`}
+                >
+                  Oldest
+                </button>
+                <button
+                  onClick={() => { setSortOption("title"); setShowSortMenu(false); }}
+                  className={`w-full px-3 py-2 text-left text-xs hover:bg-accent transition-colors ${sortOption === "title" ? "text-foreground font-medium" : "text-muted-foreground"}`}
+                >
+                  Title
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -176,17 +277,28 @@ export function NotesList({
       <div className="flex-1 overflow-y-auto px-2 py-2">
         {!convexUser || notes === undefined ? (
           <NoteListSkeleton count={6} />
-        ) : sortedNotes.length === 0 ? (
+        ) : filteredAndSortedNotes.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full px-4 text-center animate-fade-in">
             <FileText className="w-16 h-16 text-muted-foreground/30 mb-4" />
-            <h3 className="text-base font-semibold text-foreground mb-1">No notes yet</h3>
-            <p className="text-sm text-muted-foreground max-w-[200px]">
-              Click the + button to create your first note
-            </p>
+            {debouncedSearch ? (
+              <>
+                <h3 className="text-base font-semibold text-foreground mb-1">No results found</h3>
+                <p className="text-sm text-muted-foreground max-w-[200px]">
+                  Try a different search term
+                </p>
+              </>
+            ) : (
+              <>
+                <h3 className="text-base font-semibold text-foreground mb-1">No notes yet</h3>
+                <p className="text-sm text-muted-foreground max-w-[200px]">
+                  Click the + button to create your first note
+                </p>
+              </>
+            )}
           </div>
         ) : (
           <div key={selectedFolderId?.toString() || 'all'} className="animate-fade-in space-y-1">
-            {sortedNotes.map((note) => (
+            {filteredAndSortedNotes.map((note) => (
               <NoteListItem
                 key={note._id}
                 id={note._id}
@@ -195,6 +307,7 @@ export function NotesList({
                 updatedAt={note.updatedAt}
                 isSelected={selectedNoteId === note._id}
                 isFavorite={note.isFavorite}
+                viewMode={viewMode}
                 onClick={() => handleSelectNote(note._id)}
                 onFavorite={async () => {
                   await toggleFavorite({ noteId: note._id });

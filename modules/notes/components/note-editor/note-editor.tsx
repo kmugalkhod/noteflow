@@ -25,6 +25,8 @@ import { exportNoteToMarkdown } from "../../utils/exportToMarkdown";
 import { toast } from "@/modules/shared/lib/toast";
 import { ShareButton } from "@/components/share/ShareButton";
 import { DEBOUNCE_DELAY_MS, SAVE_INDICATOR_DURATION_MS } from "@/lib/constants";
+import { AIToolbar } from "../ai-toolbar/AIToolbar";
+import { useAction } from "convex/react";
 
 interface NoteEditorProps {
   noteId: Id<"notes">;
@@ -55,6 +57,7 @@ interface EditorState {
   isLoading: boolean;
   showSavedIndicator: boolean;
   retryTrigger: number; // Counter to trigger retry without modifying user data
+  isGeneratingAI: boolean; // AI generation state
   // Last saved values for change detection
   lastSavedTitle: string;
   lastSavedContent: string;
@@ -76,7 +79,9 @@ type EditorAction =
   | { type: "SAVE_SUCCESS"; payload: { title: string; content: string; blocks: string | undefined; coverImage: string | undefined } }
   | { type: "SAVE_ERROR" }
   | { type: "HIDE_SAVED_INDICATOR" }
-  | { type: "RETRY_SAVE" }; // New action for retry without touching user data
+  | { type: "RETRY_SAVE" }
+  | { type: "START_AI_GENERATION" }
+  | { type: "END_AI_GENERATION" };
 
 function editorReducer(state: EditorState, action: EditorAction): EditorState {
   switch (action.type) {
@@ -130,6 +135,10 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
     case "RETRY_SAVE":
       // Increment counter to trigger save effect without modifying user data
       return { ...state, retryTrigger: state.retryTrigger + 1 };
+    case "START_AI_GENERATION":
+      return { ...state, isGeneratingAI: true };
+    case "END_AI_GENERATION":
+      return { ...state, isGeneratingAI: false };
     default:
       return state;
   }
@@ -140,6 +149,12 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
   const noteContent = useQuery(api.notes.getNoteContent, { noteId }) as NoteContentWithCover | undefined;
   const noteTags = useQuery(api.tags.getTagsForNote, { noteId });
   const updateNote = useMutation(api.notes.updateNote);
+
+  // AI actions
+  const generateContentAction = useAction(api.ai.generateContent);
+  const generateTitleAction = useAction(api.ai.generateTitle);
+  const continueWritingAction = useAction(api.ai.continueWriting);
+  const summarizeAction = useAction(api.ai.summarize);
 
   // Zustand store - for syncing selected note
   const setSelectedNoteId = useNotesStore((state) => state.setSelectedNoteId);
@@ -158,6 +173,7 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
     isLoading: true,
     showSavedIndicator: false,
     retryTrigger: 0,
+    isGeneratingAI: false,
     lastSavedTitle: "",
     lastSavedContent: "",
     lastSavedBlocks: undefined,
@@ -340,6 +356,60 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
     }
   };
 
+  // Handle AI actions
+  const handleAIAction = async (action: "summarize" | "continue" | "custom", prompt?: string) => {
+    dispatch({ type: "START_AI_GENERATION" });
+
+    try {
+      let generatedContent = "";
+      const currentContent = state.isRichMode ? blocksToText(state.blocks) : state.content;
+
+      switch (action) {
+        case "summarize":
+          generatedContent = await summarizeAction({ content: currentContent });
+          break;
+        case "continue":
+          generatedContent = await continueWritingAction({ context: currentContent });
+          break;
+        case "custom":
+          if (!prompt) throw new Error("Custom prompt required");
+          generatedContent = await generateContentAction({ prompt, context: currentContent });
+          break;
+      }
+
+      // Append generated content to existing content
+      const updatedContent = currentContent + "\n\n" + generatedContent;
+
+      if (state.isRichMode) {
+        const newBlocks = textToBlocks(updatedContent);
+        dispatch({ type: "SET_BLOCKS", payload: newBlocks });
+        dispatch({ type: "SET_CONTENT", payload: updatedContent });
+        richEditorRef.current?.setBlocks(newBlocks);
+      } else {
+        dispatch({ type: "SET_CONTENT", payload: updatedContent });
+      }
+
+      // Auto-generate title if it's generic and we have enough content
+      if (
+        (!state.title || state.title === "Untitled" || state.title.trim().length === 0) &&
+        updatedContent.length > 50
+      ) {
+        const newTitle = await generateTitleAction({ content: updatedContent });
+        dispatch({ type: "SET_TITLE", payload: newTitle });
+      }
+
+      toast.success("AI content generated successfully");
+    } catch (error) {
+      console.error("AI generation error:", error);
+      toast.error(
+        "AI generation failed",
+        error instanceof Error ? error.message : "Please check your API configuration"
+      );
+    } finally {
+      dispatch({ type: "END_AI_GENERATION" });
+    }
+  };
+
   // Calculate word count (must be before conditional returns per Rules of Hooks)
   const wordCount = useMemo(() => {
     const text = state.isRichMode ? blocksToText(state.blocks) : state.content;
@@ -389,7 +459,7 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
   return (
     <div className="h-full flex flex-col bg-editor-bg animate-fade-in">
       {/* Stitch-Style Header */}
-      <div className="border-b border-border/50 px-6 py-3.5">
+      <div className="border-b border-border/50 px-6 py-4">
         <div className="flex items-center justify-between max-w-5xl mx-auto">
           {/* Title and Metadata */}
           <div className="flex-1 min-w-0 mr-4">
@@ -412,7 +482,7 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
               onClick={handleExport}
               variant="ghost"
               size="sm"
-              className="gap-1.5 h-8 px-3 text-xs"
+              className="gap-2 h-8 px-3 text-xs"
             >
               <Download className="w-3.5 h-3.5" />
               Export
@@ -452,6 +522,13 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
           className="w-full text-5xl font-semibold border-none focus:outline-none px-0 mb-8 placeholder:text-muted-foreground/20 bg-transparent leading-[1.15] tracking-[-0.02em] resize-none overflow-hidden text-foreground transition-colors"
         />
 
+        {/* AI Toolbar */}
+        <AIToolbar
+          onAIAction={handleAIAction}
+          isGenerating={state.isGeneratingAI}
+          disabled={!state.isInitialized}
+        />
+
         {state.isInitialized && state.isRichMode ? (
           <RichEditor
             key={noteId} // Force remount on note change
@@ -477,7 +554,7 @@ export function NoteEditor({ noteId }: NoteEditorProps) {
 
       {/* Auto-save indicator (minimal, bottom-right corner) */}
       {(state.isSaving || state.showSavedIndicator) && (
-        <div className="fixed bottom-4 right-4 flex items-center gap-2 text-xs bg-background/80 backdrop-blur-sm px-3 py-1.5 rounded-full border border-border shadow-sm animate-slide-up">
+        <div className="fixed bottom-4 right-4 flex items-center gap-2 text-xs bg-background/80 backdrop-blur-sm px-3 py-2 rounded-full border border-border shadow-sm animate-slide-up">
           {state.isSaving ? (
             <>
               <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />

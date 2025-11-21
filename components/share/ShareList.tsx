@@ -52,12 +52,12 @@ export function ShareList() {
           </p>
         </div>
         <Badge variant="secondary" className="text-sm">
-          {myShares.filter((s) => s.isActive).length} Active
+          {myShares.filter((s: typeof myShares[0]) => s.isActive).length} Active
         </Badge>
       </div>
 
       <div className="grid gap-4">
-        {myShares.map((share) => {
+        {myShares.map((share: typeof myShares[0]) => {
           // Build share URL client-side from shareId
           const shareUrl = buildShareUrl(share.shareId);
 
