@@ -74,12 +74,13 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // Show empty state only when on workspace, stories, shared, or blog pages (not viewing a specific note, trash, favorites, or drawing)
+  // Show empty state only when on workspace, stories, shared, or blog pages (not viewing a specific note, trash, favorites, drawing, or settings)
   const isViewingNote = pathname?.startsWith("/note/");
   const isTrashPage = pathname === "/trash";
   const isFavoritesPage = pathname === "/favorites";
   const isDrawingPage = pathname === "/drawing";
-  const showEmptyState = !isViewingNote && !isTrashPage && !isFavoritesPage && !isDrawingPage;
+  const isSettingsPage = pathname === "/settings";
+  const showEmptyState = !isViewingNote && !isTrashPage && !isFavoritesPage && !isDrawingPage && !isSettingsPage;
 
   // Resize handlers
   const handleResizeStart = (e: React.MouseEvent) => {
@@ -119,8 +120,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         />
 
-        {/* Column 2: Notes List - Hide on trash, favorites, and drawing pages */}
-        {!isTrashPage && !isFavoritesPage && !isDrawingPage && (
+        {/* Column 2: Notes List - Hide on trash, favorites, drawing, and settings pages */}
+        {!isTrashPage && !isFavoritesPage && !isDrawingPage && !isSettingsPage && (
           <>
             <NotesList
               onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
@@ -165,8 +166,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               </button>
             )}
 
-            {/* Show notes panel button when collapsed - but not on trash, favorites, or drawing pages */}
-            {isNotesPanelCollapsed && !isTrashPage && !isFavoritesPage && !isDrawingPage && (
+            {/* Show notes panel button when collapsed - but not on trash, favorites, drawing, or settings pages */}
+            {isNotesPanelCollapsed && !isTrashPage && !isFavoritesPage && !isDrawingPage && !isSettingsPage && (
               <button
                 onClick={() => setIsNotesPanelCollapsed(false)}
                 className="p-2 rounded-md bg-muted hover:bg-muted/80 transition-colors shadow-md"

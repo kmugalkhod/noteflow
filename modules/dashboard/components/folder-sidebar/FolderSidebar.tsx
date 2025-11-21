@@ -4,7 +4,7 @@ import { useRef } from "react";
 import { FolderTree, type FolderTreeRef } from "../folder-tree";
 import { CreateFolderButton } from "@/modules/folders/components";
 import { useNotesStore } from "../../store/useNotesStore";
-import { Folder, Trash2, Star, Paintbrush, PanelLeftClose } from "lucide-react";
+import { Folder, Trash2, Star, Paintbrush, PanelLeftClose, Settings } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useConvexUser } from "@/modules/shared/hooks/use-convex-user";
@@ -52,7 +52,8 @@ export function FolderSidebar({ isCollapsed = false, onToggle }: FolderSidebarPr
   const isTrashSelected = pathname === "/trash";
   const isFavoritesSelected = pathname === "/favorites";
   const isDrawingSelected = pathname === "/drawing";
-  const isUncategorizedSelected = selectedFolderId === "all" && !isTrashSelected && !isFavoritesSelected && !isDrawingSelected;
+  const isSettingsSelected = pathname === "/settings";
+  const isUncategorizedSelected = selectedFolderId === "all" && !isTrashSelected && !isFavoritesSelected && !isDrawingSelected && !isSettingsSelected;
 
   // Get display name from user
   const displayName = user?.fullName || user?.firstName || user?.username || "User";
@@ -160,6 +161,23 @@ export function FolderSidebar({ isCollapsed = false, onToggle }: FolderSidebarPr
         >
           <Paintbrush className={`w-[18px] h-[18px] flex-shrink-0 ${isDrawingSelected ? "text-purple-500" : "text-muted-foreground"}`} />
           <span className="flex-1 text-left">Drawing</span>
+        </button>
+
+        {/* Settings */}
+        <button
+          onClick={() => router.push("/settings")}
+          className={`
+            w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] mb-0.5
+            transition-all duration-200
+            ${
+              isSettingsSelected
+                ? "bg-folder-selected-bg text-foreground font-medium shadow-sm"
+                : "text-sidebar-foreground hover:bg-folder-hover-bg"
+            }
+          `}
+        >
+          <Settings className={`w-[18px] h-[18px] flex-shrink-0 ${isSettingsSelected ? "text-folder-icon-color" : "text-muted-foreground"}`} />
+          <span className="flex-1 text-left">Settings</span>
         </button>
 
         {/* Folders Section Header */}

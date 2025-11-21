@@ -236,4 +236,18 @@ export default defineSchema({
     .index("by_identifier", ["identifier"]) // Track abusive identifiers
     .index("by_timestamp", ["timestamp"]) // Recent violations
     .index("by_action", ["action"]), // Violations by action type
+
+  // AI Settings table (for user-configurable AI providers)
+  aiSettings: defineTable({
+    userId: v.id("users"),
+    provider: v.union(v.literal("openai"), v.literal("anthropic"), v.literal("google")),
+    model: v.string(), // Model name (e.g., "gpt-4o-mini", "claude-3-5-sonnet-20241022")
+    encryptedApiKey: v.string(), // Encrypted API key using lib/crypto/encryption
+    isActive: v.boolean(), // Whether this configuration is currently active
+    lastUsedAt: v.optional(v.number()), // Track last usage
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_active", ["userId", "isActive"]),
 });

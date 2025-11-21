@@ -7,6 +7,8 @@ const isPublicRoute = createRouteMatcher([
   "/register(.*)",
   "/sso-callback(.*)",
   "/share(.*)", // Public share links - no authentication required
+  "/api/ai(.*)", // AI API routes - authenticated via Convex
+  "/api/health(.*)", // Health check endpoint
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
