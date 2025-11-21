@@ -11,7 +11,7 @@ import { internal } from "./_generated/api";
  * Helper to get user's AI settings
  * Throws error if user not authenticated or AI not configured
  */
-async function getUserAISettings(ctx: any) {
+async function getUserAISettings(ctx: any): Promise<any> {
   const settings = await ctx.runQuery(internal.aiSettings.getAISettings);
 
   if (!settings) {

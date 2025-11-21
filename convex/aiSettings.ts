@@ -4,13 +4,31 @@
  */
 
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, internalQuery } from "./_generated/server";
 import { getAuthenticatedUserId } from "./auth";
 
 /**
- * Get active AI settings for the current user
+ * Get active AI settings for the current user (internal use only)
  */
-export const getAISettings = query({
+export const getAISettings = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthenticatedUserId(ctx);
+    if (!userId) return null;
+
+    const settings = await ctx.db
+      .query("aiSettings")
+      .withIndex("by_user_active", (q) => q.eq("userId", userId).eq("isActive", true))
+      .first();
+
+    return settings;
+  },
+});
+
+/**
+ * Public query to get AI settings (for UI)
+ */
+export const getAISettingsPublic = query({
   args: {},
   handler: async (ctx) => {
     const userId = await getAuthenticatedUserId(ctx);
