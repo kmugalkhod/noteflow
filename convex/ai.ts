@@ -38,6 +38,8 @@ export const generateContent = action({
       // Use Convex env var (set via `npx convex env set SITE_URL https://your-app.vercel.app`)
       // For local Docker-based Convex, use host.docker.internal instead of localhost
       const siteUrl = process.env.SITE_URL || "http://host.docker.internal:3000";
+      console.log('[AI] Calling API:', `${siteUrl}/api/ai/generate`);
+
       const response = await fetch(
         `${siteUrl}/api/ai/generate`,
         {
@@ -55,15 +57,28 @@ export const generateContent = action({
         }
       );
 
+      console.log('[AI] Response status:', response.status, response.statusText);
+
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to generate content");
+        const errorText = await response.text();
+        console.error('[AI] Error response:', errorText);
+        let error;
+        try {
+          error = JSON.parse(errorText);
+        } catch {
+          error = { message: errorText };
+        }
+        throw new Error(error.message || `API returned ${response.status}: ${response.statusText}`);
       }
 
       const data = await response.json();
+      console.log('[AI] Success! Content length:', data.content?.length || 0);
       return data.content;
     } catch (error) {
-      console.error("AI generation error:", error);
+      console.error("[AI] Generation error details:", {
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      });
       throw new Error(
         error instanceof Error ? error.message : "Failed to generate content"
       );
