@@ -32,6 +32,7 @@ export default clerkMiddleware(async (auth, req) => {
       "font-src 'self' https://fonts.gstatic.com data:",
       "img-src 'self' data: blob: https://*.convex.cloud https://img.clerk.com https://*.clerk.com https://clerk.noteflow.co.in",
       "connect-src 'self' https://*.clerk.accounts.dev https://*.convex.cloud https://*.clerk.com https://clerk.noteflow.co.in wss://*.convex.cloud wss://*.clerk.com",
+      "worker-src 'self' blob:", // Allow Clerk to create workers from blob URLs
       "frame-src 'self' https://*.clerk.com https://clerk.noteflow.co.in", // Allow Clerk iframes
       "frame-ancestors 'none'", // Prevent clickjacking
       "base-uri 'self'", // Prevent base tag injection
